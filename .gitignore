@@ -1,0 +1,31 @@
+# --- secrets（絶対にコミットしない） ---
+.env
+**/.env
+lp/.env
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+
+# --- 生成物（generate_*.py と Edge で再生成できる） ---
+output/
+
+# --- Node / ビルド ---
+node_modules/
+lp/node_modules/
+dist/
+
+# --- OS / エディタ ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- 作業用バックアップ（画像の作り直し前の退避） ---
+assets/_backup_smalltext/
+assets/_backup_new5/
+assets/reference/*-prefix.webp
+assets/_*-old.webp
+
+# 作業用一時データ
+tmp/
