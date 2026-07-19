@@ -328,13 +328,25 @@ def build(folder: str) -> tuple[str, list[str]]:
         if tid in ref_index:
             ref_btn = (f'<a class="big-btn ref-btn" href="../../ref/{ch_no}/index.html#t{ref_index[tid]}">'
                        f'📖 参考書でおさらいする</a>')
+        # 他の形式に進むチップ（この単元にある形式だけ）
+        type_chips = ['<button class="chip-mode" type="button" data-mode="A">🕳 穴埋め</button>',
+                      '<button class="chip-mode" type="button" data-mode="B">✍️ 短答</button>',
+                      '<button class="chip-mode" type="button" data-mode="C">✅ 4択</button>']
+        if written:
+            type_chips.append('<button class="chip-mode" type="button" data-mode="D">📝 記述</button>')
         steps.append(f"""
     <div class="step done-step" data-label="結果" data-sec="Z">
       <div class="done">{char("manabi_banzai_sm.png", "wchar done-char")}<span>🎉 「{esc(topic['name'])}」おつかれさま！</span></div>
       <div class="score-box" data-score></div>
-      <a class="big-btn line-btn" href="{liff_wb(topic['name'])}" target="_blank" rel="noopener">🤖 LINEでAI採点つきで復習する<span class="btn-sub">まちがえた問題は自動で再出題</span></a>
+      <button class="big-btn wrong-btn" type="button" data-mode="wrong" hidden>🔴 まちがえた問題だけやり直す<span class="btn-sub" data-wrong-sub></span></button>
+      <div class="next-modes">
+        <div class="nm-h">ほかの解き方でもう一度</div>
+        <div class="nm-chips">{''.join(type_chips)}</div>
+      </div>
       {ref_btn}
-      <button class="big-btn retry-btn" type="button" data-retry>↻ この単元をもう一度とく</button>
+      <a class="big-btn line-btn" href="{liff_wb(topic['name'])}" target="_blank" rel="noopener">🤖 LINEでこの単元を出題してもらう<span class="btn-sub">公式LINEに問題が届く→答えるとAIがすぐ丸つけ。すきま時間の復習に</span></a>
+      <button class="big-btn retry-btn" type="button" data-retry>↻ この単元を最初から</button>
+      <button class="big-btn home-btn" type="button" data-go="0">🏠 目次にもどる</button>
     </div>""")
 
         # やり方（モード）選択: 単元の最初に出す。推奨順=従来の全ステップ。
@@ -409,6 +421,7 @@ def build(folder: str) -> tuple[str, list[str]]:
 
     home = f"""
 <section class="view home" data-t="0">
+  <a class="home-link" href="../../index.html">🗺 すごろく（本一覧）へもどる</a>
   <header class="top">
     <div class="badge">{esc(spec['volume'])}　問題集 <span class="webtag">Web版</span></div>
     <h1>{esc(spec['title'])}</h1>
@@ -736,7 +749,23 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .btn-sub { display:block; font-weight:normal; font-size:12px; opacity:.9; }
   .ref-btn { background:#fffbeb; color:var(--brand); border:1.5px solid var(--line); }
   .retry-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
+  .home-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
   .print-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
+  /* すごろく（本一覧）へ戻るリンク */
+  .home-link { display:inline-block; margin:10px 0 0; font-size:13px; font-weight:bold;
+               color:var(--brand); text-decoration:none; background:#fffbeb;
+               border:1.5px solid var(--line); border-radius:16px; padding:6px 14px; }
+  /* まちがえた問題だけやり直す */
+  .wrong-btn { background:#fef2f2; color:var(--ng); border:1.5px solid #fecaca; }
+  .wrong-btn[hidden] { display:none; }
+  /* ほかの解き方でもう一度（形式チップ） */
+  .next-modes { margin-top:14px; background:#fff; border:1.5px solid var(--line); border-radius:14px;
+                padding:12px 14px; }
+  .nm-h { font-size:13px; font-weight:bold; color:var(--deep); margin-bottom:8px; }
+  .nm-chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-mode { flex:1 1 auto; min-width:calc(50% - 4px); border:1.5px solid #e2d5bd; background:#fffbeb;
+               color:var(--brand); border-radius:12px; padding:10px 8px; font-size:14px; font-weight:bold;
+               cursor:pointer; font-family:inherit; }
 
   .foot { text-align:center; margin-top:32px; color:#a8a29e; font-size:13px; }
   .foot-note { margin-top:4px; font-size:12px; }
@@ -922,8 +951,16 @@ __VIEWS__
         body = cfg.batch ? sec('BB') : orderBy(sec('B'), cfg.order);
       } else if (cfg.mode === 'C') { body = orderBy(sec('C'), cfg.order); }
       else if (cfg.mode === 'D') { body = sec('D'); }
-      // B/C 単独モードは表示順に合わせて「n / 全」を振り直す
-      if ((cfg.mode === 'B' && !cfg.batch) || cfg.mode === 'C') {
+      else if (cfg.mode === 'wrong') {
+        // まちがえた問題だけ（B/C/D で r===0 のもの）を集めて出し直す
+        var rw = store().r || {};
+        body = all.filter(function (s) {
+          return ['B', 'C', 'D'].indexOf(s.dataset.sec) >= 0
+            && s.dataset.qid && rw[s.dataset.qid] === 0;
+        });
+      }
+      // 単独/やり直しモードは表示順に合わせて「n / 全」を振り直す
+      if ((cfg.mode === 'B' && !cfg.batch) || cfg.mode === 'C' || cfg.mode === 'wrong') {
         body.forEach(function (el, i) {
           var q = el.querySelector('.qnum');
           if (q) q.textContent = (i + 1) + ' / ' + body.length;
@@ -939,6 +976,20 @@ __VIEWS__
     var st = store(); st['m' + t] = cfg; save(st);
     delete plCache[t];
     go(t, 1, 1);
+  }
+
+  // 指定形式(secs)の該当ステップを再挑戦できる状態に戻す（見た目リセット、必要ならスコアも）
+  function resetTypeSteps(view, secs, pred, clearR, st) {
+    [].forEach.call(view.querySelectorAll('.step'), function (el) {
+      if (secs.indexOf(el.dataset.sec) < 0 || !pred(el)) return;
+      el.classList.remove('show', 'answered');
+      [].forEach.call(el.querySelectorAll('.qopt'), function (b) { b.classList.remove('correct', 'wrong', 'dim'); });
+      [].forEach.call(el.querySelectorAll('.b-in'), function (i) { i.value = ''; });
+      [].forEach.call(el.querySelectorAll('.b-result'), function (b) { b.textContent = ''; b.className = 'b-result'; });
+      [].forEach.call(el.querySelectorAll('.mk.sel'), function (b) { b.classList.remove('sel'); });
+      [].forEach.call(el.querySelectorAll('.blank.open'), function (b) { b.classList.remove('open'); });
+      if (clearR && el.dataset.qid) delete st.r[el.dataset.qid];
+    });
   }
 
   function renderScore(view) {
@@ -957,6 +1008,17 @@ __VIEWS__
     if (qz.total) rows.push('<div class="score-row"><span>C 実戦4択</span><b>正解 ' + qz.done + ' / ' + qz.total + '</b></div>');
     if (wr.total) rows.push('<div class="score-row"><span>D 記述</span><b>⭕ ' + wr.done + ' / ' + wr.total + '</b></div>');
     box.innerHTML = rows.join('') || 'このページの問題はタップ形式だよ。';
+    // 「まちがえた問題だけやり直す」ボタン: B/C/D で r===0 の数だけ表示
+    var wrongBtn = view.querySelector('.wrong-btn');
+    if (wrongBtn) {
+      var wrongN = [].filter.call(
+        view.querySelectorAll('.qa-step[data-qid], .qz-step[data-qid], .wr-step[data-qid]'),
+        function (el) { return r[el.dataset.qid] === 0; }
+      ).length;
+      wrongBtn.hidden = wrongN === 0;
+      var sub = wrongBtn.querySelector('[data-wrong-sub]');
+      if (sub) sub.textContent = wrongN + '問';
+    }
   }
 
   function render() {
@@ -1073,6 +1135,29 @@ __VIEWS__
   document.addEventListener('click', function (e) {
     var go_ = e.target.closest('[data-go]');
     if (go_) { go(+go_.dataset.go, 0, 1); return; }
+
+    // 結果画面: 「ほかの解き方」チップ /「まちがえた問題だけやり直す」
+    var rchip = e.target.closest('.chip-mode, .wrong-btn');
+    if (rchip) {
+      var rm = rchip.dataset.mode;
+      var vw = views[state.t];
+      var stR = store(); stR.r = stR.r || {};
+      if (rm === 'wrong') {
+        // まちがい(r===0)の問題を再挑戦できるよう見た目だけ戻す（rは維持＝集合を保つ）
+        resetTypeSteps(vw, ['B', 'C', 'D'], function (el) {
+          return el.dataset.qid && stR.r[el.dataset.qid] === 0;
+        }, false, stR);
+      } else {
+        // その形式を最初からやり直せるよう見た目とスコアを戻す
+        resetTypeSteps(vw, [rm], function () { return true; }, true, stR);
+      }
+      save(stR);
+      var rcfg = { mode: rm };
+      if (rm === 'B') { rcfg.ans = 'type'; rcfg.batch = false; rcfg.shuf = false; rcfg.order = null; }
+      if (rm === 'C') { rcfg.shuf = false; rcfg.order = null; }
+      applyMode(state.t, rcfg);
+      return;
+    }
 
     // やり方（モード）選択
     var chipBtn = e.target.closest('.opt-chip');
