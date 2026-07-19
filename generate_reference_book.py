@@ -60,6 +60,15 @@ def img_uri(name: str):
     return p.as_uri() if (name and p.exists()) else None
 
 
+CHAR_DIR = BASE / "assets" / "characters"
+
+
+def char_uri(name: str):
+    """マスコット（assets/characters/）の file URI。無ければ None。"""
+    p = CHAR_DIR / name
+    return p.as_uri() if (name and p.exists()) else None
+
+
 # 用語カードの絵文字（見た目のにぎやかさ用。意味に厳密でなくてよい）
 def term_emoji(i: int) -> str:
     pool = ["📖", "🏛️", "👤", "🗺️", "⚖️", "🌸", "🏯", "📿", "🎋", "🗾", "👑", "📜"]
@@ -93,11 +102,11 @@ def build_ref_qr(topic_key: str) -> str:
 def build(chapter: str) -> str:
     spec = json.loads((REF_DIR / f"{chapter}.json").read_text(encoding="utf-8"))
     ch_no = chapter[:2]  # "04-ancient-state" → "04"（QRの単元キー用）
-    navi = img_uri("navi-teacher.webp")  # ナビキャラ（無ければ絵文字で代替）
+    navi = char_uri("char_owl_sm.png")  # ホー先生（無ければ絵文字で代替）
 
     def navi_face(size_mm):
         if navi:
-            return f'<img class="navi" style="width:{size_mm}mm;height:{size_mm}mm" src="{navi}">'
+            return f'<img class="navi-char" style="height:{size_mm}mm" src="{navi}">'
         return f'<div class="navi navi-emoji" style="width:{size_mm}mm;height:{size_mm}mm;font-size:{size_mm*0.6}mm">🦉</div>'
 
     body = [f"""
@@ -182,10 +191,14 @@ def build(chapter: str) -> str:
 
         # 30秒まとめ（データにあれば summary30、無ければ summary を流用）
         s30 = t.get("summary30") or t.get("summary")
+        _owl = char_uri("owl_think_sm.png") or char_uri("char_owl_sm.png")
+        s30_owl = (f'<span class="sum30-bubble">テスト前は ここを見直すのじゃ！</span>'
+                   f'<img class="navi-char sum30-owl" style="height:13mm" src="{_owl}">') if _owl else ""
         summary = f"""
   <div class="sum30">
     <div class="sum30-h"><span class="sum30-ico">⏱</span>30秒まとめ<span class="sum30-tag">テスト前にここだけ！</span></div>
     <div class="sum30-body">{rich(s30)}</div>
+    {s30_owl}
   </div>""" if s30 else ""
 
         ai_qr = build_ref_qr(f"{ch_no}-{t['topicId']}")
@@ -193,7 +206,7 @@ def build(chapter: str) -> str:
         body.append(f"""
 <article class="topic">
   <div class="topic-band"><span class="topic-no">{i}</span>
-    <span class="topic-name">{esc(t['name'])}</span></div>
+    <span class="topic-name">{esc(t['name'])}</span>{navi_face(13)}</div>
   {overview}
   {''.join(secs)}
   {terms}
@@ -219,6 +232,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* ナビキャラ */
   .navi { border-radius:50%; object-fit:cover; flex:none; box-shadow:0 1px 3px rgba(0,0,0,.15); }
   .navi-emoji { background:#fef3c7; display:flex; align-items:center; justify-content:center; }
+  .navi-char { object-fit:contain; flex:none; vertical-align:middle;
+               filter:drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
 
   /* 表紙 */
   .cover { border:3px solid #f59e0b; border-radius:5mm; padding:10mm 8mm; margin-bottom:6mm;
@@ -301,7 +316,13 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   /* 30秒まとめ */
   .sum30 { margin-top:6mm; border:2px solid #f59e0b; border-radius:4mm; overflow:hidden;
-           page-break-inside:avoid; box-shadow:0 2px 6px rgba(245,158,11,.14); }
+           page-break-inside:avoid; box-shadow:0 2px 6px rgba(245,158,11,.14); position:relative; }
+  /* 30秒まとめのホー先生＋吹き出し（絶対配置・本文右に余白を確保） */
+  .sum30-owl { position:absolute; right:2mm; bottom:2mm; filter:drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
+  .sum30-bubble { position:absolute; right:16mm; bottom:6mm; background:#fff; border:1.5px solid #f59e0b;
+                  border-radius:3mm; padding:1mm 3mm; font-size:9pt; font-weight:bold; color:#7c2d12; white-space:nowrap; }
+  .sum30-bubble::after { content:""; position:absolute; right:-2.4mm; bottom:2mm;
+                  border:1.2mm solid transparent; border-left-color:#f59e0b; }
   .sum30-h { background:linear-gradient(90deg,#d97706,#f59e0b); color:#fff; font-weight:bold;
              font-size:12pt; padding:2mm 4mm; display:flex; align-items:center; gap:2mm; }
   .sum30-ico { font-size:15pt; }

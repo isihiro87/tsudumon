@@ -46,6 +46,9 @@ def classify(pdf: Path):
     stem = pdf.stem
 
     # はじめに / 総合版
+    m = re.match(r"_はじめにお読みください_(.+)$", stem)
+    if m:  # プラン別（中1/中2/中3/3学年セット）の統合版
+        return Path("01_はじめに"), f"★はじめにお読みください（{m.group(1)}）.pdf"
     if stem == "_はじめにお読みください":
         return Path("01_はじめに"), "★はじめにお読みください.pdf"
     if stem == "_参考書はじめにお読みください":

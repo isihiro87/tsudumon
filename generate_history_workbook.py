@@ -178,6 +178,18 @@ def rebalance_quiz(quiz, seed: str):
     return out
 
 
+CHAR_DIR = Path(__file__).parent / "assets" / "characters"
+# 応援キャラ（透過PNG）。トピック見出しは順番に回してにぎやかに。
+CHAR_ROTATE = ["char_pencil_sm.png", "manabi_think_sm.png", "char_neko_sm.png",
+               "char_owl_sm.png", "manabi_ok_sm.png", "manabi_point_sm.png"]
+
+
+def char_img(name: str, height_mm: float, cls: str = "wb-char") -> str:
+    """マスコットを高さ指定で貼る（無ければ空文字）。レイアウトを崩さないよう flex:none。"""
+    p = CHAR_DIR / name
+    return f'<img class="{cls}" style="height:{height_mm}mm" src="{p.as_uri()}">' if p.exists() else ""
+
+
 def build_qr_box(topic_name: str, description_html: str) -> str:
     """QR即出題（LIFF）へのQR＋クリックリンクの案内ボックスを組み立てる。
     QRを読むと LIFF ページが開き、送信操作なしに問題がトークへ届く。"""
@@ -196,6 +208,7 @@ def build_qr_box(topic_name: str, description_html: str) -> str:
       <div>{description_html}</div>
       <div class="qr-link">PDFで見ている人はこちら → <a href="{qr_url}" target="_blank" rel="noopener">LINEで問題を解く</a></div>
     </div>
+    {char_img("manabi_point_sm.png", 15, "wb-char qr-mascot")}
   </div>
 """
 
@@ -225,6 +238,7 @@ def build_book(folder: str) -> str:
     <h1>{esc(spec['title'])}　<span class="cover-sub">{esc(spec['subtitle'])}</span></h1>
     <div class="cover-note">まとめて復習ワーク（要点まとめ・一問一答・実戦問題）</div>
   </div>
+  {char_img("char_manabi_sm.png", 17, "wb-char cover-mascot")}
   <div class="name-box">名前<span></span></div>
 </header>""")
 
@@ -262,11 +276,12 @@ def build_book(folder: str) -> str:
 
         qa_rows = []
         for i, card in enumerate(cards, 1):
-            w = blank_width(card["front"], per=7.0, pad=10.0, lo=30.0, hi=75.0)
+            # 解答欄の下線は全問一律幅（.qa-ans の CSS 固定幅）。答えの長さで
+            # 変えると右揃えの左端がガタつくため、幅は統一して左端をそろえる。
             qa_rows.append(f"""
       <div class="qa-row">
         <div class="qa-q"><span class="chk"></span><span class="qa-no">({i})</span>{esc(card['back'])}</div>
-        <div class="qa-ans" style="width:{w}mm"></div>
+        <div class="qa-ans"></div>
       </div>""")
 
         written = spec.get("written", {}).get(tid, [])
@@ -366,7 +381,8 @@ def build_book(folder: str) -> str:
 <section class="topic">
   <h2 class="topic-band"><span class="topic-no">{t_i}</span>
     <span class="topic-name">{esc(topic['name'])}</span>
-    <span class="topic-sub">{esc(topic['subtitle'])}</span></h2>
+    <span class="topic-sub">{esc(topic['subtitle'])}</span>
+    {char_img(CHAR_ROTATE[(t_i - 1) % len(CHAR_ROTATE)], 11, "wb-char topic-mascot")}</h2>
 {qr_html}
   <h3 class="sec-band"><span class="sec-tag">A　要点まとめ</span>（　）にあてはまる語句を答えよう</h3>
   <div class="summary">{summary_html}</div>
@@ -422,8 +438,14 @@ def build_book(folder: str) -> str:
         if lines:
             credits_html = "<div class='credits'>画像出典: " + "　".join(lines) + "</div>"
 
+    # 章末のねぎらい：解答ページ先頭の右上に「絶対配置」で重ねる＝本文を押し出さない
+    otsukare = f"""
+  <div class="otsukare">{char_img("manabi_banzai_sm.png", 15)}
+    <span class="ot-bubble">おつかれさま！<br>よくがんばったね🎉</span></div>"""
+
     body.append(f"""
 <section class="answers">
+  {otsukare}
   <h2 class="ans-band">解答</h2>
   {''.join(ans_html)}
   {credits_html}
@@ -474,11 +496,36 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   /* ---- トピック帯 ---- */
   .topic { page-break-before: always; }
   .topic-band { display: flex; align-items: baseline; gap: 3mm; background: #fef3c7;
-                border-left: 5mm solid #b45309; padding: 1.6mm 3mm; font-size: 13pt; }
+                border-left: 5mm solid #b45309; padding: 1.6mm 15mm 1.6mm 3mm; font-size: 13pt;
+                position: relative; }
   .topic-no { background: #b45309; color: #fff; border-radius: 50%; width: 7mm; height: 7mm;
               display: inline-flex; align-items: center; justify-content: center;
               font-size: 11pt; align-self: center; flex: none; }
   .topic-sub { font-size: 9.5pt; font-weight: normal; color: #78716c; margin-left: auto; }
+
+  /* ---- 応援マスコット（透過PNG・レイアウト非干渉） ---- */
+  .wb-char { flex: none; object-fit: contain; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cover-mascot { align-self: center; margin: 0 0 0 2mm; }
+  /* トピック見出しのキャラは絶対配置＝行の高さを変えず、ページ数に影響しない */
+  .topic-mascot { position: absolute; right: 3mm; top: 50%; transform: translateY(-50%); }
+  .qr-mascot { align-self: flex-end; margin-left: auto; }
+  /* 吹き出し（セリフ） */
+  .sp-bubble { position: relative; display: inline-block; background: #fffbeb; border: 1px solid #f0b558;
+               border-radius: 3mm; padding: 1mm 3mm; font-size: 8.5pt; font-weight: bold; color: #92400e;
+               white-space: nowrap; }
+  .sp-bubble.sp-taill::before { content: ""; position: absolute; left: -2mm; top: 50%; transform: translateY(-50%);
+               border: 1mm solid transparent; border-right-color: #f0b558; }
+  .sp-bubble.sp-tailr::after { content: ""; position: absolute; right: -2mm; top: 50%; transform: translateY(-50%);
+               border: 1mm solid transparent; border-left-color: #f0b558; }
+  .cover-cheer { display: flex; align-items: center; gap: 1.5mm; }
+  /* 章末「おつかれさま」：解答ページ右上に絶対配置で重ねる＝本文を1mmも押し出さない */
+  .otsukare { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 1.5mm; }
+  .otsukare .wb-char { height: 15mm; }
+  .ot-bubble { position: relative; background: #fffbeb; border: 1.5px solid #f0b558; border-radius: 3mm;
+               padding: 1mm 3mm; font-size: 9pt; font-weight: bold; color: #b45309; line-height: 1.3;
+               order: -1; }
+  .ot-bubble::after { content: ""; position: absolute; right: -2mm; top: 50%; transform: translateY(-50%);
+               border: 1mm solid transparent; border-left-color: #f0b558; }
 
   /* ---- 要点まとめ ---- */
   .summary { border: 1.5px solid #a8a29e; border-radius: 2mm; padding: 2.5mm 4mm;
@@ -494,7 +541,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .chk { display: inline-block; width: 3.2mm; height: 3.2mm; border: 1.2px solid #57534e;
          margin-right: 2mm; vertical-align: 0; }
   .qa-no { font-weight: bold; margin-right: 1.5mm; }
-  .qa-ans { flex: none; border-bottom: 1px solid #44403c; height: 6mm; }
+  .qa-ans { flex: none; width: 60mm; border-bottom: 1px solid #44403c; height: 6mm; }
 
   /* ---- 実戦4択 ---- */
   .quiz-row { display: flex; align-items: flex-start; gap: 2mm; padding: 1.2mm 0; }
@@ -545,7 +592,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   .sec-band { break-after: avoid; }
 
   /* ---- 解答 ---- */
-  .answers { page-break-before: always; }
+  .answers { page-break-before: always; position: relative; }
   .ans-band { background: #44403c; color: #fff; text-align: center; padding: 1mm 0;
               border-radius: 1.5mm; margin-bottom: 3mm; font-size: 13pt; }
   .answers { font-size: 9pt; line-height: 1.9; }

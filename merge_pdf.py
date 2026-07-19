@@ -13,6 +13,7 @@ from pathlib import Path
 import fitz
 
 from watermark_pdf import book_meta
+from add_page_numbers import number
 
 BASE = Path(__file__).parent
 OUT_DIR = BASE / "output"
@@ -58,6 +59,7 @@ def main() -> None:
         toc.append([1, name, start + 1])
 
     merged.set_toc(toc)
+    number(merged)  # 全体の通し番号（フッター中央）
     label = "歴史" if args.subject == "history" else "理科"
     out = OUT_DIR / f"_{label}_総合版.pdf"
     merged.save(out, garbage=4, deflate=True)

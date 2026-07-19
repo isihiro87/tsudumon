@@ -29,3 +29,12 @@ assets/_*-old.webp
 
 # 作業用一時データ
 tmp/
+
+# ブラウザ自動操作の使い捨てプロファイル
+.edge-*/
+
+# 出力・プレビュー・バックアップ・スクラッチ（再生成可能／git不要）
+covers/out/
+mascot-preview/
+assets/_backup_answers/
+scratch_*.log

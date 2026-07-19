@@ -63,6 +63,30 @@ python -X utf8 generate_history_workbook.py   # output/{章}.html を生成
   生徒の設定学年と冊子の単元の学年が違っても解ける
 - 実装詳細: `marutto-study/.steering/20260711-workbook-qr-line/`
 
+## 納品パッケージ（つづもん販売用）
+
+購入プランは 中1 / 中2 / 中3 / 3学年セット の4種。どのプランも同じ構成で納品する:
+
+```
+つづもん_{プラン}/
+├─ ★はじめにお読みください.pdf   … プラン別（make_intro_pdf.py が4種生成・目次は購入分のみ）
+├─ 1_問題集/                     … 3学年セットのみ 中1/中2/中3 サブフォルダ
+└─ 2_参考書/
+```
+
+```powershell
+# 素材更新時: はじめにPDFを4種再生成
+python -X utf8 make_intro_pdf.py        # HTML 4種 → Edge で PDF 化 → organize_output.py
+
+# 納品テンプレート（透かしなし）を output/00_納品用/ に組み立て
+python -X utf8 build_delivery.py
+
+# 注文が入ったら: 購入者名の透かし入り + zip を dist/ に作成
+python -X utf8 build_delivery.py --plan 中1 --name "山田太郎" --order ORD-12345 --zip
+```
+
+※ `make_ref_intro_pdf.py`（参考書別冊のはじめに）は統合により非推奨。
+
 ## 注意
 
 - 問題文・解答は **自作の marutto-study JSON データ由来**。市販ワーク PDF からは

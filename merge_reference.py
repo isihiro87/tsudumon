@@ -11,6 +11,8 @@ from pathlib import Path
 
 import fitz
 
+from add_page_numbers import number
+
 BASE = Path(__file__).parent
 OUT = BASE / "output"
 REF = BASE / "reference"
@@ -40,6 +42,7 @@ def main() -> None:
             merged.insert_pdf(d)
         toc.append([1, title, start + 1])
     merged.set_toc(toc)
+    number(merged)  # 全体の通し番号（フッター中央）
 
     out = OUT / "_歴史参考書_総合版.pdf"
     merged.save(out, garbage=4, deflate=True)
