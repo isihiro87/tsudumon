@@ -315,7 +315,12 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .era-page { flex:0 0 100%; scroll-snap-align:start; position:relative;
               padding:10px 8px 16px; background-size:cover; background-repeat:no-repeat; }
   /* ページ送りのドット */
-  .era-dots { display:flex; gap:8px; justify-content:center; margin:9px 0 2px; }
+  .era-nav { display:flex; align-items:center; justify-content:center; gap:12px; margin:9px 0 2px; }
+  .era-dots { display:flex; gap:8px; justify-content:center; }
+  .era-arrow { flex:none; border:2px solid #d8bd91; background:#fffaf0; color:var(--brand);
+               font-weight:bold; border-radius:16px; padding:5px 14px; font-size:12.5px;
+               cursor:pointer; font-family:inherit; box-shadow:0 2px 0 #d8bd91; white-space:nowrap; }
+  .era-arrow:disabled { opacity:.3; box-shadow:none; cursor:default; }
   .era-dot { width:9px; height:9px; border-radius:50%; background:#d8bd91; border:none; padding:0;
              cursor:pointer; transition:width .2s, background-color .2s; }
   .era-dot.on { background:var(--brand); width:22px; border-radius:5px; }
@@ -491,7 +496,11 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   <div class="board" id="board">
     <div class="era-track" id="eraTrack"></div>
-    <div class="era-dots" id="eraDots"></div>
+    <div class="era-nav" id="eraNav">
+      <button class="era-arrow" id="eraPrev" type="button">‹ 前へ</button>
+      <div class="era-dots" id="eraDots"></div>
+      <button class="era-arrow" id="eraNext" type="button">次へ ›</button>
+    </div>
     <div id="cells">__CELLS__</div>
     <div class="goal">
       <div class="g-box">
@@ -645,7 +654,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
       dots.appendChild(dot);
       page++;
     });
-    dots.style.display = page > 1 ? '' : 'none';
+    document.getElementById('eraNav').style.display = page > 1 ? '' : 'none';
+    updateEraNav();
 
     [].forEach.call(document.querySelectorAll('.book'), function (b) {
       b.style.display = (b.dataset.grade === cur) ? '' : 'none';
@@ -656,24 +666,41 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     track.scrollLeft = 0;
   }
 
-  // ドットとスワイプの同期（トラックは一度きり設定）
+  // いまのページ番号と、ドット・前へ/次へボタンの状態を更新
+  function updateEraNav() {
+    var track = document.getElementById('eraTrack');
+    var dots = document.getElementById('eraDots');
+    if (!track || !track.clientWidth) return;
+    var pages = dots.children.length;
+    var idx = Math.round(track.scrollLeft / track.clientWidth);
+    [].forEach.call(dots.children, function (d, i) { d.classList.toggle('on', i === idx); });
+    document.getElementById('eraPrev').disabled = idx <= 0;
+    document.getElementById('eraNext').disabled = idx >= pages - 1;
+  }
+  // ドット・スワイプ・前へ/次へボタンの同期（一度きり設定）
   (function () {
     var track = document.getElementById('eraTrack');
     var dots = document.getElementById('eraDots');
     if (!track) return;
+    function goPage(idx) {
+      var pages = dots.children.length;
+      idx = Math.max(0, Math.min(pages - 1, idx));
+      track.scrollTo({ left: idx * track.clientWidth, behavior: 'smooth' });
+    }
     var timer = null;
     track.addEventListener('scroll', function () {
       if (timer) return;
-      timer = requestAnimationFrame(function () {
-        timer = null;
-        if (!track.clientWidth) return;
-        var idx = Math.round(track.scrollLeft / track.clientWidth);
-        [].forEach.call(dots.children, function (d, i) { d.classList.toggle('on', i === idx); });
-      });
+      timer = requestAnimationFrame(function () { timer = null; updateEraNav(); });
     }, { passive: true });
     dots.addEventListener('click', function (e) {
       var d = e.target.closest && e.target.closest('.era-dot');
-      if (d) track.scrollTo({ left: (+d.dataset.page) * track.clientWidth, behavior: 'smooth' });
+      if (d) goPage(+d.dataset.page);
+    });
+    document.getElementById('eraPrev').addEventListener('click', function () {
+      goPage(Math.round(track.scrollLeft / track.clientWidth) - 1);
+    });
+    document.getElementById('eraNext').addEventListener('click', function () {
+      goPage(Math.round(track.scrollLeft / track.clientWidth) + 1);
     });
   })();
 
