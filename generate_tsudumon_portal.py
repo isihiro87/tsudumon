@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 """
-つづもん「本一覧トップ（歴史すごろく）」を生成する。
+つづもん「本一覧トップ（歴史クエスト）」を生成する。
 
-つづもん全体（歴史 中1〜中3・全19章の全単元）を1本の道でつなぐ すごろく。
+歴史 中1〜中3・全19章の全単元を、**学年ごとに独立した冒険マップ**として並べる。
 各マス＝1単元。localStorage（各章 tzmwb-{NN} / tzmref-{NN}）を読んで、
 クリア種別で見た目が変わる:
   - 未着手
@@ -12,14 +12,26 @@
   - 全問正解（全問に回答かつ全問 r===1）
 
 マスをタップすると、その単元の問題集ページ（wb/{NN}/#t{wbView}）へ。
-各本の問題集/参考書ホームからは「🗺 すごろく（本一覧）」でここへ戻れる。
+各本の問題集/参考書ホームからは「🗺 歴史クエスト（本一覧）」でここへ戻れる。
+
+■ 学年（2026-07-20）
+  マップも本の一覧も「いま選んでいる学年」ぶんだけを表示する。
+  どの学年を持っているかは **配布URLのパラメータ** で渡す:
+
+      index.html?g=1,2      … 中1・中2 を登録
+      index.html?g=中1      … 中1 だけ
+      index.html?g=all      … 全学年
+
+  受け取った時点で localStorage['tzmgrades'] に保存するので、2回目以降は
+  パラメータなしのURLでも同じ学年が出る。**2学年以上のときだけ**上部に
+  学年タブが出て切り替えられる（1学年ならタブは出さない）。
+  パラメータも保存もない場合は全学年（体験・確認用）。
 
 ■ 見た目（2026-07-20 リニューアル）
-  中学生が「もう1マス進めたい」と思える冒険マップ調。時代ごとのエリア（原始・古代／
-  中世／近世／近代／現代）に分け、看板・道・キャラの吹き出し・今日のミッションを置く。
-  イラストは Codex（image-2）で作る想定で、画像が無くても CSS だけで成立し、
-  画像が置かれたら自動で差し変わる（img は onerror で消える＝崩れない）。
-  画像の仕様は CODEX_BRIEF_PORTAL.md を参照。
+  古地図・羊皮紙調の縦長カンプ `assets/quest/quest-top-mobile.png` を再現。
+  イラストは Codex（image_generation）で作る想定で、画像が無くても CSS だけで
+  成立し、画像が置かれたら自動で差し変わる（img は onerror で消える＝崩れない）。
+  画像の仕様は CODEX_BRIEF_QUEST_MOBILE.md を参照。
 
 出力:
   python -X utf8 generate_tsudumon_portal.py            # output/web/index.html
@@ -40,10 +52,13 @@ BASE = Path(__file__).parent
 REF_DIR = BASE / "reference"
 CHAR_DIR = BASE / "assets" / "characters"
 PORTAL_IMG_DIR = BASE / "assets" / "portal"     # Codex 製イラストの置き場（無くてよい）
+QUEST_IMG_DIR = BASE / "assets" / "quest"       # 同上（歴史クエスト用）
 OUT_FILE = BASE / "output" / "web" / "index.html"
 DEPLOY_FILE = BASE.parent / "marutto-study" / "public" / "tsudumon" / "index.html"
 
-# 時代エリア（章番号 → エリア）。すごろくをこの区切りで章立てして、看板とごほうびを置く。
+GRADES = ["中1", "中2", "中3"]
+
+# 時代エリア（章番号 → エリア）。マップをこの区切りで島に分けて、看板を立てる。
 ERAS = [
     {"key": "ancient",  "name": "原始・古代",   "chapters": ["01", "02", "03", "04"],
      "emoji": "🏺", "hint": "人類のはじまりから、天皇中心の国づくりまで"},
@@ -105,7 +120,7 @@ def chapter_units(folder: str) -> list[dict]:
 
 
 def build_manifest() -> list[dict]:
-    """[{grade, ch, vol, title, units:[...]}] を章順で返す（歴史のみ）。"""
+    """[{grade, ch, no, vol, title, units:[...]}] を章順で返す（歴史のみ）。"""
     out = []
     hist = sorted(f for f in BOOKS if not f.startswith("science"))
     for folder in hist:
@@ -114,6 +129,7 @@ def build_manifest() -> list[dict]:
         out.append({
             "grade": grade_of(ch_no),
             "ch": folder[:2],
+            "no": ch_no,          # 「冒険N」の N（全学年通し）
             "vol": spec.get("volume", ""),
             "title": spec.get("title", ""),
             "units": chapter_units(folder),
@@ -130,27 +146,31 @@ def img_tag(name: str, cls: str, alt: str = "") -> str:
 def build_html() -> str:
     manifest = build_manifest()
     total_units = sum(len(c["units"]) for c in manifest)
+    # 学年ごとのマス数（進捗の分母は「その学年の中で」数える）
+    grade_total = {g: sum(len(c["units"]) for c in manifest if c["grade"] == g) for g in GRADES}
 
-    # マス（セル）を章順に一列に。JS がエリアごとに配置し、状態で着色する。
+    # マス（セル）。JS が「いま選んでいる学年」ぶんだけを島に並べる。
+    # data-n は全学年通し、data-gn は学年内の通し番号（マスに出る数字）。
     cells = []
     idx = 0
+    gidx = {g: 0 for g in GRADES}
     for ch in manifest:
         for u in ch["units"]:
             idx += 1
+            gidx[ch["grade"]] += 1
             cells.append(
                 f'<button class="cell" type="button"'
                 f' data-ch="{ch["ch"]}" data-tid="{esc(u["tid"])}"'
                 f' data-wb="{u["wbView"]}" data-ref="{u["refView"] if u["refView"] else ""}"'
-                f' data-nq="{u["nQ"]}" data-n="{idx}"'
+                f' data-nq="{u["nQ"]}" data-n="{idx}" data-gn="{gidx[ch["grade"]]}"'
                 f' data-grade="{ch["grade"]}" data-era="{ERA_OF[ch["ch"]]}"'
                 f' data-vol="{esc(ch["vol"])}"'
                 f' title="{esc(ch["vol"])} {esc(u["name"])}">'
-                f'<span class="tok"><span class="tok-no">{idx}</span>'
+                f'<span class="tok"><span class="tok-no">{gidx[ch["grade"]]}</span>'
                 f'<span class="tok-badge"></span></span>'
-                f'<span class="tok-name">{esc(u["name"])}</span>'
                 f'</button>')
 
-    # 本の一覧（学年タブつき）。単元行から問題集/参考書の該当ページへ直行できる。
+    # 単元一覧。学年で絞り込み、章の帯＋単元行をそのまま並べる（開閉なし＝カンプと同じ密度）。
     books = []
     for c in manifest:
         rows = "".join(
@@ -159,19 +179,19 @@ def build_html() -> str:
             f'<span class="u-no">{i}</span>'
             f'<span class="u-name">{esc(u["name"])}</span>'
             f'<span class="u-state"></span>'
-            f'<a class="u-btn wb" href="wb/{c["ch"]}/index.html#t{u["wbView"]}">✏️ 問題</a>'
-            + (f'<a class="u-btn ref" href="ref/{c["ch"]}/index.html#t{u["refView"]}">📖 参考書</a>'
+            f'<a class="u-btn wb" href="wb/{c["ch"]}/index.html#t{u["wbView"]}">問題</a>'
+            + (f'<a class="u-btn ref" href="ref/{c["ch"]}/index.html#t{u["refView"]}">参考書</a>'
                if u["refView"] else '<span class="u-btn ref off">—</span>')
             + '</li>'
             for i, u in enumerate(c["units"], 1))
         books.append(
             f'<section class="book" data-grade="{c["grade"]}">'
-            f'<button class="book-h" type="button">'
-            f'<span class="bk-grade">{c["grade"]}</span>'
-            f'<span class="bk-vol">{esc(c["vol"])}</span>'
-            f'<span class="bk-title">{esc(c["title"])}</span>'
+            f'<div class="ch-band">'
+            f'<span class="cb-flag">🚩</span>'
+            f'<span class="cb-no">冒険 {c["no"]}</span>'
+            f'<span class="cb-title">{esc(c["title"])}</span>'
             f'<span class="bk-prog" data-ch="{c["ch"]}"></span>'
-            f'<span class="bk-arrow">›</span></button>'
+            f'</div>'
             f'<ul class="u-list">{rows}</ul></section>')
 
     manifest_min = [{"ch": c["ch"], "grade": c["grade"], "vol": c["vol"], "title": c["title"],
@@ -182,133 +202,166 @@ def build_html() -> str:
             .replace("__CELLS__", "".join(cells))
             .replace("__BOOKS__", "".join(books))
             .replace("__ERAS__", json.dumps(ERAS, ensure_ascii=False))
-            .replace("__HERO__", img_tag("portal-hero.webp", "hero-img", "つづもん歴史すごろく"))
-            .replace("__MASCOT__", img_tag("char_manabi_sm.png", "mascot", ""))
-            .replace("__OWL__", img_tag("char_owl_sm.png", "owl", ""))
-            .replace("__GOAL_IMG__", img_tag("portal-goal.webp", "goal-img", "ゴールの宝箱"))
+            .replace("__GRADES__", json.dumps(GRADES, ensure_ascii=False))
+            .replace("__GRADE_TOTAL__", json.dumps(grade_total, ensure_ascii=False))
+            .replace("__TITLE__", img_tag("quest-title.webp", "title-img", "歴史クエスト"))
+            .replace("__CHEST__", img_tag("quest-chest.webp", "g-chest", ""))
+            .replace("__EXPLORER__", img_tag("quest-explorer.webp", "ch-explorer", ""))
+            .replace("__BIRD__", img_tag("quest-bird.webp", "ch-bird", ""))
+            .replace("__MASCOT__", img_tag("char_manabi_sm.png", "ch-mascot", ""))
             .replace("__MANIFEST__", json.dumps(manifest_min, ensure_ascii=False)))
 
 
 TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>つづもん 歴史すごろく｜本一覧</title>
+<title>つづもん 歴史クエスト｜本一覧</title>
 <style>
-  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --cream:#fffdf8; --line:#fde68a;
-          --paper:#fffaf0; --ink:#1c1917;
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --line:#e8d3a8;
+          --paper:#fffaf0; --parch:#f5e6c8; --wood:#8b5a2b; --ink:#3b2b16;
           --s-ref:#60a5fa; --s-some:#fbbf24; --s-all:#4ade80; --s-perfect:#f59e0b;
-          --era-ancient:#f6e3c5; --era-medieval:#dfeedd; --era-earlymod:#e6e2f6;
-          --era-modern:#dcecf7; --era-current:#fbe4e6; }
+          --era-ancient:#eadfbe; --era-medieval:#dfead9; --era-earlymod:#e3ddd0;
+          --era-modern:#dfd9e6; --era-current:#e6dcd2; }
   * { margin:0; padding:0; box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
-  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
-         color:var(--ink); padding-bottom:40px;
-         background:
-           radial-gradient(circle at 12% 8%, rgba(255,255,255,.85) 0 22%, transparent 22%),
-           radial-gradient(circle at 88% 4%, rgba(255,255,255,.7) 0 16%, transparent 16%),
-           linear-gradient(#eaf6ff 0 160px, #f4fbe9 160px 420px, #fffaf0 420px); }
-  .wrap { max-width:860px; margin:0 auto; padding:0 14px; }
+  body { font-family:"Kiwi Maru","Zen Maru Gothic","Hiragino Maru Gothic ProN",
+                     "Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:var(--ink);
+         padding-bottom:calc(40px + env(safe-area-inset-bottom));
+         background:#efe0c0;
+         /* 羊皮紙テクスチャ（img/quest-bg.webp）。無ければ下のグラデーションだけが見える */
+         background-image:
+           url("img/quest-bg.webp"),
+           radial-gradient(circle at 18% 12%, rgba(255,255,255,.55) 0 26%, transparent 26%),
+           radial-gradient(circle at 82% 68%, rgba(255,255,255,.4) 0 22%, transparent 22%),
+           linear-gradient(160deg,#f7ead0,#eddcb8 60%,#e6d2ab);
+         background-size:cover, auto, auto, auto;
+         background-position:top center;
+         background-attachment:fixed, scroll, scroll, scroll; }
+  .wrap { max-width:720px; margin:0 auto; padding:0 14px;
+          padding-top:calc(6px + env(safe-area-inset-top)); }
 
-  /* ───── ヒーロー（看板＋キャラ） ───── */
-  .hero { position:relative; max-width:860px; margin:0 auto; padding:14px 14px 0; }
-  .hero-in { position:relative; border-radius:22px; overflow:hidden;
-             background:linear-gradient(160deg,#7dd3fc,#bbf7d0 55%,#fef3c7);
-             box-shadow:0 8px 22px rgba(120,80,20,.18); }
-  .hero-img { display:block; width:100%; height:auto; }
-  /* 画像が無いときのための CSS 版タイトル。画像があれば .hero-in.has-img で隠す */
-  /* 右下にキャラが立つので、その幅ぶん本文を左へ寄せる（文字がキャラに隠れない） */
-  .hero-txt { position:relative; padding:26px 96px 22px 18px; text-align:center; }
-  .hero-in.has-img .hero-txt { position:absolute; inset:auto 0 0 0; padding:12px 14px 14px;
-                               background:linear-gradient(transparent,rgba(255,253,248,.92) 55%); }
-  .hero-tag { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
-              padding:3px 14px; border-radius:20px; font-size:12px;
-              box-shadow:0 2px 0 #7c2d12; }
-  .hero-h1 { font-size:34px; color:var(--deep); margin-top:8px; letter-spacing:.02em;
-             text-shadow:2px 2px 0 #fff, 4px 4px 0 rgba(180,83,9,.18); }
-  .hero-sub { color:#7c4a12; font-size:13.5px; font-weight:bold; margin-top:6px; }
-  .mascot { position:absolute; right:6px; bottom:0; width:104px; height:auto; z-index:2;
-            filter:drop-shadow(0 3px 4px rgba(0,0,0,.2)); pointer-events:none; }
+  /* ───── ヘッダー ───── */
+  .head { position:relative; text-align:center; padding:8px 0 4px; }
+  .head-h1 { font-size:34px; font-weight:900; color:#fcd34d; letter-spacing:.03em;
+             -webkit-text-stroke:5px #6b3b12; paint-order:stroke fill;
+             text-shadow:0 3px 0 rgba(107,59,18,.45); }
+  /* ロゴ画像（img/quest-title.webp）が読めたら文字版と差し替える */
+  .title-img { display:none; width:min(78%,340px); height:auto; margin:0 auto; }
+  .head.has-logo .title-img { display:block; }
+  .head.has-logo .head-h1 { position:absolute; width:1px; height:1px; overflow:hidden;
+                            clip-path:inset(50%); white-space:nowrap; }
+  .head-sub { display:inline-block; margin-top:2px; background:linear-gradient(#5c3a17,#40260d);
+              color:#fdf3d9; font-size:13px; font-weight:bold; padding:5px 20px;
+              border-radius:6px; box-shadow:0 3px 0 rgba(60,34,10,.5); }
+  .ch-explorer { position:absolute; left:0; bottom:-2px; width:64px; height:auto; pointer-events:none; }
+  .ch-bird { position:absolute; right:0; bottom:-2px; width:64px; height:auto; pointer-events:none; }
 
-  /* ───── 進み具合パネル ───── */
-  .panel { background:var(--paper); border:2px solid #f0dfb8; border-radius:18px;
-           padding:14px 16px; box-shadow:0 4px 0 #f0e2c3; margin-top:14px; }
-  .p-h { font-size:13px; font-weight:bold; color:var(--deep); display:flex; align-items:center; gap:6px; }
-  .big { text-align:center; margin:6px 0 8px; font-weight:bold; color:var(--deep); }
-  .big b { font-size:38px; color:var(--brand); line-height:1; }
+  /* ───── 学年タブ（2学年以上のときだけ出る） ───── */
+  .gtabs { display:none; gap:8px; justify-content:center; margin:6px 0 0; }
+  .gtabs.show { display:flex; }
+  .gtab { border:2px solid #c9a978; background:#fffaf0; color:var(--brand); font-weight:bold;
+          border-radius:22px; padding:7px 22px; font-size:14px; cursor:pointer; font-family:inherit;
+          box-shadow:0 3px 0 #d8bd91; }
+  .gtab.on { background:linear-gradient(#b45309,#8a3f07); color:#fff8ec; border-color:#7c2d12;
+             box-shadow:0 3px 0 #5c2508; }
+
+  /* ───── 巻物パネル ───── */
+  .panel { background:linear-gradient(#fffdf6,#f8eed9); border:2px solid #ddc39a;
+           border-radius:16px; padding:10px 14px 11px; margin-top:10px;
+           box-shadow:0 4px 0 #ddc39a, 0 6px 14px rgba(120,80,20,.14); }
+  .p-h { font-size:12.5px; font-weight:bold; color:var(--deep); text-align:center; }
+  .big { text-align:center; margin:2px 0 7px; font-weight:bold; color:var(--deep); }
+  .big b { font-size:30px; color:var(--brand); line-height:1; }
   .big .sm { font-size:14px; }
-  .ov-bar { height:16px; background:#f1e6cf; border-radius:10px; overflow:hidden;
-            border:1.5px solid #ecd9ab; position:relative; }
+  .ov-bar { height:18px; background:#f1e6cf; border-radius:10px; overflow:hidden;
+            border:2px solid #ddc39a; position:relative; }
   .ov-fill { height:100%; width:0; border-radius:8px; transition:width .5s cubic-bezier(.22,.72,.32,1);
-             background:linear-gradient(90deg,#34d399,#fbbf24 70%,#f59e0b); }
-  .ov-flag { position:absolute; right:4px; top:-3px; font-size:14px; }
-  .counts { display:flex; gap:6px; margin-top:10px; }
-  .cnt { flex:1; text-align:center; background:#fff; border:1.5px solid #f0e2c3; border-radius:12px;
-         padding:6px 2px 5px; }
-  .cnt b { display:block; font-size:19px; color:var(--deep); line-height:1.2; }
-  .cnt span { font-size:10px; color:#8a7b62; }
+             background:linear-gradient(90deg,#fbbf24,#f59e0b 70%,#d97706); }
 
-  /* 凡例 */
-  .legend { display:flex; flex-wrap:wrap; gap:6px 12px; justify-content:center;
-            margin:10px auto 0; font-size:11.5px; color:#6b6154; }
-  .lg { display:inline-flex; align-items:center; gap:4px; }
-  .dot { width:13px; height:13px; border-radius:50%; border:2px solid rgba(0,0,0,.1); background:#fff; }
+  /* 凡例（2行に折り返す） */
+  .legend { display:flex; flex-wrap:wrap; gap:8px 14px; justify-content:center;
+            margin-top:10px; font-size:11.5px; color:#6b5a3c; }
+  .lg { display:inline-flex; align-items:center; gap:5px; }
+  .dot { width:14px; height:14px; border-radius:50%; border:2px solid rgba(0,0,0,.12); background:#fff; }
   .dot.d-ref { background:var(--s-ref); } .dot.d-some { background:var(--s-some); }
   .dot.d-all { background:var(--s-all); } .dot.d-perfect { background:var(--s-perfect); }
 
   /* ───── 今日のミッション ───── */
-  .mission { display:flex; align-items:center; gap:12px; margin-top:12px;
-             background:linear-gradient(#fff7ed,#fff);
-             border:2px dashed var(--amber); border-radius:18px; padding:12px 14px; }
-  .mission .owl { width:52px; height:auto; flex:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
+  .mission { display:flex; align-items:center; gap:10px; margin-top:10px;
+             background:linear-gradient(#fffdf6,#fdf3e0);
+             border:2px dashed var(--amber); border-radius:14px; padding:8px 12px; }
+  .ch-mascot { width:42px; height:auto; flex:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
   .ms-body { flex:1; min-width:0; }
   .ms-h { font-size:12px; font-weight:bold; color:#b45309; }
   .ms-txt { font-size:14px; font-weight:bold; color:var(--deep); margin-top:2px; }
   .ms-steps { display:flex; gap:6px; margin-top:7px; }
-  .ms-step { width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid #f0dfb8;
+  .ms-step { width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid #ddc39a;
              display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
   .ms-step.on { background:var(--amber); border-color:var(--brand); color:#fff; }
 
-  /* ───── すごろく盤 ───── */
-  .board { margin-top:18px; }
-  .era { position:relative; border-radius:22px; padding:14px 12px 16px; margin-bottom:16px;
-         border:2px solid rgba(124,45,18,.10); }
-  .era.e-ancient  { background:linear-gradient(var(--era-ancient),#fffdf6); }
-  .era.e-medieval { background:linear-gradient(var(--era-medieval),#fffdf6); }
-  .era.e-earlymod { background:linear-gradient(var(--era-earlymod),#fffdf6); }
-  .era.e-modern   { background:linear-gradient(var(--era-modern),#fffdf6); }
-  .era.e-current  { background:linear-gradient(var(--era-current),#fffdf6); }
-  /* エリア看板（木の札風） */
-  .sign { display:inline-flex; align-items:center; gap:8px; background:linear-gradient(#c89a5b,#a97b3f);
-          color:#fff8ec; font-weight:bold; border-radius:12px; padding:6px 16px;
-          box-shadow:0 4px 0 #7d5a2b, 0 6px 10px rgba(90,60,20,.25); font-size:15px;
+  /* ───── マップ（島を縦に積む） ───── */
+  .board { margin-top:12px; }
+  /* いま表示していない学年のマスの置き場（画面には出さない） */
+  #cells { display:none; }
+  .era { position:relative; border-radius:20px; padding:10px 9px 12px; margin-bottom:12px;
+         border:3px solid rgba(124,45,18,.14);
+         box-shadow:inset 0 0 0 3px rgba(255,255,255,.45), 0 6px 16px rgba(120,80,20,.14); }
+  /* 島のイラスト（img/quest-island-*.png）を敷く。無ければ色だけになる。
+     マスと文字が読めるよう、白のベールを1枚かぶせている。 */
+  .era { background-repeat:no-repeat; background-position:center; background-size:cover; }
+  .era.e-ancient  { background-color:var(--era-ancient);
+                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-ancient.webp"); }
+  .era.e-medieval { background-color:var(--era-medieval);
+                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-medieval.webp"); }
+  .era.e-earlymod { background-color:var(--era-earlymod);
+                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-earlymod.webp"); }
+  .era.e-modern   { background-color:var(--era-modern);
+                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-modern.webp"); }
+  .era.e-current  { background-color:var(--era-current);
+                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-current.webp"); }
+  /* 島と島をつなぐ点線（次の島へ渡る道） */
+  .era::after { content:"⛵"; position:absolute; left:50%; bottom:-15px; transform:translateX(-50%);
+                font-size:15px; opacity:.75; }
+  .era:last-of-type::after { content:none; }
+  /* 時代の木の看板 */
+  .sign { display:inline-flex; align-items:center; gap:7px; background:linear-gradient(#c89a5b,#a97b3f);
+          color:#fff8ec; font-weight:bold; border-radius:9px; padding:4px 13px;
+          box-shadow:0 3px 0 #7d5a2b, 0 5px 8px rgba(90,60,20,.25); font-size:13.5px;
           border:2px solid #8a6431; }
-  .sign .s-emoji { font-size:17px; }
-  .sign .s-range { font-size:11px; background:rgba(255,255,255,.25); border-radius:8px; padding:1px 7px; }
-  .era-hint { font-size:11.5px; color:#7c5a2a; margin:7px 2px 10px; font-weight:bold; }
+  .sign .s-emoji { font-size:15px; }
+  .sign .s-range { font-size:10.5px; background:rgba(255,255,255,.25); border-radius:8px; padding:1px 6px; }
+  .era-hint { font-size:11px; color:#7c5a2a; margin:5px 2px 2px; font-weight:bold; }
 
-  /* 1行目は「つぎはここ！」の旗が見出しに重ならないよう上に余白 */
-  .row { display:flex; gap:8px; align-items:flex-start; position:relative; margin:18px 0 12px; }
+  /* マスは1行8個。単元名はマップには出さず、下の「単元一覧」で見せる。 */
+  .row { display:flex; gap:4px; align-items:flex-start; position:relative; margin:12px 0 6px; }
   .row.rev { flex-direction:row-reverse; }
   /* マスをつなぐ点線の道。--span＝実際にマスがある幅の割合（端数の行で線が余らない） */
-  .row::before { content:""; position:absolute; left:6%; top:31px; height:6px; z-index:0;
-                 width:calc(var(--span,100%) - 12%);
-                 background:repeating-linear-gradient(90deg,#e8d6ae 0 12px, transparent 12px 22px);
+  .row::before { content:""; position:absolute; left:5%; top:16px; height:5px; z-index:0;
+                 width:calc(var(--span,100%) - 10%);
+                 background:repeating-linear-gradient(90deg,#e0cb9c 0 9px, transparent 9px 17px);
                  border-radius:3px; }
-  .row.rev::before { left:auto; right:6%; }
-  .cell { position:relative; z-index:1; flex:0 0 calc((100% - (var(--row,4) - 1) * 8px) / var(--row,4));
+  .row.rev::before { left:auto; right:5%; }
+  .cell { position:relative; z-index:1; flex:0 0 calc((100% - (var(--row,8) - 1) * 4px) / var(--row,8));
           min-width:0; border:none; background:none;
           cursor:pointer; font-family:inherit; padding:0; display:flex; flex-direction:column;
-          align-items:center; gap:4px; }
-  .tok { position:relative; width:56px; height:56px; border-radius:50%; background:#fff;
-         border:3px solid #e2cfa4; display:flex; flex-direction:column; align-items:center;
-         justify-content:center;
-         box-shadow:0 5px 0 #e2cfa4, 0 7px 10px rgba(120,80,20,.18);
+          align-items:center; }
+  .tok { position:relative; width:min(100%,38px); aspect-ratio:1; border-radius:50%; background:#fffdf6;
+         border:2.5px solid #e2cfa4; display:flex; align-items:center; justify-content:center;
+         box-shadow:0 3px 0 #e2cfa4, 0 5px 7px rgba(120,80,20,.18);
          transition:transform .12s, box-shadow .12s, background-color .2s, border-color .2s; }
-  .tok-no { font-weight:bold; font-size:17px; color:#8a7b62; line-height:1; }
-  .tok-badge { position:absolute; right:-4px; top:-6px; font-size:15px; line-height:1;
+  .tok-no { font-weight:bold; font-size:15px; color:#7a6a4d; line-height:1; }
+  .tok-badge { position:absolute; right:-3px; bottom:-3px; font-size:12px; line-height:1;
                filter:drop-shadow(0 1px 1px rgba(0,0,0,.2)); }
-  .tok-name { font-size:9.5px; color:#6b6154; line-height:1.25; text-align:center;
-              max-height:2.6em; overflow:hidden; }
+  /* バッジ画像（img/quest-badge-*.webp）が使えるときだけ絵文字と差し替える */
+  .has-badges .tok-badge { font-size:0; width:16px; height:16px;
+                           background:center/contain no-repeat; }
+  .has-badges .cell.s-ref     .tok-badge { background-image:url("img/quest-badge-ref.webp"); }
+  .has-badges .cell.s-some    .tok-badge { background-image:url("img/quest-badge-some.webp"); }
+  .has-badges .cell.s-all     .tok-badge { background-image:url("img/quest-badge-all.webp"); }
+  .has-badges .cell.s-perfect .tok-badge { background-image:url("img/quest-badge-perfect.webp"); }
+  /* 島のイラストの上に乗るので、白いにじみで文字を浮かせる */
+  .era-hint { text-shadow:0 0 4px #fffdf6, 0 0 6px #fffdf6; }
 
   .cell.s-ref  .tok { background:#eff6ff; border-color:var(--s-ref); box-shadow:0 5px 0 #93c5fd,0 7px 10px rgba(59,130,246,.22); }
   .cell.s-some .tok { background:#fffbeb; border-color:var(--s-some); box-shadow:0 5px 0 #f6d264,0 7px 10px rgba(245,158,11,.24); }
@@ -321,104 +374,102 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   @keyframes spin { to { transform:rotate(360deg); } }
 
   /* いま挑戦中のマス＝旗つきで光る */
-  .cell.current .tok { border-color:var(--brand); background:#fff;
+  .cell.current .tok { border-color:var(--brand); background:#fffdf6;
                        box-shadow:0 5px 0 var(--brand), 0 0 0 4px rgba(180,83,9,.18), 0 10px 14px rgba(180,83,9,.3);
                        animation:pulse 1.8s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-3px); } }
-  .cell.current::before { content:"つぎはここ！"; position:absolute; top:-17px; left:50%;
-                          transform:translateX(-50%); background:var(--brand); color:#fff;
-                          font-size:9.5px; font-weight:bold; padding:2px 8px; border-radius:9px;
-                          white-space:nowrap; box-shadow:0 2px 4px rgba(0,0,0,.2); z-index:3; }
-  .cell.here .tok::before { content:"🧑‍🎓"; position:absolute; top:-22px; left:50%;
-                            transform:translateX(-50%); font-size:21px;
+  /* いまいるマスの上に立つ探検者。1行8マスなので吹き出しは出さない */
+  .cell.here .tok::before { content:"🧑‍🎓"; position:absolute; top:-17px; left:50%;
+                            transform:translateX(-50%); font-size:16px;
                             filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
 
   @media (hover:hover) { .cell:hover .tok { transform:translateY(-3px); } }
   .cell:active .tok { transform:translateY(3px); box-shadow:0 2px 0 #e2cfa4,0 3px 5px rgba(120,80,20,.18); }
 
-  /* スタート／ゴール */
-  .flagpost { display:flex; align-items:center; justify-content:center; gap:10px; margin:2px 0 12px; }
-  .flagpost .fp { background:linear-gradient(#f97316,#ea580c); color:#fff; font-weight:bold;
-                  border-radius:12px; padding:6px 20px; font-size:15px;
-                  box-shadow:0 4px 0 #9a3412; letter-spacing:.08em; }
-  .goal { text-align:center; margin:6px 0 0; }
-  .goal-img { width:120px; height:auto; }
-  .goal .g-box { display:inline-flex; flex-direction:column; align-items:center; gap:4px;
-                 background:linear-gradient(#fff7ed,#fef3c7); border:2px solid var(--amber);
-                 border-radius:18px; padding:12px 26px; box-shadow:0 5px 0 #eab308; }
-  .goal .g-t { font-weight:bold; color:var(--deep); font-size:16px; }
-  .goal .g-s { font-size:11.5px; color:#92400e; }
+  /* ゴール */
+  .goal { margin:8px 0 0; }
+  .goal .g-box { display:flex; align-items:center; gap:12px;
+                 background:linear-gradient(#fffdf6,#fdf0cf); border:2px solid var(--amber);
+                 border-radius:16px; padding:9px 14px; box-shadow:0 4px 0 #eab308; }
+  .g-chest { width:56px; height:auto; flex:none; }
+  .goal .g-flag { display:inline-block; background:linear-gradient(#e0453a,#b91c1c); color:#fff8ec;
+                  font-weight:bold; border-radius:5px; padding:2px 12px; font-size:12px;
+                  letter-spacing:.1em; box-shadow:0 2px 0 #7f1d1d; }
+  .goal .g-t { font-weight:bold; color:var(--deep); font-size:14.5px; margin-top:4px; }
+  .goal .g-s { font-size:11px; color:#92400e; }
 
-  /* ───── 本の一覧 ───── */
-  .books { margin-top:26px; }
-  .books-h { display:flex; align-items:center; gap:8px; justify-content:center; margin-bottom:10px; }
-  .books-h h2 { font-size:17px; color:var(--deep); }
-  .tabs { display:flex; gap:6px; justify-content:center; margin-bottom:12px; }
-  .tab { border:2px solid #f0dfb8; background:#fff; color:var(--brand); font-weight:bold;
-         border-radius:20px; padding:5px 16px; font-size:13px; cursor:pointer; font-family:inherit;
-         box-shadow:0 3px 0 #f0e2c3; }
-  .tab.on { background:var(--brand); color:#fff; border-color:var(--brand); box-shadow:0 3px 0 #7c2d12; }
-  .book { background:var(--paper); border:2px solid #f0dfb8; border-radius:16px; margin-bottom:9px;
-          overflow:hidden; box-shadow:0 3px 0 #f0e2c3; }
-  .book-h { width:100%; display:flex; align-items:center; gap:8px; padding:10px 12px; cursor:pointer;
-            background:none; border:none; font-family:inherit; text-align:left; }
-  .bk-grade { flex:none; background:#fff3d6; color:var(--brand); font-weight:bold; font-size:11px;
-              border-radius:8px; padding:2px 8px; border:1.5px solid var(--line); }
-  .bk-vol { flex:none; font-weight:bold; color:var(--brand); font-size:12.5px; }
-  .bk-title { flex:1; font-size:14px; font-weight:bold; color:#44403c; min-width:0; }
-  .bk-prog { flex:none; font-size:11px; color:#8a7b62; font-weight:bold; }
-  .bk-arrow { flex:none; color:var(--brand); font-size:20px; transition:transform .2s; }
-  .book.open .bk-arrow { transform:rotate(90deg); }
-  .u-list { display:none; padding:0 10px 10px; list-style:none; }
-  .book.open .u-list { display:block; }
-  .u-row { display:flex; align-items:center; gap:7px; padding:7px 4px; border-top:1px dashed #f0dfb8; }
-  .u-no { flex:none; width:20px; height:20px; border-radius:6px; background:#fff; border:1.5px solid var(--line);
-          color:var(--brand); font-weight:bold; font-size:11px; display:inline-flex;
+  /* ───── 単元一覧 ───── */
+  .books { margin-top:18px; }
+  .books-h { text-align:center; margin-bottom:10px; }
+  .books-h h2 { display:inline-block; font-size:16px; color:var(--deep);
+                background:linear-gradient(#fffdf6,#f4e7cd); border:2px solid #ddc39a;
+                border-radius:11px; padding:6px 22px; box-shadow:0 3px 0 #ddc39a; }
+  .book { background:var(--paper); border:2px solid #ddc39a; border-radius:12px; margin-bottom:8px;
+          overflow:hidden; box-shadow:0 3px 0 #e6d3ae; }
+  /* 章の帯（冒険N）。カンプの学年帯と同じ役目 */
+  .ch-band { display:flex; align-items:center; gap:6px; padding:6px 10px;
+             background:linear-gradient(#f0dcb4,#e7cd9c); border-bottom:2px solid #ddc39a; }
+  .cb-flag { flex:none; font-size:12px; }
+  .cb-no { flex:none; font-weight:bold; color:var(--deep); font-size:11.5px; white-space:nowrap; }
+  .cb-title { flex:1; font-size:12.5px; font-weight:bold; color:#4a3a22; min-width:0;
+              overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bk-prog { flex:none; font-size:10.5px; color:#7c5a2a; font-weight:bold; }
+  .u-list { list-style:none; }
+  .u-row { display:flex; align-items:center; gap:6px; padding:5px 9px; }
+  .u-row + .u-row { border-top:1px dashed #ecdcbb; }
+  .u-no { flex:none; width:19px; height:19px; border-radius:6px; background:#fff; border:1.5px solid var(--line);
+          color:var(--brand); font-weight:bold; font-size:10.5px; display:inline-flex;
           align-items:center; justify-content:center; }
-  .u-name { flex:1; font-size:13px; min-width:0; }
-  .u-state { flex:none; font-size:13px; width:16px; text-align:center; }
-  .u-btn { flex:none; text-decoration:none; font-size:11.5px; font-weight:bold; border-radius:9px;
-           padding:4px 9px; white-space:nowrap; }
-  .u-btn.wb { background:var(--brand); color:#fff; box-shadow:0 2px 0 #7c2d12; }
-  .u-btn.ref { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
-  .u-btn.off { color:#d6d3d1; border-color:#eee; box-shadow:none; }
+  .u-name { flex:1; font-size:12.5px; min-width:0; overflow:hidden;
+            text-overflow:ellipsis; white-space:nowrap; }
+  .u-state { flex:none; font-size:12px; width:15px; text-align:center; }
+  .u-btn { flex:none; text-decoration:none; font-size:10.5px; font-weight:bold; border-radius:7px;
+           padding:3px 9px; white-space:nowrap; }
+  .u-btn.wb { background:linear-gradient(#b45309,#8a3f07); color:#fff8ec; box-shadow:0 2px 0 #5c2508; }
+  .u-btn.ref { background:#fff; color:#1d4ed8; border:1.5px solid #bfdbfe; box-shadow:0 2px 0 #e6efff; }
+  .u-btn.off { color:#d6d3d1; border-color:#eee; box-shadow:none; background:#fff; }
 
-  footer { text-align:center; margin-top:26px; color:#a8a29e; font-size:12px; }
+  /* ───── 冒険のきろく ───── */
+  .record { margin-top:22px; }
+  .rec-h { text-align:center; margin-bottom:10px; }
+  .rec-h h2 { display:inline-block; font-size:16px; color:var(--deep);
+              background:linear-gradient(#fffdf6,#f4e7cd); border:2px solid #ddc39a;
+              border-radius:12px; padding:6px 22px; box-shadow:0 3px 0 #ddc39a; }
+  .counts { display:flex; gap:8px; }
+  .cnt { flex:1; text-align:center; background:#fffdf6; border:2px solid #ddc39a; border-radius:12px;
+         padding:9px 2px 7px; box-shadow:0 3px 0 #e6d3ae; }
+  .cnt b { display:block; font-size:22px; color:var(--deep); line-height:1.2; }
+  .cnt span { font-size:10.5px; color:#8a7b62; }
 
-  /* 画面が広いときはマスを大きめに */
+  footer { text-align:center; margin-top:26px; color:#9c8a6a; font-size:12px; }
+
+  /* 画面が広いときはマスを大きめに（1行の数は8個のまま） */
   @media (min-width:640px) {
-    .tok { width:66px; height:66px; }
+    .tok { width:min(100%,56px); }
     .tok-no { font-size:19px; }
-    .tok-name { font-size:11px; }
-    .row::before { top:36px; }
+    .row { gap:8px; }
+    .row::before { top:25px; }
+    .cell { flex:0 0 calc((100% - (var(--row,8) - 1) * 8px) / var(--row,8)); }
+    .head-h1 { font-size:42px; }
   }
 </style></head><body>
 
-<div class="hero">
-  <div class="hero-in" id="heroIn">
-    __HERO__
-    <div class="hero-txt">
-      <span class="hero-tag">つづもん 歴史</span>
-      <h1 class="hero-h1">歴史すごろく</h1>
-      <div class="hero-sub">マスを進めて、日本の歴史を制覇しよう！</div>
-    </div>
-    __MASCOT__
-  </div>
-</div>
-
 <div class="wrap">
+  <header class="head" id="head">
+    __EXPLORER__
+    __TITLE__
+    <h1 class="head-h1">歴史クエスト</h1>
+    <div class="head-sub">中学歴史の冒険に出発しよう！</div>
+    __BIRD__
+  </header>
+
+  <div class="gtabs" id="gtabs"></div>
+
   <div class="panel">
-    <div class="p-h">🏁 きみの進み具合</div>
-    <div class="big"><b id="ovNum">0</b><span class="sm"> / __TOTAL__ マス</span>
+    <div class="p-h">あなたの冒険の進み具合</div>
+    <div class="big"><b id="ovNum">0</b><span class="sm"> / <span id="ovTotal">0</span> マス</span>
       <span class="sm" id="ovPct">（0%）</span></div>
-    <div class="ov-bar"><div class="ov-fill" id="ovFill"></div><span class="ov-flag">🚩</span></div>
-    <div class="counts">
-      <div class="cnt"><b id="cNone">0</b><span>まだ</span></div>
-      <div class="cnt"><b id="cRef">0</b><span>📖 読んだ</span></div>
-      <div class="cnt"><b id="cSome">0</b><span>✏️ 一部</span></div>
-      <div class="cnt"><b id="cAll">0</b><span>✅ 全部</span></div>
-      <div class="cnt"><b id="cPerfect">0</b><span>👑 全問正解</span></div>
-    </div>
+    <div class="ov-bar"><div class="ov-fill" id="ovFill"></div></div>
     <div class="legend">
       <span class="lg"><span class="dot"></span>まだ</span>
       <span class="lg"><span class="dot d-ref"></span>参考書を読んだ</span>
@@ -429,7 +480,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   </div>
 
   <div class="mission">
-    __OWL__
+    __MASCOT__
     <div class="ms-body">
       <div class="ms-h">🎯 今日のミッション</div>
       <div class="ms-txt" id="msTxt">今日は 3マス すすめよう！</div>
@@ -438,36 +489,94 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   </div>
 
   <div class="board" id="board">
-    <div class="flagpost"><span class="fp">🏁 スタート</span></div>
-    <div id="cells" hidden>__CELLS__</div>
+    <div id="cells">__CELLS__</div>
     <div class="goal">
-      <div class="g-box">__GOAL_IMG__
-        <div class="g-t">🏆 ゴール：歴史マスター</div>
-        <div class="g-s">全__TOTAL__マスを制覇せよ！</div>
+      <div class="g-box">
+        __CHEST__
+        <div>
+          <span class="g-flag">ゴール！</span>
+          <div class="g-t">🏆 <span id="goalGrade">中1</span> 制覇！</div>
+          <div class="g-s">全<span id="goalTotal">0</span>マスを進めよう</div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="books">
-    <div class="books-h"><h2>📚 本の一覧</h2></div>
-    <div class="tabs" id="tabs">
-      <button class="tab on" data-g="all">すべて</button>
-      <button class="tab" data-g="中1">中1</button>
-      <button class="tab" data-g="中2">中2</button>
-      <button class="tab" data-g="中3">中3</button>
-    </div>
+    <div class="books-h"><h2>📖 単元一覧</h2></div>
     <div id="bookList">__BOOKS__</div>
   </div>
+
+  <div class="record">
+    <div class="rec-h"><h2>冒険のきろく</h2></div>
+    <div class="counts">
+      <div class="cnt"><b id="cCleared">0</b><span>クリアマス数</span></div>
+      <div class="cnt"><b id="cStamp">0</b><span>集めたスタンプ</span></div>
+      <div class="cnt"><b id="cPerfect">0</b><span>全問正解</span></div>
+    </div>
+  </div>
 </div>
-<footer>つづもん 歴史すごろく　｜　全__TOTAL__単元</footer>
+<footer>つづもん 歴史クエスト　｜　全__TOTAL__単元</footer>
 
 <script>
 (function () {
   var MANIFEST = __MANIFEST__;
   var ERAS = __ERAS__;
-  var ROW = window.matchMedia('(min-width:640px)').matches ? 6 : 4;   // 1行のマス数（snake配置）
+  var GRADES = __GRADES__;
+  var GRADE_TOTAL = __GRADE_TOTAL__;
+  var ROW = 8;   // 1行のマス数（snake配置）。カンプと同じ密度
 
   function ls(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; } }
+  function lsRaw(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function save(key, v) { try { localStorage.setItem(key, v); } catch (e) {} }
+
+  /* ───── 登録学年 ─────
+     配布URLの ?g= で受け取り、localStorage['tzmgrades'] に保存する。
+       ?g=1,2 / ?g=中1,中2 / ?g=all
+     パラメータも保存もなければ全学年（体験・確認用）。 */
+  function parseGrades(raw) {
+    if (!raw) return null;
+    if (/^all$/i.test(raw.trim())) return GRADES.slice();
+    var out = [];
+    raw.split(/[,\s、]+/).forEach(function (t) {
+      var m = t.match(/([123])/);
+      if (!m) return;
+      var g = '中' + m[1];
+      if (GRADES.indexOf(g) >= 0 && out.indexOf(g) < 0) out.push(g);
+    });
+    return out.length ? out : null;
+  }
+  function myGrades() {
+    var q = parseGrades(new URLSearchParams(location.search).get('g'));
+    if (q) { save('tzmgrades', JSON.stringify(q)); return q; }
+    var saved = null;
+    try { saved = JSON.parse(lsRaw('tzmgrades') || 'null'); } catch (e) {}
+    if (saved && saved.length) {
+      var ok = saved.filter(function (g) { return GRADES.indexOf(g) >= 0; });
+      if (ok.length) return ok;
+    }
+    return GRADES.slice();
+  }
+
+  var MY = myGrades();
+  var cur = lsRaw('tzmgrade');
+  if (MY.indexOf(cur) < 0) cur = MY[0];
+
+  function renderTabs() {
+    var box = document.getElementById('gtabs');
+    box.innerHTML = '';
+    // 1学年しか持っていない人にはタブを出さない
+    if (MY.length < 2) return;
+    box.classList.add('show');
+    MY.forEach(function (g) {
+      var b = document.createElement('button');
+      b.className = 'gtab' + (g === cur ? ' on' : '');
+      b.type = 'button';
+      b.dataset.g = g;
+      b.textContent = g;
+      box.appendChild(b);
+    });
+  }
 
   // 単元ごとのクリア種別を求める（保存形式は問題集/参考書 Web版と共通）
   function stateOf(ch, tid, nq, refV) {
@@ -490,19 +599,23 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     return stateOf(c.dataset.ch, c.dataset.tid, +c.dataset.nq || 0, c.dataset.ref);
   }
 
-  // 時代エリアごとに看板を立て、snake（うねうね）配置で道をつくる
+  // いまの学年のマスだけを、時代エリアごとの島に snake 配置で並べる
   function layout() {
     var board = document.getElementById('board');
     var goal = board.querySelector('.goal');
-    var all = [].slice.call(document.querySelectorAll('#cells .cell'));
+    var pool = document.getElementById('cells');
+    var all = [].slice.call(document.querySelectorAll('.cell[data-tid]'));
+    // いったん全部プールへ戻してから、いまの学年ぶんだけ島に入れ直す
+    all.forEach(function (c) { if (c.parentNode !== pool) pool.appendChild(c); });
     [].forEach.call(board.querySelectorAll('.era'), function (el) { el.remove(); });
 
+    var mine = all.filter(function (c) { return c.dataset.grade === cur; });
     ERAS.forEach(function (era) {
-      var list = all.filter(function (c) { return c.dataset.era === era.key; });
+      var list = mine.filter(function (c) { return c.dataset.era === era.key; });
       if (!list.length) return;
       var box = document.createElement('div');
       box.className = 'era e-' + era.key;
-      var first = list[0].dataset.n, last = list[list.length - 1].dataset.n;
+      var first = list[0].dataset.gn, last = list[list.length - 1].dataset.gn;
       box.innerHTML = '<div><span class="sign"><span class="s-emoji">' + era.emoji + '</span>'
         + era.name + '<span class="s-range">' + first + '〜' + last + '</span></span></div>'
         + '<div class="era-hint">' + era.hint + '</div>';
@@ -519,13 +632,29 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
       }
       board.insertBefore(box, goal);
     });
+
+    // 本の一覧もいまの学年だけ
+    [].forEach.call(document.querySelectorAll('.book'), function (b) {
+      b.style.display = (b.dataset.grade === cur) ? '' : 'none';
+    });
+    document.getElementById('goalGrade').textContent = cur;
+    document.getElementById('goalTotal').textContent = GRADE_TOTAL[cur] || 0;
+    document.getElementById('ovTotal').textContent = GRADE_TOTAL[cur] || 0;
   }
 
   function paint() {
-    var cells = [].slice.call(document.querySelectorAll('.cell[data-tid]'));
+    // 進捗はいまの学年の中で数える（マップに並んでいるマス＝いまの学年）
+    var cells = [].slice.call(document.querySelectorAll('#board .era .cell[data-tid]'));
     var n = { none: 0, ref: 0, some: 0, all: 0, perfect: 0 };
     var cleared = 0, lastCleared = -1;
     var byCh = {};
+    // 章ごとの進み具合は全学年ぶん集計する（表示は絞られていても値は正しく）
+    [].forEach.call(document.querySelectorAll('.cell[data-tid]'), function (c) {
+      var s = cellState(c);
+      byCh[c.dataset.ch] = byCh[c.dataset.ch] || { done: 0, all: 0 };
+      byCh[c.dataset.ch].all++;
+      if (s !== 'none') byCh[c.dataset.ch].done++;
+    });
     cells.forEach(function (c, i) {
       c.classList.remove('s-ref', 's-some', 's-all', 's-perfect', 'here', 'current');
       var s = cellState(c);
@@ -536,9 +665,6 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
         badge.textContent = s === 'perfect' ? '👑' : s === 'all' ? '✅' : s === 'some' ? '✏️' : '📖';
         cleared++; lastCleared = i;
       } else { badge.textContent = ''; }
-      byCh[c.dataset.ch] = byCh[c.dataset.ch] || { done: 0, all: 0 };
-      byCh[c.dataset.ch].all++;
-      if (s !== 'none') byCh[c.dataset.ch].done++;
     });
     if (lastCleared >= 0) cells[lastCleared].classList.add('here');
     var nextIdx = lastCleared + 1;
@@ -550,16 +676,16 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     document.getElementById('ovFill').style.width = pct + '%';
     document.getElementById('ovNum').textContent = cleared;
     document.getElementById('ovPct').textContent = '（' + pct + '%）';
-    document.getElementById('cNone').textContent = n.none;
-    document.getElementById('cRef').textContent = n.ref;
-    document.getElementById('cSome').textContent = n.some;
-    document.getElementById('cAll').textContent = n.all;
+
+    // 冒険のきろく（いまの学年ぶん）
+    document.getElementById('cCleared').textContent = cleared;
+    document.getElementById('cStamp').textContent = n.all + n.perfect;
     document.getElementById('cPerfect').textContent = n.perfect;
 
     // 本の一覧: 章ごとの進み具合と、単元行の状態マーク
     [].forEach.call(document.querySelectorAll('.bk-prog'), function (el) {
       var b = byCh[el.dataset.ch] || { done: 0, all: 0 };
-      el.textContent = b.done + '/' + b.all;
+      el.textContent = 'スタンプ ' + b.done + '/' + b.all;
     });
     [].forEach.call(document.querySelectorAll('.u-row'), function (el) {
       var m = { perfect: '👑', all: '✅', some: '✏️', ref: '📖', none: '' };
@@ -574,10 +700,10 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   // 今日のミッション: その日はじめてのアクセス時のクリア数を基準に、今日進めたマス数を数える
   function mission(cleared) {
-    var GOAL = 3, today = new Date().toISOString().slice(0, 10), key = 'tzmportal';
+    var GOAL = 3, today = new Date().toISOString().slice(0, 10), key = 'tzmportal-' + cur;
     var st = ls(key);
-    if (st.date !== today) { st = { date: today, base: cleared }; localStorage.setItem(key, JSON.stringify(st)); }
-    if (cleared < st.base) { st.base = cleared; localStorage.setItem(key, JSON.stringify(st)); }
+    if (st.date !== today) { st = { date: today, base: cleared }; save(key, JSON.stringify(st)); }
+    if (cleared < st.base) { st.base = cleared; save(key, JSON.stringify(st)); }
     var got = Math.max(0, cleared - st.base);
     var steps = document.getElementById('msSteps');
     steps.innerHTML = '';
@@ -592,29 +718,38 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
       : '今日は あと ' + (GOAL - got) + 'マス すすめよう！';
   }
 
-  // マスをタップ → その単元の問題集へ
   document.addEventListener('click', function (e) {
-    var cell = e.target.closest ? e.target.closest('.cell[data-tid]') : null;
-    if (cell) { location.href = 'wb/' + cell.dataset.ch + '/index.html#t' + cell.dataset.wb; return; }
-    var bh = e.target.closest ? e.target.closest('.book-h') : null;
-    if (bh) { bh.parentNode.classList.toggle('open'); return; }
-    var tab = e.target.closest ? e.target.closest('.tab') : null;
-    if (tab) {
-      [].forEach.call(document.querySelectorAll('.tab'), function (t) { t.classList.toggle('on', t === tab); });
-      var g = tab.dataset.g;
-      [].forEach.call(document.querySelectorAll('.book'), function (b) {
-        b.style.display = (g === 'all' || b.dataset.grade === g) ? '' : 'none';
-      });
+    if (!e.target.closest) return;
+    // 学年タブ
+    var gtab = e.target.closest('.gtab');
+    if (gtab) {
+      cur = gtab.dataset.g;
+      save('tzmgrade', cur);
+      renderTabs(); layout(); paint();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
+    // マスをタップ → その単元の問題集へ
+    var cell = e.target.closest('.cell[data-tid]');
+    if (cell) { location.href = 'wb/' + cell.dataset.ch + '/index.html#t' + cell.dataset.wb; return; }
   });
 
-  // ヒーロー画像が実際に表示できたときだけ、CSS版タイトルを画像の上へ重ねる
-  var heroImg = document.querySelector('.hero-img');
-  if (heroImg) heroImg.addEventListener('load', function () {
-    document.getElementById('heroIn').classList.add('has-img');
-  });
+  // ロゴ画像が実際に表示できたときだけ、CSS文字版のタイトルと差し替える
+  var logo = document.querySelector('.title-img');
+  if (logo) {
+    if (logo.complete && logo.naturalWidth) document.getElementById('head').classList.add('has-logo');
+    else logo.addEventListener('load', function () {
+      document.getElementById('head').classList.add('has-logo');
+    });
+  }
+  // バッジ画像が置かれていれば、絵文字のバッジを画像に切り替える
+  (function () {
+    var probe = new Image();
+    probe.onload = function () { document.documentElement.classList.add('has-badges'); };
+    probe.src = 'img/quest-badge-all.webp';
+  })();
 
-  document.getElementById('cells').hidden = false;
+  renderTabs();
   layout();
   paint();
   window.addEventListener('focus', paint);
@@ -625,15 +760,21 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
 
 def copy_assets(dest_root: Path) -> None:
-    """キャラ画像と（あれば）Codex 製のポータル用イラストを img/ へ配る。"""
+    """キャラ画像と（あれば）Codex 製のイラストを img/ へ配る。"""
     img_dir = dest_root / "img"
     img_dir.mkdir(parents=True, exist_ok=True)
-    for name in ("char_manabi_sm.png", "char_owl_sm.png"):
+    for name in ("char_manabi_sm.png", "char_owl_sm.webp"):
         src = CHAR_DIR / name
         if src.exists():
             shutil.copyfile(src, img_dir / name)
     if PORTAL_IMG_DIR.exists():
         for src in PORTAL_IMG_DIR.glob("portal-*"):
+            shutil.copyfile(src, img_dir / src.name)
+    # 歴史クエストのイラストは WebP だけを配る（PNG は原本。tools/quest_assets_to_webp.py で変換）
+    if QUEST_IMG_DIR.exists():
+        for src in QUEST_IMG_DIR.glob("quest-*.webp"):
+            if src.name.startswith("quest-top-"):
+                continue   # カンプ画像そのものは配らない
             shutil.copyfile(src, img_dir / src.name)
 
 
@@ -650,3 +791,5 @@ if __name__ == "__main__":
                     help="marutto-study/public/tsudumon/index.html へ出力")
     args = ap.parse_args()
     generate(DEPLOY_FILE if args.deploy else OUT_FILE)
+
+

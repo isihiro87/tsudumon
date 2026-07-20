@@ -30,6 +30,13 @@ assets/_*-old.webp
 # 作業用一時データ
 tmp/
 
+# --- 歴史クエストの画像 ---
+# PNG は Codex(image_generation) が出す原本で1枚1MB前後。配信するのは
+# tools/quest_assets_to_webp.py が作る .webp だけなので、PNG は追跡しない。
+# カンプ（デザインの正本）だけは残す。
+assets/quest/*.png
+!assets/quest/quest-top-mobile.png
+
 # ブラウザ自動操作の使い捨てプロファイル
 .edge-*/
 
