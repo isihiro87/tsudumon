@@ -141,7 +141,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
 
     views = [f"""
 <section class="view home" data-t="0">
-  <a class="home-link" href="../../index.html">🗺 すごろく（本一覧）へもどる</a>
+  <a class="home-link" href="../../index.html">🗺 トップにもどる（ぜんぶの本の一覧）</a>
   <header class="top">
     <div class="badge">{esc(spec['volume'])}　参考書 <span class="webtag">Web版</span></div>
     <h1>{esc(spec['title'])}</h1>
@@ -315,6 +315,9 @@ def build(chapter: str) -> tuple[str, list[str]]:
             .replace("__HEADBAR__", f"{esc(spec['volume'])} {esc(spec['title'])}")
             .replace("__TABS__", tabs)
             .replace("__STORAGE_KEY__", f"tzmref-{ch_no}")
+            .replace("__CH_NO__", ch_no)
+            .replace("__WB_VIEWS__", json.dumps(
+                [0] + [wb_index.get(t["topicId"], 0) for t in spec["topics"]]))
             .replace("__TOPIC_KEYS__", topic_keys_json)
             .replace("__FIREBASE_WEB_CONFIG__", json.dumps(firebase_web_config()))
             .replace("__VIEWS__", "".join(views)))
@@ -339,15 +342,27 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* ── 上部: タイトル＋単元タブ＋進捗バー ── */
   .bar { position:sticky; top:0; z-index:10; background:rgba(255,253,248,.96);
          backdrop-filter:blur(6px); border-bottom:1px solid #f0e6d2; }
-  .bar-in { max-width:640px; margin:0 auto; padding:8px 16px 0; }
+  .bar-in { max-width:640px; margin:0 auto; padding:5px 12px 0; }
   .bar-row { display:flex; align-items:center; gap:8px; }
+  /* 参考書⇄問題集の切替（どのページからでも1タップ・相手側は読みかけの位置に着地） */
+  /* どのページからでも「本の一覧（すごろく）」へ戻れる常設ボタン。
+     タブ列の 🏠 は「この本の目次」なので、こちらは 🗺＋文字でトップだと分かるようにする。 */
+  .tophome { flex:none; font-size:15px; color:#fff; background:var(--deep); line-height:1;
+             border-radius:50%; width:30px; height:30px; text-decoration:none;
+             display:inline-flex; align-items:center; justify-content:center; }
+  .swap { flex:none; display:inline-flex; border:1.5px solid var(--line); border-radius:20px;
+          overflow:hidden; background:#fffbeb; }
+  .sw { font-size:11px; font-weight:bold; color:var(--brand); padding:3px 9px; text-decoration:none;
+        white-space:nowrap; cursor:pointer; }
+  .sw.on { background:var(--brand); color:#fff; }
+  .sw[hidden] { display:none; }
   .bar-title { font-weight:bold; color:var(--deep); font-size:14px; flex:1;
                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar-step { flex:none; font-size:12px; font-weight:bold; color:var(--brand); }
-  .tabs { display:flex; gap:6px; overflow-x:auto; padding:8px 0;
+  .bar-step { flex:none; font-size:11px; font-weight:bold; color:var(--brand); }
+  .tabs { display:flex; gap:5px; overflow-x:auto; padding:4px 0; flex:1; min-width:0;
           scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .tabs::-webkit-scrollbar { display:none; }
-  .tab { flex:none; width:36px; height:36px; border-radius:50%; border:1.5px solid var(--line);
+  .tab { flex:none; width:30px; height:30px; border-radius:50%; border:1.5px solid var(--line);
          background:#fffbeb; color:var(--brand); font-size:15px; font-weight:bold;
          display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
   .tab.done { background:#fef3c7; }
@@ -677,10 +692,12 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 </style></head><body>
 <div class="bar"><div class="bar-in">
   <div class="bar-row">
-    <div class="bar-title">__HEADBAR__</div>
+    <a class="tophome" href="../../index.html" aria-label="つづもんトップ（本の一覧）へもどる">🗺</a>
+    <div class="swap"><span class="sw on">📖 参考書</span><a class="sw" id="swWb">✏️ 問題</a></div>
+    <nav class="tabs" id="tabs">__TABS__</nav>
     <div class="bar-step" id="barStep"></div>
   </div>
-  <nav class="tabs" id="tabs">__TABS__</nav>
+  <div class="bar-title" hidden>__HEADBAR__</div>
   <div class="pbar"><div class="pfill" id="pfill"></div></div>
 </div></div>
 <main class="wrap" id="views">
@@ -712,6 +729,8 @@ __VIEWS__
 <script>
 (function () {
   var KEY = '__STORAGE_KEY__';
+  var CH = '__CH_NO__';
+  var WB_VIEWS = __WB_VIEWS__;          // 参考書の単元t → 問題集のビュー番号（0＝対応なし）
   var views = [].slice.call(document.querySelectorAll('.view'));
   var tabs = [].slice.call(document.querySelectorAll('.tab'));
   var N = views.length - 1; // 単元数
@@ -790,7 +809,9 @@ __VIEWS__
     }
     window.scrollTo(0, 0);
     var h = '#t' + t + (t > 0 && s > 0 ? 's' + s : '');
-    if (location.hash !== h) history.replaceState(null, '', t === 0 ? '#' : h);
+    // クエリが付いていても落とさない（URL共有時の情報を保つ）
+    if (location.hash !== h) history.replaceState(null, '', location.search + (t === 0 ? '#' : h));
+    updateSwap();
     rendered = { t: t, s: s };
   }
 
@@ -814,6 +835,25 @@ __VIEWS__
     } else {
       btn.hidden = true;
     }
+  }
+
+  // ── 参考書 ⇄ 問題集の行き来 ──────────────────────────────
+  //   相手側の保存（tzmwb-{章}）を読んで「読みかけのページ」に着地させる。
+  //   同じサイト内なので localStorage をそのまま参照できる。
+  function wbHref(t) {
+    var base = '../../wb/' + CH + '/index.html';
+    var v = WB_VIEWS[t] || 0;
+    if (!v) return base;
+    var s = 0;
+    try {
+      var st = JSON.parse(localStorage.getItem('tzmwb-' + CH) || '{}');
+      if (st.last && st.last.t === v && st.last.s > 0) s = st.last.s;
+    } catch (e) {}
+    return base + '#t' + v + (s ? 's' + s : '');
+  }
+  function updateSwap() {
+    var a = document.getElementById('swWb');
+    a.href = wbHref(state.t);
   }
 
   function go(t, s, dir) {

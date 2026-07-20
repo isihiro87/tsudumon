@@ -88,11 +88,38 @@ def build(folder: str) -> tuple[str, list[str]]:
 
     # 参考書 Web 版の単元 index（topicId → #t番号）: 相互リンク用
     ref_index = {}
+    ref_sections = {}     # topicId → [節の本文（見出し＋本文）]（設問→節の対応づけ用）
     ref_path = REF_DIR / f"{folder}.json"
     if ref_path.exists():
         ref_spec = json.loads(ref_path.read_text(encoding="utf-8"))
         for i, t in enumerate(ref_spec["topics"], 1):
             ref_index[t["topicId"]] = i
+            ref_sections[t["topicId"]] = [
+                (sec.get("heading", "") + sec.get("lead", "") + sec.get("body", "")
+                 + sec.get("point", "")).replace("**", "")
+                for sec in t.get("sections", [])]
+
+    def ref_help(tid: str, *hints: str) -> str:
+        """設問の答え（用語）が最もよく出てくる節へのリンク。
+        参考書のページ構成は step0=単元表紙 / step1..n=節 なので、節の番号がそのまま s になる。
+        当てられないときは単元の先頭へ（それでも「探しに戻る」より速い）。"""
+        if tid not in ref_index:
+            return ""
+        secs = ref_sections.get(tid) or []
+        # 答えそのもの（強い手がかり）＋設問文から拾った漢字2文字以上の語（弱い手がかり）で
+        # 節ごとに点数をつけ、いちばん高い節を選ぶ。
+        strong = [h for h in hints if h and len(h) >= 2]
+        weak = []
+        for h in hints:
+            weak += [w for w in re.findall(r"[一-鿿]{2,}", h or "") if w not in strong]
+        best, best_hits = 0, 0
+        for si, body in enumerate(secs, 1):
+            hits = sum(body.count(h) * 3 for h in strong) + sum(body.count(w) for w in weak)
+            if hits > best_hits:
+                best, best_hits = si, hits
+        frag = f"s{best}" if best else ""
+        return (f'<a class="sec-help" href="../../ref/{ch_no}/index.html'
+                f'#t{ref_index[tid]}{frag}">📖 解説を読む（ヒント）</a>')
 
     images: list[str] = []
 
@@ -153,8 +180,8 @@ def build(folder: str) -> tuple[str, list[str]]:
         summary_html, summary_ans = blanks_html(spec["summaries"][tid])
         ref_link = ""
         if tid in ref_index:
-            ref_link = (f'<a class="ref-link" href="../../ref/{ch_no}/index.html#t{ref_index[tid]}">'
-                        f'📖 先に参考書で理解する</a>')
+            ref_link = (f'<a class="ref-link" href="../../ref/{ch_no}/index.html'
+                        f'#t{ref_index[tid]}">📖 先に参考書で理解する</a>')
         steps.append(f"""
     <div class="step" data-label="A 要点まとめ" data-sec="A">
       <div class="sec-h"><span class="sec-tag">A</span>要点まとめ<span class="sec-note">（　）をタップして確かめよう</span></div>
@@ -170,6 +197,7 @@ def build(folder: str) -> tuple[str, list[str]]:
             qid = f"qa-{tid}-{i}"
             expl = (f'<div class="qa-expl">{esc(card["explanation"])}</div>'
                     if card.get("explanation") else "")
+            help_b = ref_help(tid, ruby_base(card["front"]), card["back"])
             steps.append(f"""
     <div class="step qa-step" data-label="B 一問一答 ({i}/{len(cards)})" data-qid="{qid}" data-kind="qa" data-sec="B" data-a="{esc(ruby_base(card['front']))}" data-r="{esc(ruby_reading(card['front']))}">
       <div class="sec-h"><span class="sec-tag">B</span>一問一答<span class="sec-note"><span class="qnum">{i} / {len(cards)}</span></span></div>
@@ -178,6 +206,7 @@ def build(folder: str) -> tuple[str, list[str]]:
       <div class="b-inrow"><input class="b-in" type="text" placeholder="こたえを入力（ひらがなでもOK）" autocomplete="off" enterkeyhint="done"><button class="b-judge" type="button">判定</button></div>
       <button class="b-idk" type="button">わからない…こたえを見る</button>
       <button class="reveal" type="button">こたえを見る</button>
+      {help_b}
       <div class="hidden-until">
         <div class="b-result" aria-live="polite"></div>
         <div class="qa-a">{to_ruby(card['front'])}</div>
@@ -233,12 +262,14 @@ def build(folder: str) -> tuple[str, list[str]]:
                 for j, o in enumerate(q["options"]))
             expl = (f'<div class="expl hidden-until">💡 {esc(q["explanation"])}</div>'
                     if q.get("explanation") else "")
+            help_c = ref_help(tid, q["options"][q["correctIndex"]], q["question"])
             steps.append(f"""
     <div class="step qz-step" data-label="C 実戦問題 ({i}/{len(quiz)})" data-qid="{qid}" data-kind="qz" data-c="{q['correctIndex']}" data-sec="C">
       <div class="sec-h"><span class="sec-tag">C</span>実戦問題<span class="sec-note"><span class="qnum">{i} / {len(quiz)}</span>　正しいものを選ぼう</span></div>
       <div class="q-text">{esc(q['question'])}</div>
       <div class="qopts">{opts}</div>
       {expl}
+      {help_c}
     </div>""")
 
         # D 記述
@@ -254,6 +285,7 @@ def build(folder: str) -> tuple[str, list[str]]:
       <div class="sec-h"><span class="sec-tag">D</span>記述問題<span class="sec-note"><span class="qnum">{i} / {len(written)}</span>　文章で説明しよう</span></div>
       <div class="q-text">{esc(w['q'])}</div>
       {kw}
+      {ref_help(tid, *(w.get("keywords") or []), w.get("a", ""))}
       <textarea class="w-input print-hide" rows="3" placeholder="ここに書いてみよう（書かずに頭の中で説明してもOK）"></textarea>
       <div class="wline print-only"></div><div class="wline print-only"></div>
       <button class="reveal" type="button">模範解答を見る</button>
@@ -421,7 +453,7 @@ def build(folder: str) -> tuple[str, list[str]]:
 
     home = f"""
 <section class="view home" data-t="0">
-  <a class="home-link" href="../../index.html">🗺 すごろく（本一覧）へもどる</a>
+  <a class="home-link" href="../../index.html">🗺 トップにもどる（ぜんぶの本の一覧）</a>
   <header class="top">
     <div class="badge">{esc(spec['volume'])}　問題集 <span class="webtag">Web版</span></div>
     <h1>{esc(spec['title'])}</h1>
@@ -462,6 +494,9 @@ def build(folder: str) -> tuple[str, list[str]]:
   {''.join(ans_blocks)}
 </section>"""
 
+    # 問題集のビュー番号（t0=ホーム, t1=年表, t2〜=単元）→ 参考書の単元番号
+    ref_views = [0, 0] + [ref_index.get(t["topicId"], 0) for t in topics]
+
     tabs = ('<button class="tab tab-home" data-go="0" aria-label="目次">🏠</button>'
             '<button class="tab" data-go="1" aria-label="年表">年</button>'
             + "".join(f'<button class="tab" data-go="{i + 1}" aria-label="{esc(t["name"])}">{i}</button>'
@@ -472,6 +507,8 @@ def build(folder: str) -> tuple[str, list[str]]:
             .replace("__HEADBAR__", f"{esc(spec['volume'])} {esc(spec['title'])}（問題集）")
             .replace("__TABS__", tabs)
             .replace("__STORAGE_KEY__", f"tzmwb-{ch_no}")
+            .replace("__CH_NO__", ch_no)
+            .replace("__REF_VIEWS__", json.dumps(ref_views))
             .replace("__VIEWS__", home + "".join(views) + print_answers))
     return page, images
 
@@ -495,14 +532,30 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* ── 上部バー ── */
   .bar { position:sticky; top:0; z-index:10; background:rgba(255,253,248,.96);
          backdrop-filter:blur(6px); border-bottom:1px solid #f0e6d2; }
-  .bar-in { max-width:640px; margin:0 auto; padding:8px 16px 0; }
+  .bar-in { max-width:640px; margin:0 auto; padding:5px 12px 0; }
   .bar-row { display:flex; align-items:center; gap:8px; }
+  /* 問題集⇄参考書の切替（どのページからでも1タップ・相手側は読みかけの位置に着地） */
+  /* どのページからでも「本の一覧（すごろく）」へ戻れる常設ボタン。
+     タブ列の 🏠 は「この本の目次」なので、こちらは 🗺＋文字でトップだと分かるようにする。 */
+  .tophome { flex:none; font-size:15px; color:#fff; background:var(--deep); line-height:1;
+             border-radius:50%; width:30px; height:30px; text-decoration:none;
+             display:inline-flex; align-items:center; justify-content:center; }
+  .swap { flex:none; display:inline-flex; border:1.5px solid var(--line); border-radius:20px;
+          overflow:hidden; background:#fffbeb; }
+  .sw { font-size:11px; font-weight:bold; color:var(--brand); padding:3px 9px; text-decoration:none;
+        white-space:nowrap; cursor:pointer; }
+  .sw.on { background:var(--brand); color:#fff; }
+  .sw[hidden] { display:none; }
+  /* 設問ごとの「解説を見る」（その問題の根拠になる節へ直行） */
+  .sec-help { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:bold;
+              color:var(--brand); background:#fffbeb; border:1.5px solid var(--line);
+              border-radius:14px; padding:3px 10px; text-decoration:none; margin-top:8px; }
   .bar-title { font-weight:bold; color:var(--deep); font-size:14px; flex:1;
                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .bar-step { flex:none; font-size:12px; font-weight:bold; color:var(--brand); }
-  .tabs { display:flex; gap:6px; overflow-x:auto; padding:8px 0; scrollbar-width:none; }
+  .bar-step { flex:none; font-size:11px; font-weight:bold; color:var(--brand); }
+  .tabs { display:flex; gap:5px; overflow-x:auto; padding:4px 0; flex:1; min-width:0; scrollbar-width:none; }
   .tabs::-webkit-scrollbar { display:none; }
-  .tab { flex:none; width:36px; height:36px; border-radius:50%; border:1.5px solid var(--line);
+  .tab { flex:none; width:30px; height:30px; border-radius:50%; border:1.5px solid var(--line);
          background:#fffbeb; color:var(--brand); font-size:14px; font-weight:bold;
          display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
   .tab.done { background:#fef3c7; }
@@ -838,10 +891,12 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 </style></head><body>
 <div class="bar"><div class="bar-in">
   <div class="bar-row">
-    <div class="bar-title">__HEADBAR__</div>
+    <a class="tophome" href="../../index.html" aria-label="つづもんトップ（本の一覧）へもどる">🗺</a>
+    <div class="swap"><a class="sw" id="swRef">📖 参考書</a><span class="sw on">✏️ 問題</span></div>
+    <nav class="tabs" id="tabs">__TABS__</nav>
     <div class="bar-step" id="barStep"></div>
   </div>
-  <nav class="tabs" id="tabs">__TABS__</nav>
+  <div class="bar-title" hidden>__HEADBAR__</div>
   <div class="pbar"><div class="pfill" id="pfill"></div></div>
 </div></div>
 <main class="wrap" id="views">
@@ -854,12 +909,31 @@ __VIEWS__
 <script>
 (function () {
   var KEY = '__STORAGE_KEY__';
+  var CH = '__CH_NO__';
+  var REF_VIEWS = __REF_VIEWS__;        // 問題集のビューt → 参考書の単元番号（0＝対応なし）
   var views = [].slice.call(document.querySelectorAll('.view'));
   var tabs = [].slice.call(document.querySelectorAll('.tab'));
   var N = views.length - 1;
   var state = { t: 0, s: 0 };
   var lastDir = 1;
   var rendered = null; // 直前に表示していた {t, s}（ページめくり演出用）
+
+  // ── 問題集 ⇄ 参考書の行き来（相手側の読みかけページに着地） ──
+  function refHref(t) {
+    var base = '../../ref/' + CH + '/index.html';
+    var v = REF_VIEWS[t] || 0;
+    if (!v) return base;
+    var s = 0;
+    try {
+      var st = JSON.parse(localStorage.getItem('tzmref-' + CH) || '{}');
+      if (st.last && st.last.t === v && st.last.s > 0) s = st.last.s;
+    } catch (e) {}
+    return base + '#t' + v + (s ? 's' + s : '');
+  }
+  function updateSwap() {
+    var a = document.getElementById('swRef');
+    a.href = refHref(state.t);
+  }
 
   function store() {
     try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; }
@@ -1077,7 +1151,9 @@ __VIEWS__
       }
     }
     var h = '#t' + t + (t > 0 && s > 0 ? 's' + s : '');
-    if (location.hash !== h) history.replaceState(null, '', t === 0 ? '#' : h);
+    // クエリが付いていても落とさない（URL共有時の情報を保つ）
+    if (location.hash !== h) history.replaceState(null, '', location.search + (t === 0 ? '#' : h));
+    updateSwap();
     rendered = { t: t, s: s };
   }
 
