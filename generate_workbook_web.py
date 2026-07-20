@@ -88,12 +88,15 @@ def build(folder: str) -> tuple[str, list[str]]:
 
     # 参考書 Web 版の単元 index（topicId → #t番号）: 相互リンク用
     ref_index = {}
+    ref_image = {}        # topicId → 単元挿絵（目次サムネ用）
     ref_sections = {}     # topicId → [節の本文（見出し＋本文）]（設問→節の対応づけ用）
     ref_path = REF_DIR / f"{folder}.json"
     if ref_path.exists():
         ref_spec = json.loads(ref_path.read_text(encoding="utf-8"))
         for i, t in enumerate(ref_spec["topics"], 1):
             ref_index[t["topicId"]] = i
+            if t.get("image"):
+                ref_image[t["topicId"]] = t["image"]
             ref_sections[t["topicId"]] = [
                 (sec.get("heading", "") + sec.get("lead", "") + sec.get("body", "")
                  + sec.get("point", "")).replace("**", "")
@@ -432,9 +435,14 @@ def build(folder: str) -> tuple[str, list[str]]:
         '<button class="toc-item" data-go="1"><span class="toc-no">年</span>'
         f'<span class="toc-name">{esc(check_title)}</span><span class="toc-state" data-state-t="1"></span></button>'
     ]
+    def toc_thumb(tid):
+        img = ref_image.get(tid)
+        u = use_img("reference/" + img) if img else None
+        return f'<img class="toc-thumb" src="{u}" alt="" loading="lazy">' if u else '<span class="toc-thumb ph"></span>'
     for i, t in enumerate(topics, 1):
         toc_items.append(
-            f'<button class="toc-item" data-go="{i + 1}"><span class="toc-no">{i}</span>'
+            f'<button class="toc-item" data-go="{i + 1}">{toc_thumb(t["topicId"])}'
+            f'<span class="toc-no">{i}</span>'
             f'<span class="toc-name">{esc(t["name"])}</span>'
             f'<span class="toc-state" data-state-t="{i + 1}"></span></button>')
 
@@ -627,11 +635,15 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .resume span { font-weight:normal; font-size:12px; opacity:.9; margin-left:8px; }
   .toc { margin:16px 0 12px; background:#fff; border:2px solid var(--line); border-radius:14px; padding:14px; }
   .toc-h { font-weight:bold; color:var(--deep); margin-bottom:6px; font-size:15px; }
-  .toc-item { display:flex; align-items:center; gap:10px; width:100%; padding:11px 6px;
+  .toc-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 6px;
               background:none; border:none; border-top:1px solid #faf1dc; cursor:pointer;
               color:#44403c; font-weight:bold; font-size:15px; text-align:left;
-              font-family:inherit; line-height:1.5; }
+              font-family:inherit; line-height:1.4; }
   .toc-item:first-of-type { border-top:none; }
+  /* 目次の単元サムネ（Codex製の水彩挿絵）。目次を絵入りで見やすく */
+  .toc-thumb { flex:none; width:56px; height:42px; border-radius:9px; object-fit:cover;
+               border:1.5px solid var(--line); background:#fff7e6; box-shadow:0 1px 3px rgba(120,80,20,.15); }
+  .toc-thumb.ph { background:linear-gradient(135deg,#fef3c7,#fde68a); }
   .toc-no { flex:none; min-width:24px; height:24px; border-radius:50%; background:var(--amber);
             color:#fff; display:inline-flex; align-items:center; justify-content:center;
             font-size:12px; padding:0 4px; }

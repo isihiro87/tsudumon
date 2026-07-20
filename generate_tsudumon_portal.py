@@ -793,7 +793,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     }
     // マスをタップ → その単元の問題集へ
     var cell = e.target.closest('.cell[data-tid]');
-    if (cell) { location.href = 'wb/' + cell.dataset.ch + '/index.html#t' + cell.dataset.wb; return; }
+    if (cell) { location.href = 'wb/' + cell.dataset.ch + '/index.html'; return; }  // まず章の目次へ
   });
 
   // ロゴ画像が実際に表示できたときだけ、CSS文字版のタイトルと差し替える

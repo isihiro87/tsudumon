@@ -229,8 +229,12 @@ def build(chapter: str) -> tuple[str, list[str]]:
                  or '<div class="navi navi-emoji">🦉</div>')
 
     # ── ホーム（表紙＋目次。進捗表示は JS が data-t を見て差し込む）──
+    def toc_thumb(t):
+        u = use_img(t.get("image", ""))
+        return f'<img class="toc-thumb" src="{u}" alt="" loading="lazy">' if u else '<span class="toc-thumb ph"></span>'
     toc_items = "".join(
         f'<button class="toc-item" data-go="{i}">'
+        f'{toc_thumb(t)}'
         f'<span class="toc-no">{i}</span>'
         f'<span class="toc-name">{esc(t["name"])}</span>'
         f'<span class="toc-state" data-state-t="{i}"></span></button>'
@@ -406,7 +410,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
         views.append(f"""
 <section class="view" data-t="{i}">
   <div class="tband"><span class="tno">{i}</span><h2>{esc(t['name'])}</h2>
-    <button class="play-unit" type="button" data-play="{i}" hidden>🔊 読み上げ</button></div>
+    <button class="play-unit" type="button" data-play="{i}" hidden>🔊 このページを読む</button></div>
   {''.join(steps)}
 </section>""")
 
@@ -594,11 +598,15 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .toc { margin:16px 0 8px; background:#fff; border:2px solid var(--line); border-radius:14px;
          padding:14px; }
   .toc-h { font-weight:bold; color:var(--deep); margin-bottom:6px; font-size:15px; }
-  .toc-item { display:flex; align-items:center; gap:10px; width:100%; padding:11px 6px;
+  .toc-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 6px;
               background:none; border:none; border-top:1px solid #faf1dc; cursor:pointer;
               color:#44403c; font-weight:bold; font-size:15px; text-align:left;
-              font-family:inherit; line-height:1.5; }
+              font-family:inherit; line-height:1.4; }
   .toc-item:first-of-type { border-top:none; }
+  /* 目次の単元サムネ（Codex製の水彩挿絵）。目次を絵入りで見やすく */
+  .toc-thumb { flex:none; width:56px; height:42px; border-radius:9px; object-fit:cover;
+               border:1.5px solid var(--line); background:#fff7e6; box-shadow:0 1px 3px rgba(120,80,20,.15); }
+  .toc-thumb.ph { background:linear-gradient(135deg,#fef3c7,#fde68a); }
   .toc-no { flex:none; width:24px; height:24px; border-radius:50%; background:var(--amber);
             color:#fff; display:inline-flex; align-items:center; justify-content:center;
             font-size:13px; }
@@ -933,85 +941,124 @@ __VIEWS__
   })();
 
 
-  // ── 読み上げ（音声に合わせて句をハイライトし、ページも自動でめくる）──
+  // ── 読み上げ（いま開いているページ＝ステップの音声だけを再生）──
+  //   音声ファイルは単元まるごと1本。tl[k]=[開始秒,長さ,そのマスがあるステップ]。
+  //   再生するのは「いま見ているステップ」に属する区間だけで、終わったら停止する
+  //   （次のページには自動で進まない）。時間表示もそのページ分だけ。
   var au = document.getElementById('audio');
   var apl = document.getElementById('aplayer');
-  var reading = { t: 0, i: -1 };
+  var reading = { t: 0, step: null, i0: 0, i1: -1, s0: 0, s1: 0, i: -1 };
   var RATES = [1, 1.25, 1.5, 0.75], ri = 0;
 
   function fmt(x) { x = Math.max(0, x | 0); return (x / 60 | 0) + ':' + ('0' + (x % 60)).slice(-2); }
   function spansOf(t) { return [].slice.call(views[t].querySelectorAll('.s')); }
 
-  function startAudio(t) {
+  // 単元t のステップstep に対応する音声区間（chunk範囲＋開始・終了秒）。無ければ null。
+  function stepRange(t, step) {
     var a = AUDIO[t];
-    if (!a) return;
-    reading = { t: t, i: -1 };
-    if (au.dataset.t !== String(t)) { au.src = a.url; au.dataset.t = String(t); }
+    if (!a) return null;
+    var tl = a.tl, i0 = -1, i1 = -1;
+    for (var i = 0; i < tl.length; i++) {
+      if (tl[i][2] === step) { if (i0 < 0) i0 = i; i1 = i; }
+    }
+    if (i0 < 0) return null;
+    return { i0: i0, i1: i1, s0: tl[i0][0], s1: tl[i1][0] + tl[i1][1] };
+  }
+
+  // いま開いているページを読み上げる。fromChunk を渡すとその句から。
+  function playStep(t, step, fromChunk) {
+    var r = stepRange(t, step);
+    if (!r) return;                       // 音声のないページ（重要語チェック等）
+    var a = AUDIO[t];
+    var at = (fromChunk != null && a.tl[fromChunk]) ? a.tl[fromChunk][0] : r.s0;
+    reading = { t: t, step: step, i0: r.i0, i1: r.i1, s0: r.s0, s1: r.s1, i: -1 };
     document.body.classList.add('reading');
     apl.hidden = false;
     au.playbackRate = RATES[ri];
-    au.play();
+    var begin = function () { try { au.currentTime = at; } catch (e) {} au.play(); };
+    if (au.dataset.t === String(t) && au.readyState >= 1) { begin(); }
+    else {
+      au.src = a.url; au.dataset.t = String(t);
+      au.addEventListener('loadedmetadata', begin, { once: true });
+      au.load();
+    }
   }
   function stopAudio() {
     au.pause();
     document.body.classList.remove('reading');
     apl.hidden = true;
     if (reading.t) spansOf(reading.t).forEach(function (el) { el.classList.remove('now', 'read'); });
-    reading = { t: 0, i: -1 };
+    reading = { t: 0, step: null, i0: 0, i1: -1, s0: 0, s1: 0, i: -1 };
   }
   function paintAudio() {
-    var a = AUDIO[reading.t];
-    if (!a) return;
-    var tl = a.tl, k = -1;
-    for (var i = 0; i < tl.length; i++) { if (au.currentTime >= tl[i][0]) k = i; else break; }
+    if (reading.step == null) return;
+    var tl = AUDIO[reading.t].tl, k = -1;
+    for (var i = reading.i0; i <= reading.i1; i++) { if (au.currentTime >= tl[i][0]) k = i; else break; }
     if (k === reading.i) return;
     reading.i = k;
-    // 読んでいる箇所が別のページなら、そのページへ自動でめくる
-    if (k >= 0 && tl[k][2] !== state.s && state.t === reading.t) go(reading.t, tl[k][2], tl[k][2] > state.s ? 1 : -1);
     var sp = spansOf(reading.t);
     sp.forEach(function (el, i) {
       el.classList.toggle('now', i === k);
-      el.classList.toggle('read', i < k);
+      el.classList.toggle('read', i >= reading.i0 && i < k);
     });
     var el = sp[k];
     if (el) {
-      var r = el.getBoundingClientRect();
-      if (r.top < 70 || r.bottom > innerHeight - 150) {
-        scrollTo({ top: scrollY + r.top - innerHeight * 0.4, behavior: 'smooth' });
+      var rc = el.getBoundingClientRect();
+      if (rc.top < 70 || rc.bottom > innerHeight - 150) {
+        scrollTo({ top: scrollY + rc.top - innerHeight * 0.4, behavior: 'smooth' });
       }
     }
   }
+  function updateBar(atEnd) {
+    var dur = reading.s1 - reading.s0;
+    var pos = atEnd ? dur : Math.min(dur, Math.max(0, au.currentTime - reading.s0));
+    document.getElementById('apSeek').value = dur ? Math.round(pos / dur * 1000) : 0;
+    document.getElementById('apTime').textContent = fmt(pos) + ' / ' + fmt(dur);
+  }
   function tickAudio() {
-    paintAudio();
-    if (au.duration) {
-      document.getElementById('apSeek').value = Math.round(au.currentTime / au.duration * 1000);
-      document.getElementById('apTime').textContent = fmt(au.currentTime) + ' / ' + fmt(au.duration);
+    // ページの終わりまで来たら、そのページで停止（次ページには進まない）
+    if (reading.step != null && au.currentTime >= reading.s1 - 0.02) {
+      au.pause();
+      var sp = spansOf(reading.t);
+      sp.forEach(function (el, i) {
+        el.classList.remove('now');
+        el.classList.toggle('read', i >= reading.i0 && i <= reading.i1);
+      });
+      updateBar(true);
+      return;
     }
+    paintAudio();
+    updateBar(false);
     if (!au.paused) requestAnimationFrame(tickAudio);
   }
   au.addEventListener('play', function () { document.getElementById('apPlay').textContent = '❚❚'; tickAudio(); });
   au.addEventListener('pause', function () { document.getElementById('apPlay').textContent = '▶'; });
-  au.addEventListener('ended', stopAudio);
-  document.getElementById('apPlay').onclick = function () { au.paused ? au.play() : au.pause(); };
+  document.getElementById('apPlay').onclick = function () {
+    if (reading.step == null) return;
+    if (au.paused) {
+      if (au.currentTime >= reading.s1 - 0.05) au.currentTime = reading.s0;  // 読み終わっていたら頭から
+      au.play();
+    } else au.pause();
+  };
   document.getElementById('apClose').onclick = stopAudio;
   document.getElementById('apSeek').oninput = function () {
-    if (au.duration) { au.currentTime = this.value / 1000 * au.duration; reading.i = -1; paintAudio(); }
+    if (reading.step == null) return;
+    var dur = reading.s1 - reading.s0;
+    au.currentTime = reading.s0 + this.value / 1000 * dur;
+    reading.i = -1; paintAudio(); updateBar(false);
   };
   document.getElementById('apRate').onclick = function () {
     ri = (ri + 1) % RATES.length; au.playbackRate = RATES[ri];
     this.textContent = RATES[ri].toFixed(2).replace(/0$/, '') + '×';
   };
-  // 単元見出しの「🔊 読み上げ」＋ 文字タップでその場所から読む
+  // 「🔊 このページを読む」＝いま開いているページを読む／文字タップでその句から読む
   document.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('.play-unit');
-    if (b) { startAudio(+b.dataset.play); return; }
+    if (b) { playStep(state.t, state.s); return; }
     var sp = e.target.closest && e.target.closest('.s');
     if (sp && AUDIO[state.t]) {
-      var k = +sp.dataset.i, a = AUDIO[state.t];
-      if (a.tl[k]) {
-        if (reading.t !== state.t) startAudio(state.t);
-        au.currentTime = a.tl[k][0]; reading.i = -1; paintAudio(); au.play();
-      }
+      var k = +sp.dataset.i;
+      if (AUDIO[state.t].tl[k]) playStep(state.t, AUDIO[state.t].tl[k][2], k);
     }
   });
 
@@ -1113,7 +1160,7 @@ __VIEWS__
     if (location.hash !== h) history.replaceState(null, '', location.search + (t === 0 ? '#' : h));
     updateSwap();
     var pb = views[t] && views[t].querySelector('.play-unit');
-    if (pb) pb.hidden = !AUDIO[t];
+    if (pb) pb.hidden = !stepRange(t, s);
     rendered = { t: t, s: s };
   }
 
@@ -1159,6 +1206,7 @@ __VIEWS__
   }
 
   function go(t, s, dir) {
+    if (typeof reading !== 'undefined' && reading.step != null) stopAudio();
     lastDir = dir || 1;
     state.t = Math.max(0, Math.min(N, t));
     state.s = Math.max(0, s || 0);
