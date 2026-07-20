@@ -168,6 +168,7 @@ def build_html() -> str:
                 f' title="{esc(ch["vol"])} {esc(u["name"])}">'
                 f'<span class="tok"><span class="tok-no">{gidx[ch["grade"]]}</span>'
                 f'<span class="tok-badge"></span></span>'
+                f'<span class="tok-name">{esc(u["name"])}</span>'
                 f'</button>')
 
     # 単元一覧。学年で絞り込み、章の帯＋単元行をそのまま並べる（開閉なし＝カンプと同じ密度）。
@@ -247,9 +248,10 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
              -webkit-text-stroke:5px #6b3b12; paint-order:stroke fill;
              text-shadow:0 3px 0 rgba(107,59,18,.45); }
   /* ロゴ画像（img/quest-title.webp）が読めたら文字版と差し替える */
-  .title-img { display:none; width:min(78%,340px); height:auto; margin:0 auto; }
+  .title-img { display:none; width:min(88%,400px); height:auto; margin:0 auto; }
   .head.has-logo .title-img { display:block; }
-  .head.has-logo .head-h1 { position:absolute; width:1px; height:1px; overflow:hidden;
+  .head.has-logo .head-h1, .head.has-logo .head-sub {
+                            position:absolute; width:1px; height:1px; overflow:hidden;
                             clip-path:inset(50%); white-space:nowrap; }
   .head-sub { display:inline-block; margin-top:2px; background:linear-gradient(#5c3a17,#40260d);
               color:#fdf3d9; font-size:13px; font-weight:bold; padding:5px 20px;
@@ -300,30 +302,23 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
              display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
   .ms-step.on { background:var(--amber); border-color:var(--brand); color:#fff; }
 
-  /* ───── マップ（島を縦に積む） ───── */
+  /* ───── マップ（時代エリアごとに1画面・横スワイプで切替） ───── */
   .board { margin-top:12px; }
-  /* いま表示していない学年のマスの置き場（画面には出さない） */
-  #cells { display:none; }
-  .era { position:relative; border-radius:20px; padding:10px 9px 12px; margin-bottom:12px;
-         border:3px solid rgba(124,45,18,.14);
-         box-shadow:inset 0 0 0 3px rgba(255,255,255,.45), 0 6px 16px rgba(120,80,20,.14); }
-  /* 島のイラスト（img/quest-island-*.png）を敷く。無ければ色だけになる。
-     マスと文字が読めるよう、白のベールを1枚かぶせている。 */
-  .era { background-repeat:no-repeat; background-position:center; background-size:cover; }
-  .era.e-ancient  { background-color:var(--era-ancient);
-                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-ancient.webp"); }
-  .era.e-medieval { background-color:var(--era-medieval);
-                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-medieval.webp"); }
-  .era.e-earlymod { background-color:var(--era-earlymod);
-                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-earlymod.webp"); }
-  .era.e-modern   { background-color:var(--era-modern);
-                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-modern.webp"); }
-  .era.e-current  { background-color:var(--era-current);
-                    background-image:linear-gradient(rgba(255,253,246,.40),rgba(255,253,246,.58)),url("img/quest-island-current.webp"); }
-  /* 島と島をつなぐ点線（次の島へ渡る道） */
-  .era::after { content:"⛵"; position:absolute; left:50%; bottom:-15px; transform:translateX(-50%);
-                font-size:15px; opacity:.75; }
-  .era:last-of-type::after { content:none; }
+  #cells { display:none; }   /* 表示前のマスの置き場 */
+  /* 横スワイプのカルーセル。1ページ＝1時代エリア */
+  .era-track { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+               -webkit-overflow-scrolling:touch; scrollbar-width:none; background:#bcd6e2;
+               border-radius:22px; border:3px solid rgba(124,45,18,.22);
+               box-shadow:inset 0 0 0 3px rgba(255,255,255,.35), 0 6px 18px rgba(120,80,20,.2); }
+  .era-track::-webkit-scrollbar { display:none; }
+  /* 各エリアのページ。背景は学年の舞台画像を上/下に寄せて敷く（JSで設定） */
+  .era-page { flex:0 0 100%; scroll-snap-align:start; position:relative;
+              padding:10px 8px 16px; background-size:cover; background-repeat:no-repeat; }
+  /* ページ送りのドット */
+  .era-dots { display:flex; gap:8px; justify-content:center; margin:9px 0 2px; }
+  .era-dot { width:9px; height:9px; border-radius:50%; background:#d8bd91; border:none; padding:0;
+             cursor:pointer; transition:width .2s, background-color .2s; }
+  .era-dot.on { background:var(--brand); width:22px; border-radius:5px; }
   /* 時代の木の看板 */
   .sign { display:inline-flex; align-items:center; gap:7px; background:linear-gradient(#c89a5b,#a97b3f);
           color:#fff8ec; font-weight:bold; border-radius:9px; padding:4px 13px;
@@ -333,26 +328,31 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .sign .s-range { font-size:10.5px; background:rgba(255,255,255,.25); border-radius:8px; padding:1px 6px; }
   .era-hint { font-size:11px; color:#7c5a2a; margin:5px 2px 2px; font-weight:bold; }
 
-  /* マスは1行8個。単元名はマップには出さず、下の「単元一覧」で見せる。 */
-  .row { display:flex; gap:4px; align-items:flex-start; position:relative; margin:12px 0 6px; }
+  /* マスは1行4個。各マスに単元名を出す（何の内容か一目でわかる） */
+  .row { display:flex; gap:6px; align-items:flex-start; position:relative; margin:10px 0 4px; }
   .row.rev { flex-direction:row-reverse; }
-  /* マスをつなぐ点線の道。--span＝実際にマスがある幅の割合（端数の行で線が余らない） */
-  .row::before { content:""; position:absolute; left:5%; top:16px; height:5px; z-index:0;
-                 width:calc(var(--span,100%) - 10%);
-                 background:repeating-linear-gradient(90deg,#e0cb9c 0 9px, transparent 9px 17px);
+  /* マスをつなぐ点線の道 */
+  .row::before { content:""; position:absolute; left:8%; top:23px; height:5px; z-index:0;
+                 width:calc(var(--span,100%) - 16%);
+                 background:repeating-linear-gradient(90deg,#c9a978 0 9px, transparent 9px 17px);
                  border-radius:3px; }
-  .row.rev::before { left:auto; right:5%; }
-  .cell { position:relative; z-index:1; flex:0 0 calc((100% - (var(--row,8) - 1) * 4px) / var(--row,8));
+  .row.rev::before { left:auto; right:8%; }
+  .cell { position:relative; z-index:1; flex:0 0 calc((100% - (var(--row,4) - 1) * 6px) / var(--row,4));
           min-width:0; border:none; background:none;
           cursor:pointer; font-family:inherit; padding:0; display:flex; flex-direction:column;
-          align-items:center; }
-  .tok { position:relative; width:min(100%,38px); aspect-ratio:1; border-radius:50%; background:#fffdf6;
+          align-items:center; gap:3px; }
+  .tok { position:relative; width:min(100%,46px); aspect-ratio:1; border-radius:50%; background:#fffdf6;
          border:2.5px solid #e2cfa4; display:flex; align-items:center; justify-content:center;
          box-shadow:0 3px 0 #e2cfa4, 0 5px 7px rgba(120,80,20,.18);
          transition:transform .12s, box-shadow .12s, background-color .2s, border-color .2s; }
-  .tok-no { font-weight:bold; font-size:15px; color:#7a6a4d; line-height:1; }
+  .tok-no { font-weight:bold; font-size:17px; color:#7a6a4d; line-height:1; }
   .tok-badge { position:absolute; right:-3px; bottom:-3px; font-size:12px; line-height:1;
                filter:drop-shadow(0 1px 1px rgba(0,0,0,.2)); }
+  /* 単元名（島の上でも読めるよう白いチップに） */
+  .tok-name { font-size:9.5px; line-height:1.25; color:#3b2b16; text-align:center; max-width:100%;
+              background:rgba(255,253,246,.9); border-radius:7px; padding:2px 5px;
+              box-shadow:0 1px 2px rgba(120,80,20,.15);
+              display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   /* バッジ画像（img/quest-badge-*.webp）が使えるときだけ絵文字と差し替える */
   .has-badges .tok-badge { font-size:0; width:16px; height:16px;
                            background:center/contain no-repeat; }
@@ -443,13 +443,14 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   footer { text-align:center; margin-top:26px; color:#9c8a6a; font-size:12px; }
 
-  /* 画面が広いときはマスを大きめに（1行の数は8個のまま） */
+  /* 画面が広いときはマスを大きめに（1行4個のまま） */
   @media (min-width:640px) {
-    .tok { width:min(100%,56px); }
-    .tok-no { font-size:19px; }
-    .row { gap:8px; }
-    .row::before { top:25px; }
-    .cell { flex:0 0 calc((100% - (var(--row,8) - 1) * 8px) / var(--row,8)); }
+    .tok { width:min(100%,60px); }
+    .tok-no { font-size:22px; }
+    .tok-name { font-size:11px; }
+    .row { gap:10px; }
+    .row::before { top:29px; }
+    .cell { flex:0 0 calc((100% - (var(--row,4) - 1) * 10px) / var(--row,4)); }
     .head-h1 { font-size:42px; }
   }
 </style></head><body>
@@ -489,6 +490,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   </div>
 
   <div class="board" id="board">
+    <div class="era-track" id="eraTrack"></div>
+    <div class="era-dots" id="eraDots"></div>
     <div id="cells">__CELLS__</div>
     <div class="goal">
       <div class="g-box">
@@ -524,7 +527,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   var ERAS = __ERAS__;
   var GRADES = __GRADES__;
   var GRADE_TOTAL = __GRADE_TOTAL__;
-  var ROW = 8;   // 1行のマス数（snake配置）。カンプと同じ密度
+  var ROW = 4;   // 1行のマス数（エリアごとに1画面・snake配置）
 
   function ls(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; } }
   function lsRaw(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
@@ -599,22 +602,28 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     return stateOf(c.dataset.ch, c.dataset.tid, +c.dataset.nq || 0, c.dataset.ref);
   }
 
-  // いまの学年のマスだけを、時代エリアごとの島に snake 配置で並べる
+  // いまの学年のマスを、時代エリアごとの1ページ（横スワイプ）に並べる
   function layout() {
-    var board = document.getElementById('board');
-    var goal = board.querySelector('.goal');
+    var track = document.getElementById('eraTrack');
+    var dots = document.getElementById('eraDots');
     var pool = document.getElementById('cells');
     var all = [].slice.call(document.querySelectorAll('.cell[data-tid]'));
-    // いったん全部プールへ戻してから、いまの学年ぶんだけ島に入れ直す
     all.forEach(function (c) { if (c.parentNode !== pool) pool.appendChild(c); });
-    [].forEach.call(board.querySelectorAll('.era'), function (el) { el.remove(); });
+    track.innerHTML = ''; dots.innerHTML = '';
 
+    var gn = { '中1': 1, '中2': 2, '中3': 3 }[cur] || 1;
+    var veil = 'linear-gradient(rgba(255,253,246,.30),rgba(255,253,246,.42))';
+    var img = 'url("img/quest-stage-g' + gn + '.webp")';
     var mine = all.filter(function (c) { return c.dataset.grade === cur; });
+    var page = 0;
     ERAS.forEach(function (era) {
       var list = mine.filter(function (c) { return c.dataset.era === era.key; });
       if (!list.length) return;
       var box = document.createElement('div');
-      box.className = 'era e-' + era.key;
+      box.className = 'era-page e-' + era.key;
+      // 学年の舞台画像を、1エリア目は上・2エリア目は下に寄せて見せる
+      box.style.backgroundImage = veil + ', ' + img;
+      box.style.backgroundPosition = (page === 0 ? 'top center' : 'bottom center');
       var first = list[0].dataset.gn, last = list[list.length - 1].dataset.gn;
       box.innerHTML = '<div><span class="sign"><span class="s-emoji">' + era.emoji + '</span>'
         + era.name + '<span class="s-range">' + first + '〜' + last + '</span></span></div>'
@@ -624,27 +633,53 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
         row.className = 'row' + ((i / ROW) % 2 === 1 ? ' rev' : '');
         var slice = list.slice(i, i + ROW);
         slice.forEach(function (c) { row.appendChild(c); });
-        // マスの幅は常に1行ぶんで割る（端数の行でもマスが大きくならない）。
-        // 道の点線も実際にマスがあるぶんだけ伸ばす。
         row.style.setProperty('--row', ROW);
         row.style.setProperty('--span', (slice.length / ROW * 100) + '%');
         box.appendChild(row);
       }
-      board.insertBefore(box, goal);
+      track.appendChild(box);
+      var dot = document.createElement('button');
+      dot.className = 'era-dot' + (page === 0 ? ' on' : '');
+      dot.type = 'button'; dot.dataset.page = page;
+      dot.setAttribute('aria-label', era.name);
+      dots.appendChild(dot);
+      page++;
     });
+    dots.style.display = page > 1 ? '' : 'none';
 
-    // 本の一覧もいまの学年だけ
     [].forEach.call(document.querySelectorAll('.book'), function (b) {
       b.style.display = (b.dataset.grade === cur) ? '' : 'none';
     });
     document.getElementById('goalGrade').textContent = cur;
     document.getElementById('goalTotal').textContent = GRADE_TOTAL[cur] || 0;
     document.getElementById('ovTotal').textContent = GRADE_TOTAL[cur] || 0;
+    track.scrollLeft = 0;
   }
+
+  // ドットとスワイプの同期（トラックは一度きり設定）
+  (function () {
+    var track = document.getElementById('eraTrack');
+    var dots = document.getElementById('eraDots');
+    if (!track) return;
+    var timer = null;
+    track.addEventListener('scroll', function () {
+      if (timer) return;
+      timer = requestAnimationFrame(function () {
+        timer = null;
+        if (!track.clientWidth) return;
+        var idx = Math.round(track.scrollLeft / track.clientWidth);
+        [].forEach.call(dots.children, function (d, i) { d.classList.toggle('on', i === idx); });
+      });
+    }, { passive: true });
+    dots.addEventListener('click', function (e) {
+      var d = e.target.closest && e.target.closest('.era-dot');
+      if (d) track.scrollTo({ left: (+d.dataset.page) * track.clientWidth, behavior: 'smooth' });
+    });
+  })();
 
   function paint() {
     // 進捗はいまの学年の中で数える（マップに並んでいるマス＝いまの学年）
-    var cells = [].slice.call(document.querySelectorAll('#board .era .cell[data-tid]'));
+    var cells = [].slice.call(document.querySelectorAll('.era-page .cell[data-tid]'));
     var n = { none: 0, ref: 0, some: 0, all: 0, perfect: 0 };
     var cleared = 0, lastCleared = -1;
     var byCh = {};

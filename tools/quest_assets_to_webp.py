@@ -9,12 +9,27 @@ generate_tsudumon_portal.py が配る（PNG は原本として残す）。
 """
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
+
+
+def drop_green_screen(im: Image.Image) -> Image.Image:
+    """クロマキー用の明るい緑の背景を透明に抜く（ロゴ画像用）。
+    Codex の画像生成は透過で返すこともあれば緑ベタで返すこともあるので、
+    緑ベタのときだけここで抜く（既に透過なら緑ピクセルが無く実質ノーオペ）。"""
+    a = np.array(im.convert("RGBA")).astype(int)
+    r, g, b, alpha = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
+    green = (g > 130) & (g - np.maximum(r, b) > 45) & (alpha > 0)
+    if green.mean() < 0.05:      # 緑がほぼ無い＝すでに透過済み
+        return im
+    a[..., 3][green] = 0
+    return Image.fromarray(a.astype("uint8"), "RGBA")
 
 QUEST = Path(__file__).resolve().parent.parent / "assets" / "quest"
 
 # ファイル名の接頭辞 → (長辺の上限, 品質)
 RULES = [
+    ("quest-stage",  (1080, 78)),   # 学年ごとの舞台背景（board全体に敷く）
     ("quest-bg",     (1080, 78)),
     ("quest-island", (900, 76)),
     ("quest-title",  (760, 88)),
@@ -37,6 +52,8 @@ def main() -> None:
             continue                      # カンプ画像そのものは配信しない
         limit, quality = rule_for(src.stem)
         im = Image.open(src).convert("RGBA")
+        if src.stem == "quest-title":
+            im = drop_green_screen(im)
         if max(im.size) > limit:
             scale = limit / max(im.size)
             im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
