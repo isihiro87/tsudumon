@@ -28,8 +28,10 @@ const chapters = files
   .filter((c) => !only.length || only.includes(c.slice(0, 2)))
   .sort((a, b) => (a.startsWith("04") ? -1 : b.startsWith("04") ? 1 : a.localeCompare(b)));
 
+// 章ごとに独立した処理なので、章を分けて複数プロセスで走らせられる（WORKER=名前 で区別）。
+const WORKER = process.env.WORKER ? "[" + process.env.WORKER + "] " : "";
 function log(line) {
-  const s = new Date().toISOString().slice(11, 19) + " " + line;
+  const s = new Date().toISOString().slice(11, 19) + " " + WORKER + line;
   console.log(s);
   fs.appendFileSync(LOG, s + "\n");
 }
@@ -44,9 +46,16 @@ for (const chapter of chapters) {
   for (let i = 1; i <= spec.topics.length; i++) {
     const t = spec.topics[i - 1];
     const label = `${chapter} #${i} ${t.name}`;
-    const r = spawnSync(process.execPath, [path.join(__dirname, "gen_ref_narration.js"), chapter, String(i)],
-      { cwd: BASE, encoding: "utf8", maxBuffer: 1 << 26 });
-    const out = (r.stdout || "") + (r.stderr || "");
+    // 一時的な API エラー（まれな 400 など）で単元ごと落ちることがあるので、単元単位でも1度やり直す。
+    // 生成済みの文はキャッシュから読むので、やり直しても失敗した文だけを取り直す。
+    let r, out = "";
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      r = spawnSync(process.execPath, [path.join(__dirname, "gen_ref_narration.js"), chapter, String(i)],
+        { cwd: BASE, encoding: "utf8", maxBuffer: 1 << 26 });
+      out = (r.stdout || "") + (r.stderr || "");
+      if (r.status === 0) break;
+      if (attempt === 1) log(`  … ${label} を再試行（${(out.match(/ERROR:.*/) || [""])[0].slice(0, 80)}）`);
+    }
     const wrote = (out.match(/narration\.mp3 \(([\d.]+)s \/ (\d+)文\)/) || []);
     const fixes = (out.match(/読み落とし/g) || []).length;
     const cost = (out.match(/COST 概算: 約([\d.]+)円/) || [])[1] || "?";
