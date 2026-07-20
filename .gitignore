@@ -45,3 +45,4 @@ covers/out/
 mascot-preview/
 assets/_backup_answers/
 scratch_*.log
+dist/tts/

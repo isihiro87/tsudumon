@@ -98,11 +98,108 @@ def ai_url(topic_key: str) -> str:
             f"?t={urllib.parse.quote(topic_key)}")
 
 
+
+# ── 読み上げ音声（tools/gen_ref_narration.js が作った narration.json と対応づける）──
+# 音声は「文」単位で作り、ハイライトは「読点で切った句」単位。
+# ここでの分け方は gen_ref_narration.js と完全に一致させること（ズレるとハイライトが狂う）。
+TTS_DIR = BASE / "output" / "web" / "tts"
+TTS_URLS = BASE / "dist" / "tts" / "_urls.json"
+MIN_CLAUSE = 8
+
+
+def split_sentences(full: str) -> list[str]:
+    out, buf, depth = [], "", 0
+    for ch in str(full):
+        buf += ch
+        if ch in "「（『":
+            depth += 1
+        elif ch in "」）』":
+            depth = max(0, depth - 1)
+        elif depth == 0 and ch in "。！？":
+            out.append(buf)
+            buf = ""
+    if buf.strip():
+        out.append(buf)
+    return [x for x in out if x.strip()]
+
+
+def split_clauses(sentence: str) -> list[str]:
+    raw, buf, bold = [], "", False
+    chars = list(str(sentence))
+    i = 0
+    while i < len(chars):
+        ch = chars[i]
+        if ch == "*" and i + 1 < len(chars) and chars[i + 1] == "*":
+            bold = not bold
+            buf += "**"
+            i += 2
+            continue
+        buf += ch
+        if not bold and ch == "、":
+            raw.append(buf)
+            buf = ""
+        i += 1
+    if buf:
+        raw.append(buf)
+    out: list[str] = []
+    for c in raw:
+        if out and (len(strip_bold(c)) < MIN_CLAUSE or len(strip_bold(out[-1])) < MIN_CLAUSE):
+            out[-1] += c
+        else:
+            out.append(c)
+    return out or [sentence]
+
+
+def strip_bold(s: str) -> str:
+    return BOLD_RE.sub(lambda m: m.group(1), str(s))
+
+
+class Narration:
+    """1単元ぶんの読み上げ。ブロックを読む順に spans() へ渡すと、
+    narration.json の chunk 順（hook→(見出し・リード・本文・ここだけ)×節→30秒まとめ）と
+    そろった <span class="s" data-i="…"> を返す。"""
+
+    def __init__(self, ch_no: str, topic_id: str, urls: dict):
+        self.key = f"{ch_no}-{topic_id}"
+        self.url = urls.get(self.key)
+        self.chunks: list[dict] = []
+        self.steps: list[int] = []      # 句ごとの「そのマスがあるステップ番号」
+        self.i = 0
+        self.step = 0
+        path = TTS_DIR / self.key / "narration.json"
+        if self.url and path.exists():
+            self.chunks = json.loads(path.read_text(encoding="utf-8"))["chunks"]
+
+    @property
+    def ok(self) -> bool:
+        return bool(self.url and self.chunks)
+
+    def spans(self, text: str, renderer=rich) -> str:
+        """読み上げ対象のテキストを句ごとの span で包む（音声が無ければ素通し）。"""
+        if not self.ok:
+            return renderer(text)
+        out = []
+        for sent in split_sentences(text):
+            for c in split_clauses(sent):
+                out.append(f'<span class="s" data-i="{self.i}">{renderer(c)}</span>')
+                self.steps.append(self.step)
+                self.i += 1
+        return "".join(out)
+
+    def timeline(self) -> list:
+        """[[開始秒, 長さ, そのマスがあるステップ番号], …]。ステップは spans() 呼び出し時の値。"""
+        return [[c["start"], c["dur"], self.steps[k] if k < len(self.steps) else 0]
+                for k, c in enumerate(self.chunks)]
+
+
 def build(chapter: str) -> tuple[str, list[str]]:
     """(HTML, 使用した画像ファイル名リスト) を返す。"""
     spec = json.loads((REF_DIR / f"{chapter}.json").read_text(encoding="utf-8"))
     ch_no = chapter[:2]
     images: list[str] = []
+    # 読み上げ音声（アップロード済みのURL一覧。無ければ音声UIは出ない）
+    tts_urls = json.loads(TTS_URLS.read_text(encoding="utf-8")) if TTS_URLS.exists() else {}
+    audio: dict[int, dict] = {}
 
     # 問題集 Web 版の単元 index（topicId → #t番号。t1=年表なので +2）: 相互リンク用
     wb_index = {}
@@ -165,10 +262,12 @@ def build(chapter: str) -> tuple[str, list[str]]:
     # ── 各単元（ステップに分割）──
     for i, t in enumerate(spec["topics"], 1):
         steps = []
+        narr = Narration(ch_no, t["topicId"], tts_urls)
+        narr.step = 0
 
         # step 0: 単元表紙（covers/out/webtopics の表紙画像＝PDF単元表紙と同デザイン
         # を埋め込む。画像が無い場合は従来の HTML 表示にフォールバック）
-        hook = (f'<div class="hook">{navi_html}<div class="bubble">{rich(t["hook"])}</div></div>'
+        hook = (f'<div class="hook">{navi_html}<div class="bubble">{narr.spans(t["hook"])}</div></div>'
                 if t.get("hook") else "")
         web_cover = WEB_COVER_DIR / f"{ch_no}-{t['topicId']}.webp"
         if web_cover.exists():
@@ -211,10 +310,13 @@ def build(chapter: str) -> tuple[str, list[str]]:
         # step 1..n: 各節（本文＋ここだけ覚える＋用語カード）
         used_terms = set()
         for si, s in enumerate(t["sections"]):
-            lead = (f'<div class="sec-lead">{esc(s["lead"])}</div>'
+            narr.step = si + 1
+            heading_html = narr.spans(s["heading"], esc)
+            lead = (f'<div class="sec-lead">{narr.spans(s["lead"], esc)}</div>'
                     if s.get("lead") else "")
+            body_html = narr.spans(s["body"])
             point = (f'<div class="point"><span class="ptag">⭐ ここだけ覚える</span>'
-                     f'<div class="ptxt">{rich(s["point"])}</div></div>'
+                     f'<div class="ptxt">{narr.spans(s["point"])}</div></div>'
                      if s.get("point") else "")
             side_items = []
             if s.get("aside"):
@@ -232,9 +334,9 @@ def build(chapter: str) -> tuple[str, list[str]]:
                     if side_items else "")
             steps.append(f"""
     <div class="step" data-label="{esc(s['heading'])}">
-      <h3><span class="sec-no">{si + 1}</span>{esc(s['heading'])}</h3>
+      <h3><span class="sec-no">{si + 1}</span>{heading_html}</h3>
       {lead}
-      <p>{rich(s['body'])}</p>
+      <p>{body_html}</p>
       {point}
       {side}
     </div>""")
@@ -266,6 +368,8 @@ def build(chapter: str) -> tuple[str, list[str]]:
     </div>""")
 
         # 最終 step: 30秒まとめ ＋ AI先生 ＋ 完了
+        # まとめは最終ステップ（表紙1＋節n＋重要語チェック(あれば)）
+        narr.step = 1 + len(t["sections"]) + (1 if t.get("terms") else 0)
         s30 = t.get("summary30") or t.get("summary")
         s30_owl = f"""
         <div class="sum30-navi">{char_web("owl_think_sm.png", "navi-char")}
@@ -273,7 +377,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
         summary = f"""
       <div class="sum30">
         <div class="sum30-h">⏱ 30秒まとめ<span class="sum30-tag">テスト前にここだけ！</span></div>
-        <div class="sum30-body">{rich(s30)}</div>
+        <div class="sum30-body">{narr.spans(s30)}</div>
         {s30_owl}
       </div>""" if s30 else ""
         url = ai_url(f"{ch_no}-{t['topicId']}")
@@ -296,9 +400,13 @@ def build(chapter: str) -> tuple[str, list[str]]:
       </a>
     </div>""")
 
+        if narr.ok:
+            audio[i] = {"url": narr.url, "tl": narr.timeline()}
+
         views.append(f"""
 <section class="view" data-t="{i}">
-  <div class="tband"><span class="tno">{i}</span><h2>{esc(t['name'])}</h2>{char_web("char_owl_sm.png", "navi-char tchar")}</div>
+  <div class="tband"><span class="tno">{i}</span><h2>{esc(t['name'])}</h2>
+    <button class="play-unit" type="button" data-play="{i}" hidden>🔊 読み上げ</button></div>
   {''.join(steps)}
 </section>""")
 
@@ -316,6 +424,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
             .replace("__TABS__", tabs)
             .replace("__STORAGE_KEY__", f"tzmref-{ch_no}")
             .replace("__CH_NO__", ch_no)
+            .replace("__AUDIO__", json.dumps(audio, ensure_ascii=False))
             .replace("__WB_VIEWS__", json.dumps(
                 [0] + [wb_index.get(t["topicId"], 0) for t in spec["topics"]]))
             .replace("__TOPIC_KEYS__", topic_keys_json)
@@ -339,6 +448,36 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   .mark { background:linear-gradient(transparent 55%, var(--line) 55%); font-weight:bold; padding:0 1px; }
 
+  /* ── 読み上げ（音声＋読んでいる句のハイライト）── */
+  .s { border-radius:6px; padding:.14em .12em; margin:0 -.12em;
+       -webkit-box-decoration-break:clone; box-decoration-break:clone;
+       transition:background-color .15s ease, color .15s ease; }
+  body.reading .s { cursor:pointer; }
+  .s.read { color:#8a8279; }
+  .s.now { background:#fcd34d; color:#1c1917; }
+  .s.now .mark { background:none; }
+  /* 単元見出しの再生ボタン */
+  .play-unit { display:inline-flex; align-items:center; gap:6px; margin-left:auto; flex:none;
+               background:#fff; color:var(--brand); border:1.5px solid var(--line);
+               border-radius:20px; padding:4px 12px; font-size:12px; font-weight:bold;
+               font-family:inherit; cursor:pointer; }
+  .play-unit[hidden] { display:none; }
+  /* 下部プレーヤー（再生中だけ出す。ナビバーの上に重ねる） */
+  .aplayer { position:fixed; left:0; right:0; bottom:58px; z-index:25;
+             background:rgba(255,253,248,.98); border-top:1px solid #f0e6d2;
+             box-shadow:0 -3px 12px rgba(120,80,20,.14); padding:7px 0 8px; }
+  .aplayer[hidden] { display:none; }
+  .ap-in { max-width:640px; margin:0 auto; padding:0 14px; display:flex; align-items:center; gap:9px; }
+  .ap-btn { flex:none; width:40px; height:40px; border-radius:50%; border:none; background:var(--brand);
+            color:#fff; font-size:16px; cursor:pointer; box-shadow:0 2px 6px rgba(180,83,9,.35); }
+  .ap-seek { flex:1; min-width:0; }
+  .ap-seek input { width:100%; accent-color:var(--brand); }
+  .ap-time { flex:none; font-size:11px; font-weight:bold; color:var(--brand); min-width:74px;
+             text-align:right; }
+  .ap-rate, .ap-close { flex:none; border:1.5px solid var(--line); background:#fffbeb; color:var(--brand);
+             font-weight:bold; border-radius:16px; padding:4px 9px; font-size:11.5px; cursor:pointer;
+             font-family:inherit; }
+
   /* ── 上部: タイトル＋単元タブ＋進捗バー ── */
   .bar { position:sticky; top:0; z-index:10; background:rgba(255,253,248,.96);
          backdrop-filter:blur(6px); border-bottom:1px solid #f0e6d2; }
@@ -361,7 +500,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bar-step { flex:none; font-size:11px; font-weight:bold; color:var(--brand); }
   /* 初回だけ出す操作ヒント（PCはキー、スマホはスワイプ） */
-  .hintbar { position:fixed; left:50%; transform:translateX(-50%); bottom:78px; z-index:35;
+  .hintbar { position:fixed; left:50%; transform:translateX(-50%); bottom:132px; z-index:35;
              background:rgba(28,25,23,.88); color:#fff; font-size:12.5px; font-weight:bold;
              border-radius:20px; padding:8px 16px; box-shadow:0 4px 14px rgba(0,0,0,.3);
              animation:hintIn .3s ease; }
@@ -725,6 +864,14 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 __VIEWS__
 </main>
 <div class="hintbar" id="hintBar" hidden></div>
+<div class="aplayer" id="aplayer" hidden><div class="ap-in">
+  <button class="ap-btn" id="apPlay" aria-label="再生／一時停止">❚❚</button>
+  <div class="ap-seek"><input type="range" id="apSeek" min="0" max="1000" value="0"></div>
+  <div class="ap-time" id="apTime">0:00 / 0:00</div>
+  <button class="ap-rate" id="apRate">1.0×</button>
+  <button class="ap-close" id="apClose" aria-label="読み上げを止める">×</button>
+</div></div>
+<audio id="audio" preload="none"></audio>
 <div class="navbar" id="navbar" hidden><div class="navbar-in">
   <button class="nb nb-prev" id="btnPrev">← まえへ</button>
   <button class="nb nb-next" id="btnNext">つぎへ →</button>
@@ -752,7 +899,8 @@ __VIEWS__
 (function () {
   var KEY = '__STORAGE_KEY__';
   var CH = '__CH_NO__';
-  var WB_VIEWS = __WB_VIEWS__;          // 参考書の単元t → 問題集のビュー番号（0＝対応なし）
+  var WB_VIEWS = __WB_VIEWS__;
+  var AUDIO = __AUDIO__;          // {単元t: {url, tl:[[開始秒,長さ,ステップ], …]}}          // 参考書の単元t → 問題集のビュー番号（0＝対応なし）
   var views = [].slice.call(document.querySelectorAll('.view'));
   var tabs = [].slice.call(document.querySelectorAll('.tab'));
   var N = views.length - 1; // 単元数
@@ -783,6 +931,89 @@ __VIEWS__
     };
     bar.addEventListener('click', function () { bar.hidden = true; });
   })();
+
+
+  // ── 読み上げ（音声に合わせて句をハイライトし、ページも自動でめくる）──
+  var au = document.getElementById('audio');
+  var apl = document.getElementById('aplayer');
+  var reading = { t: 0, i: -1 };
+  var RATES = [1, 1.25, 1.5, 0.75], ri = 0;
+
+  function fmt(x) { x = Math.max(0, x | 0); return (x / 60 | 0) + ':' + ('0' + (x % 60)).slice(-2); }
+  function spansOf(t) { return [].slice.call(views[t].querySelectorAll('.s')); }
+
+  function startAudio(t) {
+    var a = AUDIO[t];
+    if (!a) return;
+    reading = { t: t, i: -1 };
+    if (au.dataset.t !== String(t)) { au.src = a.url; au.dataset.t = String(t); }
+    document.body.classList.add('reading');
+    apl.hidden = false;
+    au.playbackRate = RATES[ri];
+    au.play();
+  }
+  function stopAudio() {
+    au.pause();
+    document.body.classList.remove('reading');
+    apl.hidden = true;
+    if (reading.t) spansOf(reading.t).forEach(function (el) { el.classList.remove('now', 'read'); });
+    reading = { t: 0, i: -1 };
+  }
+  function paintAudio() {
+    var a = AUDIO[reading.t];
+    if (!a) return;
+    var tl = a.tl, k = -1;
+    for (var i = 0; i < tl.length; i++) { if (au.currentTime >= tl[i][0]) k = i; else break; }
+    if (k === reading.i) return;
+    reading.i = k;
+    // 読んでいる箇所が別のページなら、そのページへ自動でめくる
+    if (k >= 0 && tl[k][2] !== state.s && state.t === reading.t) go(reading.t, tl[k][2], tl[k][2] > state.s ? 1 : -1);
+    var sp = spansOf(reading.t);
+    sp.forEach(function (el, i) {
+      el.classList.toggle('now', i === k);
+      el.classList.toggle('read', i < k);
+    });
+    var el = sp[k];
+    if (el) {
+      var r = el.getBoundingClientRect();
+      if (r.top < 70 || r.bottom > innerHeight - 150) {
+        scrollTo({ top: scrollY + r.top - innerHeight * 0.4, behavior: 'smooth' });
+      }
+    }
+  }
+  function tickAudio() {
+    paintAudio();
+    if (au.duration) {
+      document.getElementById('apSeek').value = Math.round(au.currentTime / au.duration * 1000);
+      document.getElementById('apTime').textContent = fmt(au.currentTime) + ' / ' + fmt(au.duration);
+    }
+    if (!au.paused) requestAnimationFrame(tickAudio);
+  }
+  au.addEventListener('play', function () { document.getElementById('apPlay').textContent = '❚❚'; tickAudio(); });
+  au.addEventListener('pause', function () { document.getElementById('apPlay').textContent = '▶'; });
+  au.addEventListener('ended', stopAudio);
+  document.getElementById('apPlay').onclick = function () { au.paused ? au.play() : au.pause(); };
+  document.getElementById('apClose').onclick = stopAudio;
+  document.getElementById('apSeek').oninput = function () {
+    if (au.duration) { au.currentTime = this.value / 1000 * au.duration; reading.i = -1; paintAudio(); }
+  };
+  document.getElementById('apRate').onclick = function () {
+    ri = (ri + 1) % RATES.length; au.playbackRate = RATES[ri];
+    this.textContent = RATES[ri].toFixed(2).replace(/0$/, '') + '×';
+  };
+  // 単元見出しの「🔊 読み上げ」＋ 文字タップでその場所から読む
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.play-unit');
+    if (b) { startAudio(+b.dataset.play); return; }
+    var sp = e.target.closest && e.target.closest('.s');
+    if (sp && AUDIO[state.t]) {
+      var k = +sp.dataset.i, a = AUDIO[state.t];
+      if (a.tl[k]) {
+        if (reading.t !== state.t) startAudio(state.t);
+        au.currentTime = a.tl[k][0]; reading.i = -1; paintAudio(); au.play();
+      }
+    }
+  });
 
   // 単元タブの左右矢印: まだ隠れているタブがある側だけ出す
   function updateTabArrows() {
@@ -881,6 +1112,8 @@ __VIEWS__
     // クエリが付いていても落とさない（URL共有時の情報を保つ）
     if (location.hash !== h) history.replaceState(null, '', location.search + (t === 0 ? '#' : h));
     updateSwap();
+    var pb = views[t] && views[t].querySelector('.play-unit');
+    if (pb) pb.hidden = !AUDIO[t];
     rendered = { t: t, s: s };
   }
 
