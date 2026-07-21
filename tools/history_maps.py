@@ -194,7 +194,27 @@ def voyage():
     save(fig, "hist07-sec-voyage")
 
 
-MAKERS = {"hakusukinoe": hakusukinoe, "genko": genko, "voyage": voyage}
+def treaty_ports():
+    """日米修好通商条約(1858)で開かれた5港。歴史⑩ opening-japan 節2。"""
+    fig, ax = base_map((128.5, 143.2, 31.0, 43.2))
+    ports = [
+        ("函館", 140.73, 41.77, "left", "bottom"),
+        ("新潟", 139.05, 37.92, "right", "center"),
+        ("神奈川（横浜）", 139.64, 35.44, "left", "top"),
+        ("兵庫（神戸）", 135.19, 34.69, "right", "top"),
+        ("長崎", 129.87, 32.74, "right", "center"),
+    ]
+    for name, lon, lat, ha, va in ports:
+        ax.plot(lon, lat, "o", color="#c0392b", markersize=13, zorder=8, mec="#fff", mew=1.6)
+        dx = 0.35 if ha == "left" else -0.35
+        lab(ax, lon + dx, lat + (0.35 if va == "bottom" else -0.35 if va == "top" else 0),
+            name, 19, color="#a01e12", ha=ha, va=("bottom" if va == "bottom" else "top" if va == "top" else "center"))
+    lab(ax, 138.4, 36.6, "日本", 26, color="#6b5a3a")
+    save(fig, "hist10-sec-treaty-ports")
+
+
+MAKERS = {"hakusukinoe": hakusukinoe, "genko": genko, "voyage": voyage,
+          "treaty_ports": treaty_ports}
 
 if __name__ == "__main__":
     import sys
