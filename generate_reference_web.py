@@ -243,10 +243,12 @@ def build(chapter: str) -> tuple[str, list[str]]:
 
     views = [f"""
 <section class="view home" data-t="0">
-  <a class="home-link" href="../../index.html">単元一覧にもどる</a>
+  <div class="home-topline">
+    <a class="home-link" href="../../index.html">‹ 単元一覧にもどる</a>
+    <div class="badge3"><span class="b-vol">{esc(spec['volume'])}</span><span class="b-kind">参考書</span></div>
+  </div>
   <header class="top hometop">
     <div class="ht-main">
-      <div class="badge3"><span class="b-vol">{esc(spec['volume'])}</span><span class="b-kind">参考書</span><span class="b-web">Web版</span></div>
       <h1 class="ht-title">{esc(spec['title'])}</h1>
       <div class="sub">{esc(spec['subtitle'])}</div>
     </div>
@@ -257,9 +259,9 @@ def build(chapter: str) -> tuple[str, list[str]]:
     <div class="toc-head"><div class="toc-h">この単元</div></div>
     {toc_items}
   </nav>
-  {f'<a class="wb-home" href="../../wb/{ch_no}/index.html">✏️ 問題集Web版を開く（この本の問題を解く）</a>' if wb_index else ''}
+  {f'<a class="wb-home" href="../../wb/{ch_no}/index.html">✏️ 問題集を開く（この本の問題を解く）</a>' if wb_index else ''}
   <footer class="foot">
-    <div>つづもん 参考書 Web版</div>
+    <div>つづもん 参考書</div>
     <div class="foot-note">紙やタブレットでじっくり派には、ダウンロード済みのPDF版もどうぞ。</div>
   </footer>
 </section>"""]
@@ -573,7 +575,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .top h1 { font-size:29px; color:var(--deep); margin-top:12px; line-height:1.4; }
   .sub { color:#92400e; font-size:14px; margin-top:4px; }
   /* 目次ページのヘッダー（画像デザイン：3分割バッジ＋左寄せタイトル＋右にマスコット） */
-  .hometop { display:flex; align-items:flex-start; gap:6px; padding:16px 2px 2px; text-align:left; }
+  .home-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; }
+  .hometop { display:flex; align-items:flex-start; gap:6px; padding:8px 2px 2px; text-align:left; }
   .ht-main { flex:1; min-width:0; }
   .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
             box-shadow:0 2px 4px rgba(120,80,20,.2); }
@@ -581,10 +584,10 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .b-vol { background:var(--brand); color:#fff; }
   .b-kind { background:#fff; color:var(--deep); }
   .b-web { background:var(--amber); color:#fff; }
-  .ht-title { font-size:33px; color:var(--deep); margin:12px 0 0; line-height:1.15; position:relative;
-              display:inline-block; padding:0 6px; }
-  .ht-title::before { content:"✨"; position:absolute; left:-20px; top:0; font-size:16px; }
-  .ht-title::after { content:"✨"; position:absolute; right:-18px; bottom:2px; font-size:13px; }
+  .ht-title { font-size:41px; color:var(--deep); margin:12px 0 0; line-height:1.12; position:relative;
+              display:inline-block; padding:0 6px; letter-spacing:.01em; }
+  .ht-title::before { content:"✨"; position:absolute; left:-22px; top:2px; font-size:19px; }
+  .ht-title::after { content:"✨"; position:absolute; right:-20px; bottom:4px; font-size:15px; }
   .ht-mascot { flex:none; position:relative; width:100px; padding-top:22px; text-align:center; }
   .ht-mascot img { height:74px; width:auto; }
   .ht-bubble { position:absolute; top:0; left:50%; transform:translateX(-50%); white-space:nowrap;
