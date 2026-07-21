@@ -36,6 +36,55 @@ BASE = Path(__file__).parent
 OUT_DIR = BASE / "output" / "web" / "wb"
 ASSET_DIR = BASE / "assets"
 DEPLOY_DIR = BASE.parent / "marutto-study" / "public" / "tsudumon" / "wb"
+
+
+# ── UIラインアイコン（絵文字を使わず統一トーンに。currentColor で色を継承）──
+def _svg(inner, fill=False):
+    attr = ('fill="currentColor"' if fill else
+            'fill="none" stroke="currentColor" stroke-width="1.8" '
+            'stroke-linecap="round" stroke-linejoin="round"')
+    return f'<svg class="mi" viewBox="0 0 24 24" {attr} aria-hidden="true">{inner}</svg>'
+
+
+IC = {
+    # おすすめ順（星）
+    "star": _svg('<path d="M12 3.4l2.5 5 5.5.8-4 3.9 1 5.5-4.9-2.6-5 2.6 1-5.5-4-3.9 5.5-.8z"/>', fill=True),
+    # 穴埋め（（　）に線）
+    "ana": _svg('<path d="M9 4.7C6.7 6.3 6.1 9 6.1 12s.6 5.7 2.9 7.3"/>'
+                '<path d="M15 4.7c2.3 1.6 2.9 4.3 2.9 7.3s-.6 5.7-2.9 7.3"/>'
+                '<line x1="9.4" y1="12.3" x2="14.6" y2="12.3"/>'),
+    # 一問一答（Q&Aの吹き出し2つ）
+    "qa": _svg('<path d="M3.9 5.4h9.2a1.5 1.5 0 0 1 1.5 1.5v3.3a1.5 1.5 0 0 1-1.5 1.5H8l-4.1 2.9z"/>'
+               '<path d="M20.1 10.8v5.9a1.5 1.5 0 0 1-1.5 1.5h-4.3L10.3 21v-2.3"/>'),
+    # 4択（選択肢・中央が選択済み）
+    "yon": _svg('<circle cx="6" cy="7" r="1.6"/><line x1="10" y1="7" x2="19" y2="7"/>'
+                '<circle cx="6" cy="12.4" r="1.6" fill="currentColor"/><line x1="10" y1="12.4" x2="19" y2="12.4"/>'
+                '<circle cx="6" cy="17.8" r="1.6"/><line x1="10" y1="17.8" x2="19" y2="17.8"/>'),
+    # 記述（文書＋行）
+    "doc": _svg('<path d="M6.6 3.6H13l4.4 4.4V19a1.5 1.5 0 0 1-1.5 1.5H6.6A1.5 1.5 0 0 1 5.1 19V5.1A1.5 1.5 0 0 1 6.6 3.6z"/>'
+                '<path d="M12.8 3.7V8.4h4.6"/><line x1="8" y1="13" x2="14.5" y2="13"/>'
+                '<line x1="8" y1="16.3" x2="12.6" y2="16.3"/>'),
+    # ヘッダー: 参考書（本）・問題（ペン）・目次（家）
+    "book": _svg('<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v15.5H5.5A1.5 1.5 0 0 0 4 20.5z"/>'
+                 '<path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v15.5h5.5A1.5 1.5 0 0 1 20 20.5z"/>'),
+    "pen": _svg('<path d="M14.6 5.3l4.1 4.1"/>'
+                '<path d="M4.6 19.4l1-4.1L15.2 5.7a1.3 1.3 0 0 1 1.9 0l1.2 1.2a1.3 1.3 0 0 1 0 1.9L8.7 18.4z"/>'),
+    "home": _svg('<path d="M4 11l8-6 8 6"/><path d="M6 10.2v9h12v-9"/>'),
+    # 入力して答え合わせ（キーボード）・答えを見て自己採点（目）
+    "kbd": _svg('<rect x="2.8" y="6.7" width="18.4" height="10.6" rx="1.8"/>'
+                '<line x1="6" y1="10" x2="6.1" y2="10"/><line x1="9.4" y1="10" x2="9.5" y2="10"/>'
+                '<line x1="12.8" y1="10" x2="12.9" y2="10"/><line x1="16.2" y1="10" x2="16.3" y2="10"/>'
+                '<line x1="8" y1="14" x2="16" y2="14"/>'),
+    "eye": _svg('<path d="M2.6 12S6 6.6 12 6.6 21.4 12 21.4 12 18 17.4 12 17.4 2.6 12 2.6 12z"/>'
+                '<circle cx="12" cy="12" r="2.6"/>'),
+}
+
+# カテゴリアイコンは codex イラスト（assets/ui-icons/ic-*.png）があれば SVG より優先。
+# 各章の img/ に配置して参照（トピック毎に data URI を埋め込むとページが重くなるため）。
+UI_ICON_KEYS = ("star", "ana", "qa", "yon", "doc")
+for _k in UI_ICON_KEYS:
+    if (ASSET_DIR / "ui-icons" / f"ic-{_k}.png").exists():
+        IC[_k] = f'<img class="mi-img" src="img/ic-{_k}.png" alt="" aria-hidden="true">'
 REF_DIR = BASE / "reference"
 
 LIFF_ID_UNITS = "2009587166-LjyCza2c"
@@ -125,14 +174,18 @@ def build(folder: str) -> tuple[str, list[str]]:
             if hits > best_hits:
                 best, best_hits = si, hits
         frag = f"s{best}" if best else ""
-        # 別タブで開く（問題タブが残るので解いている問題にすぐ戻れる）。
-        # 万一ポップアップ制限で同タブ遷移しても、参考書側ヘッダーの「✏️問題」切替で
-        # 解いていた位置に戻れる（相手側の last を読んで着地）。
+        # 同じタブで参考書へ移動し、JS が現在の問題位置を back= に付ける。
+        # 参考書側は back= を読んで「問題にもどる」ボタンを出す（すぐ問題へ戻れる）。
         return (f'<a class="sec-help" href="../../ref/{ch_no}/index.html'
-                f'#t{ref_index[tid]}{frag}" target="_blank" rel="noopener">'
-                f'📖 解説を読む（ヒント）</a>')
+                f'#t{ref_index[tid]}{frag}">'
+                f'<svg class="sh-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.5C10.5 5.3 8.4 4.8 6 4.8c-1 0-2 .1-2.8.3v13c.8-.2 1.8-.3 2.8-.3 2.4 0 4.5.5 6 1.7 1.5-1.2 3.6-1.7 6-1.7 1 0 2 .1 2.8.3v-13C20 4.9 19 4.8 18 4.8c-2.4 0-4.5.5-6 1.7z"/></svg>'
+                f'解説を読む（ヒント）</a>')
 
     images: list[str] = []
+    # カテゴリアイコン（codexイラスト）を img/ic-*.png として各章にコピー
+    for _k in UI_ICON_KEYS:
+        if (ASSET_DIR / "ui-icons" / f"ic-{_k}.png").exists():
+            images.append(f"ui-icons/ic-{_k}.png|ic-{_k}.png")
 
     def use_img(rel: str):
         """assets/{rel} をパッケージ img/ 配下へ（サブフォルダ名は _ に潰す）"""
@@ -192,7 +245,7 @@ def build(folder: str) -> tuple[str, list[str]]:
         ref_link = ""
         if tid in ref_index:
             ref_link = (f'<a class="ref-link" href="../../ref/{ch_no}/index.html'
-                        f'#t{ref_index[tid]}">📖 先に参考書で理解する</a>')
+                        f'#t{ref_index[tid]}">先に参考書で理解する</a>')
         steps.append(f"""
     <div class="step" data-label="A 要点まとめ" data-sec="A">
       <div class="sec-h"><span class="sec-tag">A</span>要点まとめ<span class="sec-note">（　）をタップして確かめよう</span></div>
@@ -210,12 +263,12 @@ def build(folder: str) -> tuple[str, list[str]]:
     <div class="step mb-step" data-label="短答のやり方" data-sec="MB">
       <div class="sec-h"><span class="sec-tag">▶</span>ここからは一問一答<span class="sec-note">答え合わせのやり方をえらぼう</span></div>
       <button class="mode-btn mb-pick" type="button" data-ansall="type">
-        <span class="mode-ic ic-b">⌨️</span>
+        <span class="mode-ic">{IC['kbd']}</span>
         <span class="mode-main"><span class="mode-t">入力して答え合わせ</span>
           <span class="mode-sub">こたえを打つと自動で正誤判定</span></span>
         <span class="mode-arrow">›</span></button>
       <button class="mode-btn mb-pick" type="button" data-ansall="check">
-        <span class="mode-ic ic-a">👀</span>
+        <span class="mode-ic">{IC['eye']}</span>
         <span class="mode-main"><span class="mode-t">答えを見て自己採点</span>
           <span class="mode-sub">こたえを見て ○ △ をタップ</span></span>
         <span class="mode-arrow">›</span></button>
@@ -239,44 +292,12 @@ def build(folder: str) -> tuple[str, list[str]]:
         <div class="qa-a">{to_ruby(card['front'])}</div>
         {expl}
         <div class="marks">
-          <button class="mk mk-ok" type="button" data-v="1">⭕ できた</button>
-          <button class="mk mk-ng" type="button" data-v="0">🔺 もう一度</button>
+          <button class="mk mk-ok" type="button" data-v="1">できた</button>
+          <button class="mk mk-ng" type="button" data-v="0">もう一度</button>
         </div>
       </div>
     </div>""")
         answer_sections.append((f"{t_i}　{topic['name']}", []))  # placeholder → 下で埋める
-
-        # B（まとめて採点用バッチステップ）: 全問を1画面に並べ、最後に一括で答えを開いて採点する。
-        # 個別ステップと同じ qid を使うので成績（st.r）は共通。通常フロー・印刷では出さない。
-        batch_items = []
-        for i, card in enumerate(cards, 1):
-            qid = f"qa-{tid}-{i}"
-            expl = (f'<div class="qa-expl">{esc(card["explanation"])}</div>'
-                    if card.get("explanation") else "")
-            batch_items.append(f"""
-      <div class="bq-item" data-qid="{qid}" data-a="{esc(ruby_base(card['front']))}" data-r="{esc(ruby_reading(card['front']))}">
-        <div class="bq-q"><span class="qa-no">({i})</span>{esc(card['back'])}</div>
-        <div class="b-inrow"><input class="b-in" type="text" placeholder="こたえを入力" autocomplete="off"></div>
-        <div class="hidden-until">
-          <div class="b-result" aria-live="polite"></div>
-          <div class="qa-a">{to_ruby(card['front'])}</div>
-          {expl}
-          <div class="marks">
-            <button class="mk mk-ok" type="button" data-v="1">⭕ できた</button>
-            <button class="mk mk-ng" type="button" data-v="0">🔺 もう一度</button>
-          </div>
-        </div>
-      </div>""")
-        steps.append(f"""
-    <div class="step qa-batch-step" data-label="B 一問一答（まとめて採点）" data-sec="BB">
-      <div class="sec-h"><span class="sec-tag">B</span>一問一答<span class="sec-note">全{len(cards)}問・まとめて採点</span></div>
-      <div class="howto">まず全部の問題にこたえてから、下のボタンでまとめて答え合わせしよう！</div>
-      {''.join(batch_items)}
-      <div class="reveal-all-row">
-        <button class="reveal batch-grade" type="button">こたえをまとめて表示して採点する</button>
-        <button class="b-batch-judge" type="button">入力したこたえをまとめて採点する</button>
-      </div>
-    </div>""")
 
         # C 実戦4択（タップで即判定）
         n_quiz = resolve_count(spec, "nQuiz", N_QUIZ, len(topic["quiz"]["questions"]))
@@ -285,9 +306,9 @@ def build(folder: str) -> tuple[str, list[str]]:
             qid = f"qz-{tid}-{i}"
             opts = "".join(
                 f'<button class="qopt" type="button" data-i="{j}">'
-                f'<span class="opt-k">{KATAKANA[j]}</span><span class="opt-t">{esc(o)}</span></button>'
+                f'<span class="opt-k">{j + 1}</span><span class="opt-t">{esc(o)}</span></button>'
                 for j, o in enumerate(q["options"]))
-            expl = (f'<div class="expl hidden-until">💡 {esc(q["explanation"])}</div>'
+            expl = (f'<div class="expl hidden-until">{esc(q["explanation"])}</div>'
                     if q.get("explanation") else "")
             help_c = ref_help(tid, q["options"][q["correctIndex"]], q["question"])
             steps.append(f"""
@@ -315,15 +336,13 @@ def build(folder: str) -> tuple[str, list[str]]:
       {ref_help(tid, *(w.get("keywords") or []), w.get("a", ""))}
       <textarea class="w-input print-hide" rows="3" placeholder="ここに書いてみよう（書かずに頭の中で説明してもOK）"></textarea>
       <div class="wline print-only"></div><div class="wline print-only"></div>
-      <button class="ai-grade print-hide" type="button" data-bankid="q-wbw-history-{ch_no}-{tid}-{i}">🤖 AIに採点してもらう</button>
+      <div class="wr-actions">
+        <button class="ai-grade print-hide" type="button" data-bankid="q-wbw-history-{ch_no}-{tid}-{i}" disabled>AI採点</button>
+        <button class="reveal" type="button">わからない</button>
+      </div>
       <div class="ai-result" hidden></div>
-      <button class="reveal" type="button">模範解答を見る</button>
       <div class="hidden-until">
         <div class="qa-a">{esc(w['a'])}</div>
-        <div class="marks">
-          <button class="mk mk-ok" type="button" data-v="1">⭕ 書けた</button>
-          <button class="mk mk-ng" type="button" data-v="0">🔺 もう一度</button>
-        </div>
       </div>
     </div>""")
 
@@ -383,43 +402,42 @@ def build(folder: str) -> tuple[str, list[str]]:
       {''.join(item_rows)}
     </div>""")
 
-        # 結果ステップ
+        # 結果ステップ（絵文字は使わない・ボタンは用途で色分け）
         ref_btn = ""
         if tid in ref_index:
             ref_btn = (f'<a class="big-btn ref-btn" href="../../ref/{ch_no}/index.html#t{ref_index[tid]}">'
-                       f'📖 参考書でおさらいする</a>')
+                       f'参考書でおさらいする</a>')
         # 他の形式に進むチップ（この単元にある形式だけ）
-        type_chips = ['<button class="chip-mode" type="button" data-mode="A">🕳 穴埋め</button>',
-                      '<button class="chip-mode" type="button" data-mode="B">✍️ 短答</button>',
-                      '<button class="chip-mode" type="button" data-mode="C">✅ 4択</button>']
+        type_chips = ['<button class="chip-mode" type="button" data-mode="A">穴埋め</button>',
+                      '<button class="chip-mode" type="button" data-mode="B">短答</button>',
+                      '<button class="chip-mode" type="button" data-mode="C">4択</button>']
         if written:
-            type_chips.append('<button class="chip-mode" type="button" data-mode="D">📝 記述</button>')
+            type_chips.append('<button class="chip-mode" type="button" data-mode="D">記述</button>')
         steps.append(f"""
     <div class="step done-step" data-label="結果" data-sec="Z">
-      <div class="done">{char("manabi_banzai_sm.png", "wchar done-char")}<span>🎉 「{esc(topic['name'])}」おつかれさま！</span></div>
+      <div class="done">{char("manabi_banzai_sm.png", "wchar done-char")}<span>「{esc(topic['name'])}」おつかれさま！</span></div>
       <div class="score-box" data-score></div>
-      <button class="big-btn wrong-btn" type="button" data-mode="wrong" hidden>🔴 まちがえた問題だけやり直す<span class="btn-sub" data-wrong-sub></span></button>
+      <button class="big-btn wrong-btn" type="button" data-mode="wrong" hidden>まちがえた問題だけやり直す<span class="btn-sub" data-wrong-sub></span></button>
       <div class="next-modes">
         <div class="nm-h">ほかの解き方でもう一度</div>
         <div class="nm-chips">{''.join(type_chips)}</div>
       </div>
       {ref_btn}
-      <a class="big-btn line-btn" href="{liff_wb(topic['name'])}" target="_blank" rel="noopener">🤖 LINEでこの単元を出題してもらう<span class="btn-sub">公式LINEに問題が届く→答えるとAIがすぐ丸つけ。すきま時間の復習に</span></a>
-      <button class="big-btn retry-btn" type="button" data-retry>↻ この単元を最初から</button>
-      <button class="big-btn home-btn" type="button" data-go="0">🏠 目次にもどる</button>
+      <div class="line-block">
+        <a class="big-btn line-btn" href="{liff_wb(topic['name'])}" target="_blank" rel="noopener">LINEで出題してもらう</a>
+        <p class="line-note">公式LINEに問題が届く→答えるとAIがすぐ丸つけ。すきま時間の復習に。</p>
+      </div>
+      <button class="big-btn retry-btn" type="button" data-retry>この単元を最初から</button>
+      <a class="big-btn home-btn" href="../../index.html">単元一覧にもどる</a>
     </div>""")
 
         # やり方（モード）選択: 単元の最初に出す。推奨順=従来の全ステップ。
         # 短答は「一問ずつ/まとめて採点」、短答・4択は「シャッフル」を選べる。
-        flow = ["要点まとめ", "一問一答", "4択", "記述"]
-        if spec.get("shiryo", {}).get(tid):
-            flow.append("資料")
-        flow_html = '<span class="flow-arr">→</span>'.join(f'<span class="flow-chip">{f}</span>' for f in flow)
         mode_btn_d = ""
         if written:
             mode_btn_d = (
                 '<div class="mode-card"><button class="mode-btn" type="button" data-mode="D">'
-                '<span class="mode-ic ic-d">📝</span>'
+                f'<span class="mode-ic">{IC["doc"]}</span>'
                 f'<span class="mode-main"><span class="mode-t">記述</span>'
                 f'<span class="mode-sub">{len(written)}問・模範解答つき</span></span>'
                 '<span class="mode-arrow">›</span></button></div>')
@@ -427,28 +445,26 @@ def build(folder: str) -> tuple[str, list[str]]:
     <div class="step mode-step" data-label="やり方をえらぶ" data-sec="M">
       <div class="sec-h"><span class="sec-tag">▶</span>やり方をえらぼう<span class="sec-note">目次にもどれば何度でも変えられるよ</span></div>
       <button class="mode-btn mode-reco" type="button" data-mode="all">
-        <span class="mode-ic ic-star">⭐</span>
-        <span class="mode-main"><span class="mode-t">おすすめ順でぜんぶ解く</span>
-          <span class="mode-flow">{flow_html}</span></span>
+        <span class="mode-ic ic-star">{IC['star']}</span>
+        <span class="mode-main"><span class="mode-t">おすすめ順で解く</span></span>
         <span class="mode-arrow">›</span></button>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="A">
-        <span class="mode-ic ic-a">✏️</span>
+        <span class="mode-ic">{IC['ana']}</span>
         <span class="mode-main"><span class="mode-t">穴埋め（要点まとめ）</span>
           <span class="mode-sub">（　）をタップして確かめる</span></span>
         <span class="mode-arrow">›</span></button></div>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="B">
-        <span class="mode-ic ic-b">🔥</span>
+        <span class="mode-ic">{IC['qa']}</span>
         <span class="mode-main"><span class="mode-t">一問一答（短答）</span>
           <span class="mode-sub">{len(cards)}問・入力して自動で正誤判定</span></span>
         <span class="mode-arrow">›</span></button>
         <div class="mode-opts">
-          <div class="opt-row"><span class="opt-lb">解答</span><button class="opt-chip on" type="button" data-opt="ansB" data-val="0">⌨️ 入力して判定</button><button class="opt-chip" type="button" data-opt="ansB" data-val="1">入力せず答えだけ確認</button></div>
-          <div class="opt-row"><span class="opt-lb">採点</span><button class="opt-chip on" type="button" data-opt="batch" data-val="0">一問ずつ</button><button class="opt-chip" type="button" data-opt="batch" data-val="1">まとめて</button></div>
+          <div class="opt-row"><span class="opt-lb">解答</span><button class="opt-chip on" type="button" data-opt="ansB" data-val="0">答えを入力</button><button class="opt-chip" type="button" data-opt="ansB" data-val="1">見て確認</button></div>
           <div class="opt-row"><span class="opt-lb">順番</span><button class="opt-chip on" type="button" data-opt="shufB" data-val="0">そのまま</button><button class="opt-chip" type="button" data-opt="shufB" data-val="1">シャッフル</button></div>
         </div>
       </div>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="C">
-        <span class="mode-ic ic-c">✅</span>
+        <span class="mode-ic">{IC['yon']}</span>
         <span class="mode-main"><span class="mode-t">4択（選択）</span>
           <span class="mode-sub">{len(quiz)}問・タップで即判定</span></span>
         <span class="mode-arrow">›</span></button>
@@ -497,7 +513,7 @@ def build(folder: str) -> tuple[str, list[str]]:
 
     ref_home = ""
     if ref_index:
-        ref_home = f'<a class="big-btn ref-btn" href="../../ref/{ch_no}/index.html">📖 参考書を開く</a>'
+        ref_home = f'<a class="big-btn ref-btn" href="../../ref/{ch_no}/index.html">参考書を開く</a>'
 
     credits_html = ""
     lines = []
@@ -511,7 +527,6 @@ def build(folder: str) -> tuple[str, list[str]]:
     home = f"""
 <section class="view home" data-t="0">
   <div class="home-topline">
-    <a class="home-link" href="../../index.html">‹ 単元一覧にもどる</a>
     <div class="badge3"><span class="b-vol">{esc(spec['volume'])}</span><span class="b-kind">問題集</span></div>
   </div>
   <header class="top hometop">
@@ -525,12 +540,12 @@ def build(folder: str) -> tuple[str, list[str]]:
   <nav class="toc">
     <div class="toc-head">
       <div class="toc-h">単元を選択</div>
-      <button class="toc-cal" data-go="1">📅 {esc(check_title)}<span class="cal-go">›</span></button>
+      <button class="toc-cal" data-go="1">{esc(check_title)}<span class="cal-go">›</span></button>
     </div>
     {''.join(toc_items)}
   </nav>
   {ref_home}
-  <button class="big-btn print-btn" type="button" onclick="window.print()">🖨 紙に印刷して解く（解答つき）</button>
+  <button class="big-btn print-btn" type="button" onclick="window.print()">紙に印刷して解く（解答つき）</button>
   {credits_html}
   <footer class="foot">
     <div>つづもん 問題集</div>
@@ -559,8 +574,7 @@ def build(folder: str) -> tuple[str, list[str]]:
     # 問題集のビュー番号（t0=ホーム, t1=年表, t2〜=単元）→ 参考書の単元番号
     ref_views = [0, 0] + [ref_index.get(t["topicId"], 0) for t in topics]
 
-    tabs = ('<button class="tab tab-home" data-go="0" aria-label="目次">🏠</button>'
-            '<button class="tab" data-go="1" aria-label="年表">年</button>'
+    tabs = ('<button class="tab tab-year" data-go="1" aria-label="年表">年表</button>'
             + "".join(f'<button class="tab" data-go="{i + 1}" aria-label="{esc(t["name"])}">{i}</button>'
                       for i, t in enumerate(topics, 1)))
 
@@ -603,18 +617,24 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
      タブ列の 🏠 は「この本の目次」なので、こちらは 🗺＋文字でトップだと分かるようにする。 */
   .tophome { flex:none; height:30px; padding:0 12px; font-size:11.5px; font-weight:bold;
              color:#fff; background:var(--deep); border-radius:15px; text-decoration:none;
-             display:inline-flex; align-items:center; white-space:nowrap;
-             box-shadow:0 2px 0 #5b1e0b; }
-  .swap { flex:none; display:inline-flex; border:1.5px solid var(--line); border-radius:20px;
-          overflow:hidden; background:#fffbeb; }
-  .sw { font-size:11px; font-weight:bold; color:var(--brand); padding:3px 7px; text-decoration:none;
-        white-space:nowrap; cursor:pointer; }
-  .sw.on { background:var(--brand); color:#fff; }
+             display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+             box-shadow:0 2px 0 #5b1e0b; transition:filter .12s; }
+  .th-ic { width:14px; height:14px; fill:currentColor; flex:none; }
+  @media (hover:hover) { .tophome:hover { filter:brightness(1.12); } }
+  /* 参考書⇄問題の切りかえタブ。押せると分かるよう、非選択側は白ボタン風＋ホバー反応 */
+  .swap { flex:none; display:inline-flex; gap:3px; padding:2px; border-radius:16px;
+          background:#f0e2c3; }
+  .sw { font-size:11.5px; font-weight:bold; color:var(--brand); padding:4px 12px; text-decoration:none;
+        white-space:nowrap; cursor:pointer; border-radius:13px; background:#fff;
+        transition:filter .12s, background-color .12s; }
+  .sw.on { background:var(--brand); color:#fff; cursor:default; box-shadow:0 1px 2px rgba(180,83,9,.3); }
+  @media (hover:hover) { .sw:not(.on):hover { background:#fff8ec; filter:brightness(0.98); } }
   .sw[hidden] { display:none; }
   /* 設問ごとの「解説を見る」（その問題の根拠になる節へ直行） */
-  .sec-help { display:inline-flex; align-items:center; gap:4px; font-size:11.5px; font-weight:bold;
+  .sec-help { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:bold;
               color:var(--brand); background:#fffbeb; border:1.5px solid var(--line);
-              border-radius:14px; padding:3px 10px; text-decoration:none; margin-top:8px; }
+              border-radius:14px; padding:4px 12px; text-decoration:none; margin-top:8px; cursor:pointer; }
+  .sh-ic { width:14px; height:14px; fill:currentColor; flex:none; }
   .bar-title { font-weight:bold; color:var(--deep); font-size:14px; flex:1;
                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bar-step { flex:none; font-size:11px; font-weight:bold; color:var(--brand); }
@@ -636,12 +656,16 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .tsr { right:0; background:linear-gradient(to left, #fffdf8 62%, rgba(255,253,248,0)); }
   .tabs { display:flex; gap:5px; overflow-x:auto; padding:4px 0; width:100%; scrollbar-width:none; }
   .tabs::-webkit-scrollbar { display:none; }
+  /* 単元タブ: 位置は動かさず、色で状態を示す（未着手=クリーム／解いた=緑／表示中=茶） */
   .tab { flex:none; width:30px; height:30px; border-radius:50%; border:1.5px solid var(--line);
          background:#fffbeb; color:var(--brand); font-size:14px; font-weight:bold;
-         display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
-  .tab.done { background:#fef3c7; }
-  .tab.on { background:var(--brand); border-color:var(--brand); color:#fff;
-            box-shadow:0 2px 6px rgba(180,83,9,.35); }
+         display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+         transition:background-color .12s, border-color .12s; }
+  /* 年表タブは2文字なので横長の楕円（ピル）に */
+  .tab-year { width:auto; padding:0 10px; border-radius:15px; font-size:12.5px; letter-spacing:.5px; }
+  .tab.done { background:#dcfce7; border-color:#86efac; color:#15803d; }   /* 解いた単元 */
+  .tab.on { background:var(--brand); border-color:var(--brand); color:#fff; }  /* いま表示中 */
+  @media (hover:hover) { .tab:not(.on):hover { background:#fff2d6; } }
   .pbar { height:3px; background:#f5ecd8; border-radius:2px; overflow:hidden; }
   .pfill { height:100%; width:0; background:linear-gradient(90deg,var(--amber),#fbbf24);
            transition:width .25s ease; }
@@ -694,8 +718,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .b-web { background:var(--amber); color:#fff; }
   .ht-title { font-size:41px; color:var(--deep); margin:12px 0 0; line-height:1.12; position:relative;
               display:inline-block; padding:0 6px; letter-spacing:.01em; }
-  .ht-title::before { content:"✨"; position:absolute; left:-22px; top:2px; font-size:19px; }
-  .ht-title::after { content:"✨"; position:absolute; right:-20px; bottom:4px; font-size:15px; }
+  .ht-title::before, .ht-title::after { content:none; }
   .ht-mascot { flex:none; position:relative; width:100px; padding-top:22px; text-align:center; }
   .ht-mascot .wchar { height:74px; }
   .ht-bubble { position:absolute; top:0; left:50%; transform:translateX(-50%); white-space:nowrap;
@@ -716,8 +739,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .toc { margin:16px 0 12px; background:#fff9ef; border:2px solid #f0e2c3; border-radius:16px; padding:12px; }
   .toc-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
   .toc-h { font-weight:bold; color:var(--deep); font-size:16px; display:flex; align-items:center; gap:8px; }
-  .toc-h::before { content:"📖"; display:inline-flex; align-items:center; justify-content:center;
-                   width:30px; height:30px; border-radius:50%; background:var(--brand); font-size:15px; }
+  .toc-h::before { content:""; flex:none; width:30px; height:30px; border-radius:50%;
+                   background:var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 6.6C10.5 5.4 8.4 4.9 6 4.9c-1 0-2 .1-2.8.3v12.9c.8-.2 1.8-.3 2.8-.3 2.4 0 4.5.5 6 1.7 1.5-1.2 3.6-1.7 6-1.7 1 0 2 .1 2.8.3V5.2C20 5 19 4.9 18 4.9c-2.4 0-4.5.5-6 1.7z'/%3E%3C/svg%3E") center/17px no-repeat; }
   /* 「年表でチェック」へ飛ぶボタン。押せると気づかれるよう塗り＋矢印＋押し込み影で目立たせる */
   .toc-cal { flex:none; border:none; background:linear-gradient(#fbbf24,#f59e0b); color:#fff;
              font-weight:bold; border-radius:20px; padding:8px 8px 8px 14px; font-size:12.5px;
@@ -789,11 +812,14 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
               border:none; border-radius:16px; padding:12px 10px; font-size:16px; font-weight:bold;
               color:#44403c; background:#fff; cursor:pointer; font-family:inherit; line-height:1.35;
               box-shadow:0 2px 0 #ecdcbb; border:1.5px solid #f0e2c3; }
+  /* アイコン: 絵文字をやめ、ブランド色の統一ラインアイコンに（丸背景も1トーンに揃える） */
   .mode-ic { flex:none; width:52px; height:52px; border-radius:50%; display:inline-flex;
-             align-items:center; justify-content:center; font-size:24px; background:#f1ece0; }
-  .ic-star { background:#fff; }
-  .ic-a { background:#e3edff; } .ic-b { background:#ffe6d6; }
-  .ic-c { background:#dcfce7; } .ic-d { background:#ece9fb; }
+             align-items:center; justify-content:center; background:#f7e8cf; color:var(--brand); }
+  .mode-ic .mi { width:27px; height:27px; display:block; }
+  /* codexイラストのカテゴリアイコン（丸背景は消して、アイコン自身のバッジを見せる） */
+  .mode-ic .mi-img { width:52px; height:52px; object-fit:contain; display:block; }
+  .mode-ic:has(.mi-img) { background:transparent; }
+  .ic-star { background:rgba(255,255,255,.22); color:#fff; }
   .mode-main { flex:1; min-width:0; }
   .mode-t { display:block; }
   .mode-btn .mode-sub { display:block; font-weight:normal; font-size:12.5px; color:#a8a29e; margin-top:3px; }
@@ -802,10 +828,11 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .mode-reco { background:linear-gradient(#f59e0b,#ea7a09); border:none; color:#fff; margin-top:0;
                box-shadow:0 4px 0 #c2620a, 0 6px 12px rgba(180,83,9,.3); border-radius:18px; padding:14px 12px; }
   .mode-reco .mode-arrow { color:#fff; }
-  .mode-flow { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:6px; }
+  .mode-flow { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:7px; }
+  .flow-unit { display:inline-flex; align-items:center; gap:6px; }  /* 「→ 記述」を一体で折り返す */
   .flow-chip { background:rgba(255,255,255,.95); color:var(--brand); font-size:11.5px; font-weight:bold;
-               border-radius:12px; padding:2px 9px; }
-  .flow-arr { color:#fff; font-weight:bold; font-size:12px; }
+               border-radius:12px; padding:3px 10px; white-space:nowrap; }
+  .flow-arr { color:rgba(255,255,255,.9); font-weight:bold; font-size:12px; }
   /* オプション（一問一答・4択の中） */
   .mode-opts { margin:2px 8px 4px 70px; display:flex; flex-direction:column; gap:7px; }
   .opt-row { font-size:12.5px; font-weight:bold; color:#78716c; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -878,6 +905,9 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .hidden-until { display:none; }
   .show .hidden-until { display:block; }
   .show .reveal { display:none; }
+  /* 記述: 「AI採点」と「わからない」を横並びに */
+  .wr-actions { display:flex; gap:10px; margin-top:12px; }
+  .wr-actions .ai-grade, .wr-actions .reveal { margin-top:0; width:auto; flex:1; }
 
   /* 記述のAIその場採点 */
   .ai-grade { display:block; width:100%; margin-top:12px; border:none; border-radius:12px;
@@ -919,10 +949,13 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   /* 4択 */
   .qopts { display:flex; flex-direction:column; gap:8px; margin-top:12px; }
-  .qopt { display:flex; align-items:center; gap:10px; text-align:left; background:#fff;
+  /* color を明示（iOS Safari は button のテキストを既定で青にするため） */
+  .qopt { display:flex; align-items:center; gap:10px; text-align:left; background:#fff; color:#1c1917;
           border:1.5px solid #e2d5bd; border-radius:12px; padding:10px 12px; font-size:14.5px;
           cursor:pointer; font-family:inherit; line-height:1.7; }
+  .opt-t { color:#1c1917; }
   .opt-k { flex:none; width:26px; height:26px; border-radius:50%; border:1.5px solid #a8a29e;
+           color:#44403c; background:#fff;
            display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:bold; }
   .qz-step.answered .qopt { cursor:default; }
   .qopt.correct { border-color:var(--ok); background:#f0fdf4; }
@@ -974,7 +1007,10 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .big-btn { display:block; width:100%; text-align:center; margin-top:10px; border:none;
              border-radius:14px; padding:13px 16px; font-size:15px; font-weight:bold;
              cursor:pointer; font-family:inherit; text-decoration:none; }
-  .line-btn { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  /* LINEボタン: シンプルに。補足はボタンの下へ */
+  .line-block { margin-top:10px; }
+  .line-btn { margin-top:0; background:#06c755; color:#fff; box-shadow:0 3px 0 #05a648; }
+  .line-note { font-size:11.5px; color:#8a7b62; text-align:center; margin:6px 4px 0; line-height:1.6; }
   .btn-sub { display:block; font-weight:normal; font-size:12px; opacity:.9; }
   .ref-btn { background:#fffbeb; color:var(--brand); border:1.5px solid var(--line); }
   .retry-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
@@ -1000,6 +1036,23 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .foot-note { margin-top:4px; font-size:12px; }
 
   /* ── 下部ナビ ── */
+  /* 教材ゲートのロック案内（頭出しの先） */
+  .lock-ov { position:fixed; inset:0; z-index:40; background:rgba(60,40,15,.5);
+             display:flex; align-items:center; justify-content:center; padding:20px; }
+  .lock-ov[hidden] { display:none; }
+  .lock-card { width:100%; max-width:360px; background:#fff; border-radius:18px; padding:24px 20px 18px;
+               text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lock-ic svg { width:34px; height:34px; }
+  .lock-ic { font-size:40px; }
+  .lock-t { font-size:18px; font-weight:bold; color:var(--deep); margin:6px 0 6px; }
+  .lock-d { font-size:13px; color:#78716c; line-height:1.8; margin-bottom:16px; }
+  .lock-btn { display:block; width:100%; margin-top:10px; border:none; border-radius:13px; padding:13px;
+              font-size:15px; font-weight:bold; text-decoration:none; cursor:pointer; font-family:inherit; }
+  .lb-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  .lb-buy { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .lock-close { display:block; width:100%; margin-top:12px; background:none; border:none; cursor:pointer;
+                color:#a8a29e; font-size:12.5px; font-family:inherit; text-decoration:underline; }
+
   .navbar { position:fixed; left:0; right:0; bottom:0; z-index:10;
             background:rgba(255,253,248,.97); border-top:1px solid #f0e6d2;
             padding:10px 16px calc(10px + env(safe-area-inset-bottom)); }
@@ -1008,6 +1061,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
         cursor:pointer; font-family:inherit; }
   .nb-prev { flex:1; background:#fff; color:var(--brand); border:1.5px solid var(--line); }
   .nb-next { flex:2; background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
+  /* 未回答で先に進めないときは、押せないことが分かるグレーに */
+  .nb-next.locked, .nb-next:disabled { background:#e7ddc9; color:#b0a488; box-shadow:none; cursor:not-allowed; }
 
   /* ── ホバー: マウスを乗せると「押せる」ことが分かる（タッチ端末では固着しないよう hover 端末限定）── */
   @media (hover: hover) {
@@ -1019,9 +1074,11 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     /* 色つき（塗り）ボタンは少し濃くして「押せる」感を出す */
     .tab:hover, .reveal:hover, .batch-grade:hover, .big-btn:hover, .nb:hover,
     .resume:hover, .mode-reco:hover, .b-judge:hover, .b-batch-judge:hover,
-    .mk:hover, .mopt:hover, .line-mini:hover { filter: brightness(0.94); }
-    /* 白・枠線ボタン／リストは薄いアンバーで下地を変えて分かりやすく */
-    .toc-item:hover, .mode-btn:hover, .opt-chip:hover, .reveal-all:hover,
+    .mk:hover, .mopt:hover, .line-mini:hover,
+    .opt-chip.on:hover { filter: brightness(0.94); }
+    /* 白・枠線ボタン／リストは薄いアンバーで下地を変える（塗りボタンは上の brightness 側）。
+       選択中(.on)チップや mode-reco は塗りなので、この背景変更から除外して文字が埋もれないように */
+    .toc-item:hover, .mode-btn:not(.mode-reco):hover, .opt-chip:not(.on):hover, .reveal-all:hover,
     .ref-link:hover, .b-idk:hover, .blank:hover, .chip-mode:hover, .sec-help:hover,
     .qz-step:not(.answered) .qopt:hover { background-color: #fff8ec; }
     .b-in:hover { border-color: var(--amber); }
@@ -1070,8 +1127,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 </style></head><body>
 <div class="bar"><div class="bar-in">
   <div class="bar-row">
-    <a class="tophome" href="../../index.html" aria-label="単元一覧へもどる">単元一覧</a>
-    <div class="swap"><a class="sw" id="swRef">📖 参考書</a><span class="sw on">✏️ 問題</span></div>
+    <a class="tophome" href="../../index.html" aria-label="単元一覧へもどる"><svg class="th-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>単元一覧</a>
+    <div class="swap" role="tablist" aria-label="参考書と問題の切りかえ"><a class="sw" id="swRef" role="tab">参考書</a><span class="sw on">問題</span></div>
     <div class="tabs-wrap">
       <nav class="tabs" id="tabs">__TABS__</nav>
       <button class="tscroll tsl" id="tabsL" type="button" hidden aria-label="単元タブを左へ">‹</button>
@@ -1089,6 +1146,14 @@ __VIEWS__
 <div class="navbar" id="navbar" hidden><div class="navbar-in">
   <button class="nb nb-prev" id="btnPrev">← まえへ</button>
   <button class="nb nb-next" id="btnNext">つぎへ →</button>
+</div></div>
+<div class="lock-ov" id="lockOv" hidden><div class="lock-card">
+  <div class="lock-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+  <div class="lock-t">つづきは購入者向けです</div>
+  <div class="lock-d">ここまでは無料でためせます。つづきを解くには、つづもんのライセンスが必要です。</div>
+  <button class="lock-btn lb-line" id="lockLogin">LINEでログイン（購入者の方）</button>
+  <a class="lock-btn lb-buy" href="../../index.html">つづもんを見てみる →</a>
+  <button class="lock-close" id="lockClose">とじる（ここまで解く）</button>
 </div></div>
 
 <script type="module">
@@ -1112,9 +1177,24 @@ try {
       location.href = '/welcome?next=' + encodeURIComponent(location.pathname + location.hash);
     },
   };
+  var ENTITLEMENT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonEntitlement';
+  async function refreshEntitlement(u) {
+    try {
+      var idToken = await u.getIdToken();
+      var res = await fetch(ENTITLEMENT_API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: idToken }),
+      });
+      if (!res.ok) return;
+      var data = await res.json();
+      try { localStorage.setItem('tzm-lic', JSON.stringify((data && data.grades) || [])); } catch (e) {}
+      if (window.tzmRefreshGate) window.tzmRefreshGate();
+    } catch (e) { /* localStorage フォールバックのまま */ }
+  }
   onAuthStateChanged(auth, function (u) {
     window.__tzmAuth.user = u;
     window.__tzmAuth.ready = true;
+    if (u) refreshEntitlement(u);
     document.dispatchEvent(new CustomEvent('tzm-auth'));
   });
 } catch (e) { /* 設定が無ければ採点はフォールバック（自己採点）に倒れる */ }
@@ -1124,6 +1204,7 @@ try {
 (function () {
   var KEY = '__STORAGE_KEY__';
   var CH = '__CH_NO__';
+  var GRADE = '__GRADE__';        // この本の学年（中1/中2/中3）
   var GRADE_API = '__GRADE_API__';      // 記述AI採点 Cloud Function
   var REF_VIEWS = __REF_VIEWS__;        // 問題集のビューt → 参考書の単元番号（0＝対応なし）
   var views = [].slice.call(document.querySelectorAll('.view'));
@@ -1163,7 +1244,7 @@ try {
     try { if (localStorage.getItem('tzmhint') === '1') return; } catch (e) { return; }
     var canHover = window.matchMedia && window.matchMedia('(hover:hover)').matches;
     bar.textContent = canHover ? '⌨️ ← → キーでもページをめくれるよ'
-                               : '👆 よこにスワイプでもページをめくれるよ';
+                               : 'よこにスワイプでもページをめくれるよ';
     var shown = false;
     window.showHint = function () {
       if (shown || state.t === 0) return;
@@ -1249,6 +1330,7 @@ try {
         st.r[step.dataset.qid] = result.verdict === 'correct' ? 1 : 0;
         st.g[step.dataset.qid] = result;
         save(st);
+        refreshNextLock();
         return;
       }
       if (r.status === 402) {
@@ -1276,6 +1358,19 @@ try {
       if (r) renderGradeCard(step, r);
     });
   }
+
+  // 記述: 空欄のあいだは「AI採点」を押せないようにする（入力があれば有効化）
+  function syncAiBtn(step) {
+    if (!step) return;
+    var ta = step.querySelector('.w-input'), b = step.querySelector('.ai-grade');
+    if (ta && b) b.disabled = !ta.value.trim();
+  }
+  [].forEach.call(document.querySelectorAll('.wr-step'), syncAiBtn);
+  document.addEventListener('input', function (e) {
+    if (e.target.classList && e.target.classList.contains('w-input')) {
+      syncAiBtn(e.target.closest('.wr-step'));
+    }
+  });
 
   // 単元タブの左右矢印: まだ隠れているタブがある側だけ出す
   function updateTabArrows() {
@@ -1354,7 +1449,7 @@ try {
   function showJudged(scopeEl, ok) {
     var banner = scopeEl.querySelector('.b-result');
     if (banner) {
-      banner.textContent = ok ? '⭕ せいかい！' : '❌ おしい！';
+      banner.textContent = ok ? 'せいかい！' : 'おしい！';
       banner.className = 'b-result ' + (ok ? 'ok' : 'ng');
     }
     scopeEl.classList.add('show');
@@ -1372,7 +1467,7 @@ try {
       var tail = sec('Z');
       if (cfg.mode === 'all') {
         body = all.filter(function (s) {
-          return s.dataset.sec !== 'M' && s.dataset.sec !== 'BB';
+          return s.dataset.sec !== 'M';
         });
         tail = [];
         // 以前のシャッフルで振り直した番号を元に戻す
@@ -1385,7 +1480,7 @@ try {
         });
       } else if (cfg.mode === 'A') { body = sec('A'); }
       else if (cfg.mode === 'B') {
-        body = cfg.batch ? sec('BB') : orderBy(sec('B'), cfg.order);
+        body = orderBy(sec('B'), cfg.order);
       } else if (cfg.mode === 'C') { body = orderBy(sec('C'), cfg.order); }
       else if (cfg.mode === 'D') { body = sec('D'); }
       else if (cfg.mode === 'wrong') {
@@ -1397,7 +1492,7 @@ try {
         });
       }
       // 単独/やり直しモードは表示順に合わせて「n / 全」を振り直す
-      if ((cfg.mode === 'B' && !cfg.batch) || cfg.mode === 'C' || cfg.mode === 'wrong') {
+      if (cfg.mode === 'B' || cfg.mode === 'C' || cfg.mode === 'wrong') {
         body.forEach(function (el, i) {
           var q = el.querySelector('.qnum');
           if (q) q.textContent = (i + 1) + ' / ' + body.length;
@@ -1429,6 +1524,25 @@ try {
     });
   }
 
+  // 4択の選択肢の表示順を毎回シャッフルする（ラベル1,2,3,4は位置固定・中身だけ入れ替え）。
+  // data-i（元の選択肢番号）は各ボタンに保持したままなので、正誤判定はそのまま動く。
+  function shuffleQopts(step) {
+    if (!step || step.classList.contains('answered')) return;   // 回答済みは並びを保つ
+    var box = step.querySelector('.qopts');
+    if (!box) return;
+    var opts = [].slice.call(box.querySelectorAll('.qopt'));
+    if (opts.length < 2) return;
+    for (var i = opts.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = opts[i]; opts[i] = opts[j]; opts[j] = tmp;
+    }
+    opts.forEach(function (el, i) {
+      box.appendChild(el);                       // 新しい順で並べ直す
+      var k = el.querySelector('.opt-k');
+      if (k) k.textContent = (i + 1);            // ラベルは上から 1,2,3,4
+    });
+  }
+
   function renderScore(view) {
     var st = store(), r = st.r || {};
     var box = view.querySelector('[data-score]');
@@ -1441,9 +1555,9 @@ try {
     }
     var qa = count('.qa-step'), qz = count('.qz-step'), wr = count('.wr-step');
     var rows = [];
-    if (qa.tried) rows.push('<div class="score-row"><span>B 一問一答</span><b>⭕ ' + qa.done + ' / ' + qa.tried + '</b></div>');
+    if (qa.tried) rows.push('<div class="score-row"><span>B 一問一答</span><b>正解 ' + qa.done + ' / ' + qa.tried + '</b></div>');
     if (qz.tried) rows.push('<div class="score-row"><span>C 実戦4択</span><b>正解 ' + qz.done + ' / ' + qz.tried + '</b></div>');
-    if (wr.tried) rows.push('<div class="score-row"><span>D 記述</span><b>⭕ ' + wr.done + ' / ' + wr.tried + '</b></div>');
+    if (wr.tried) rows.push('<div class="score-row"><span>D 記述</span><b>正解 ' + wr.done + ' / ' + wr.tried + '</b></div>');
     box.innerHTML = rows.join('') || 'このページの問題はタップ形式だよ。';
     // 「まちがえた問題だけやり直す」ボタン: B/C/D で r===0 の数だけ表示
     var wrongBtn = view.querySelector('.wrong-btn');
@@ -1466,7 +1580,7 @@ try {
       b.classList.toggle('on', bt === t);
       b.classList.toggle('done', bt > 0 && store()['d' + bt] === 1);
     });
-    var tabEl = tabs[t];
+    var tabEl = tabs.filter(function (b) { return +b.dataset.go === t; })[0];
     if (tabEl && tabEl.scrollIntoView) tabEl.scrollIntoView({ block: 'nearest', inline: 'center' });
     var navbar = document.getElementById('navbar');
     var barStep = document.getElementById('barStep');
@@ -1491,16 +1605,18 @@ try {
         el.classList.remove('turn-out', 'turn-in', 'turn-under', 'on');
       });
       if (steps[s]) steps[s].classList.add('on');
+      // 4択は表示のたびに選択肢の並びをシャッフル（未回答のときだけ）
+      if (steps[s] && steps[s].classList.contains('qz-step')) shuffleQopts(steps[s]);
       navbar.hidden = false;
       var onModeStep = steps[s] && steps[s].dataset.sec === 'M';
       // 「やり方をえらぼう」は本文にも大きく出るのでヘッダーには出さない（単元タブの幅を優先）
       barStep.textContent = onModeStep ? '' : (s + 1) + ' / ' + steps.length;
       pfill.style.width = (((s + 1) / steps.length) * 100) + '%';
-      document.getElementById('btnPrev').textContent = s === 0 ? '🏠 目次' : '← まえへ';
+      document.getElementById('btnPrev').textContent = s === 0 ? '目次へ' : '← まえへ';
       var next = document.getElementById('btnNext');
-      if (onModeStep && steps.length === 1) next.textContent = '⭐ おすすめ順で始める →';
+      if (onModeStep && steps.length === 1) next.textContent = 'おすすめ順で始める →';
       else if (s < steps.length - 1) next.textContent = 'つぎへ →';
-      else next.textContent = t < N ? '次の単元へ →' : '🏠 目次にもどる';
+      else next.textContent = t < N ? '次の単元へ →' : '目次にもどる';
       if (steps[s] && steps[s].classList.contains('done-step')) renderScore(views[t]);
       var st = store();
       st.last = { t: t, s: s };
@@ -1520,6 +1636,7 @@ try {
     // クエリが付いていても落とさない（URL共有時の情報を保つ）
     if (location.hash !== h) history.replaceState(null, '', location.search + (t === 0 ? '#' : h));
     updateSwap();
+    refreshNextLock();
     rendered = { t: t, s: s };
   }
 
@@ -1543,13 +1660,53 @@ try {
     } else { btn.hidden = true; }
   }
 
+  // ── 教材ゲート（中間案・ゆるめ「頭出しは見せる」）──
+  //   有料単元はやり方えらぶ＋要点まとめまで誰でも試せる。その先は購入者（この学年）だけ。
+  function isLicensed() {
+    try { return (JSON.parse(localStorage.getItem('tzm-lic') || '[]')).indexOf(GRADE) >= 0; }
+    catch (e) { return false; }
+  }
+  function lockFrom(t) { var v = views[t]; return v ? +(v.getAttribute('data-lock') || 0) : 0; }
+  function gateBlocks(t, s) { var lk = lockFrom(t); return lk > 0 && !isLicensed() && s >= lk; }
+  function showLock() { var ov = document.getElementById('lockOv'); if (ov) ov.hidden = false; }
+  function hideLock() { var ov = document.getElementById('lockOv'); if (ov) ov.hidden = true; }
+  window.tzmRefreshGate = function () { if (isLicensed()) hideLock(); };
+
   function go(t, s, dir) {
     lastDir = dir || 1;
     state.t = Math.max(0, Math.min(N, t));
     state.s = Math.max(0, s || 0);
-    if (state.t > 0) state.s = Math.min(state.s, stepsOf(state.t).length - 1);
-    else state.s = 0;
+    if (state.t > 0) {
+      state.s = Math.min(state.s, stepsOf(state.t).length - 1);
+      if (gateBlocks(state.t, state.s)) {
+        state.s = Math.max(0, lockFrom(state.t) - 1);
+        render();
+        showLock();
+        return;
+      }
+    } else state.s = 0;
+    hideLock();
     render();
+  }
+  // ── 未回答ガード: 問題(一問一答/4択/記述)に答えるまで「つぎへ」で先に進めない ──
+  function isGatedStep(step) {
+    return !!step && /(^| )(qa-step|qa-batch-step|qz-step|wr-step)( |$)/.test(step.className);
+  }
+  function stepAnswered(step) {
+    if (!step) return true;
+    if (step.classList.contains('show') || step.classList.contains('answered')) return true;
+    var qid = step.dataset.qid;
+    if (qid) { var r = (store() || {}).r || {}; if (r[qid] !== undefined) return true; }
+    return false;
+  }
+  function refreshNextLock() {
+    var b = document.getElementById('btnNext');
+    if (!b) return;
+    var steps = state.t > 0 ? stepsOf(state.t) : null;
+    var stp = steps ? steps[state.s] : null;
+    var locked = !!(stp && isGatedStep(stp) && !stepAnswered(stp));
+    b.classList.toggle('locked', locked);
+    b.disabled = locked;
   }
   function next() {
     var t = state.t, s = state.s;
@@ -1560,6 +1717,7 @@ try {
       applyMode(t, { mode: 'all' });
       return;
     }
+    if (isGatedStep(pl[s]) && !stepAnswered(pl[s])) return;  // 未回答は進めない
     if (s < pl.length - 1) go(t, s + 1, 1);
     else if (t < N) go(t + 1, 0, 1);
     else go(0, 0, 1);
@@ -1571,10 +1729,31 @@ try {
     else go(0, 0, -1);
   }
 
+  document.getElementById('lockLogin').addEventListener('click', function () {
+    var here = location.pathname + '#t' + state.t + (state.s > 0 ? 's' + state.s : '');
+    location.href = '../../login/?next=' + encodeURIComponent(here);
+  });
+  document.getElementById('lockClose').addEventListener('click', hideLock);
   document.getElementById('btnNext').addEventListener('click', next);
   document.getElementById('btnPrev').addEventListener('click', prev);
+  // 回答するとロックを解除（回答処理の後に評価するため click は次tickで）
+  document.addEventListener('click', function () { setTimeout(refreshNextLock, 0); });
+  document.addEventListener('input', refreshNextLock);
 
   document.addEventListener('click', function (e) {
+    // 「解説を読む」= 参考書へ同じタブで移動し、いまの問題位置を back= に付ける
+    // （参考書側が「問題にもどる」ボタンを出す）。
+    var sh = e.target.closest('.sec-help');
+    if (sh) {
+      e.preventDefault();
+      var href = sh.getAttribute('href');
+      var hi = href.indexOf('#');
+      var base = hi >= 0 ? href.slice(0, hi) : href;
+      var frag = hi >= 0 ? href.slice(hi) : '';
+      var back = encodeURIComponent(location.pathname + location.hash);
+      location.href = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'back=' + back + frag;
+      return;
+    }
     var go_ = e.target.closest('[data-go]');
     if (go_) { go(+go_.dataset.go, 0, 1); return; }
 
@@ -1597,7 +1776,7 @@ try {
       var rcfg = { mode: rm };
       // まちがい直しは、直前の解き方（入力/確認）を引き継ぐ（既定は入力）
       if (rm === 'wrong') { rcfg.ans = (modeCfg(state.t) || {}).ans || 'type'; }
-      if (rm === 'B') { rcfg.ans = 'type'; rcfg.batch = false; rcfg.shuf = false; rcfg.order = null; }
+      if (rm === 'B') { rcfg.ans = 'type'; rcfg.shuf = false; rcfg.order = null; }
       if (rm === 'C') { rcfg.shuf = false; rcfg.order = null; }
       applyMode(state.t, rcfg);
       return;
@@ -1632,11 +1811,10 @@ try {
       var cfg = { mode: mb.dataset.mode };
       if (cfg.mode === 'B') {
         cfg.ans = chip('ansB') === 1 ? 'check' : 'type';
-        cfg.batch = chip('batch') === 1;
         cfg.shuf = chip('shufB') === 1;
       }
       if (cfg.mode === 'C') { cfg.shuf = chip('shufC') === 1; }
-      if ((cfg.mode === 'B' && !cfg.batch) || cfg.mode === 'C') {
+      if (cfg.mode === 'B' || cfg.mode === 'C') {
         var cnt = views[mt].querySelectorAll('.step[data-sec="' + cfg.mode + '"]').length;
         cfg.order = cfg.shuf ? shuffledOrder(cnt) : null;
       }
@@ -1678,28 +1856,12 @@ try {
       var istep = idk.closest('.qa-step');
       showJudged(istep, false);
       var bn = istep.querySelector('.b-result');
-      if (bn) { bn.textContent = '👇 こたえはこちら。次はきっと書けるよ！'; bn.className = 'b-result ng'; }
+      if (bn) { bn.textContent = 'こたえはこちら。次はきっと書けるよ！'; bn.className = 'b-result ng'; }
       var stI = store(); stI.r = stI.r || {};
       stI.r[istep.dataset.qid] = 0;
       save(stI);
       return;
     }
-    // 一問一答: 入力して判定（まとめて）
-    var bbj = e.target.closest('.b-batch-judge');
-    if (bbj) {
-      var bstep = bbj.closest('.step');
-      var stB = store(); stB.r = stB.r || {};
-      [].forEach.call(bstep.querySelectorAll('.bq-item'), function (it) {
-        var ok2 = judgeTerm(it.querySelector('.b-in').value, it.dataset.a, it.dataset.r);
-        showJudged(it, ok2);
-        stB.r[it.dataset.qid] = ok2 ? 1 : 0;
-      });
-      bstep.classList.add('show');
-      save(stB);
-      window.scrollTo(0, 0);  // 上から答え合わせを見返せるように
-      return;
-    }
-
     var rev = e.target.closest('.reveal');
     if (rev) { rev.closest('.step').classList.add('show'); return; }
 
@@ -1711,16 +1873,6 @@ try {
     var mk = e.target.closest('.mk');
     if (mk) {
       var st = store(); st.r = st.r || {};
-      // まとめて採点（バッチ）内の○△: 記録して選択表示するだけで、進まない
-      var bq = mk.closest('.bq-item');
-      if (bq) {
-        st.r[bq.dataset.qid] = +mk.dataset.v;
-        save(st);
-        [].forEach.call(bq.querySelectorAll('.mk'), function (b) {
-          b.classList.toggle('sel', b === mk);
-        });
-        return;
-      }
       var stp = mk.closest('.step');
       st.r[stp.dataset.qid] = +mk.dataset.v;
       save(st);
