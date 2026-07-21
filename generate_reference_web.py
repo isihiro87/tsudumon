@@ -192,6 +192,18 @@ class Narration:
                 for k, c in enumerate(self.chunks)]
 
 
+# 教材ゲート（中間案・ゆるめ「頭出しは見せる」）。
+# 無料体験の単元は tsudumonCore.TSUDUMON_FREE_REFERENCE_KEYS と一致させる。
+FREE_REFERENCE_KEYS = {"04-ritsuryo-nara"}
+# 頭出し = 表紙(step0)+最初の節(step1) まで。step>=2 で購入者判定。
+REF_LOCK_FROM = 2
+
+
+def grade_of_ch(ch_no: str) -> str:
+    n = int(ch_no)
+    return "中1" if n <= 6 else "中2" if n <= 12 else "中3"
+
+
 def build(chapter: str) -> tuple[str, list[str]]:
     """(HTML, 使用した画像ファイル名リスト) を返す。"""
     spec = json.loads((REF_DIR / f"{chapter}.json").read_text(encoding="utf-8"))
@@ -244,7 +256,6 @@ def build(chapter: str) -> tuple[str, list[str]]:
     views = [f"""
 <section class="view home" data-t="0">
   <div class="home-topline">
-    <a class="home-link" href="../../index.html">‹ 単元一覧にもどる</a>
     <div class="badge3"><span class="b-vol">{esc(spec['volume'])}</span><span class="b-kind">参考書</span></div>
   </div>
   <header class="top hometop">
@@ -259,7 +270,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
     <div class="toc-head"><div class="toc-h">単元を選択</div></div>
     {toc_items}
   </nav>
-  {f'<a class="wb-home" href="../../wb/{ch_no}/index.html">✏️ 問題集を開く（この本の問題を解く）</a>' if wb_index else ''}
+  {f'<a class="wb-home" href="../../wb/{ch_no}/index.html">問題集を開く（この本の問題を解く）</a>' if wb_index else ''}
   <footer class="foot">
     <div>つづもん 参考書</div>
     <div class="foot-note">紙やタブレットでじっくり派には、ダウンロード済みのPDF版もどうぞ。</div>
@@ -282,7 +293,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
             images.append(str(web_cover) + "|" + flat)
             steps.append(f"""
     <div class="step" data-label="この単元でわかること">
-      <img class="cover-img" src="img/{flat}"
+      <img class="cover-img zoomable" src="img/{flat}"
            alt="{esc(t['name'])}（この単元でわかること）">
       {hook}
     </div>""")
@@ -294,7 +305,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
                        if t.get("imageCaption") else "")
                 tilt = " art-even" if i % 2 == 0 else ""
                 hero_html = (f'<figure class="cover-art{tilt}">'
-                             f'<img src="{hero}" alt="" loading="lazy">{cap}</figure>')
+                             f'<img class="zoomable" src="{hero}" alt="" loading="lazy">{cap}</figure>')
             learn = t.get("learn") or [s["heading"] for s in t["sections"]]
             learn_html = "".join(
                 f'<li><span class="ov-num">{n}</span><span>{rich(x)}</span></li>'
@@ -308,7 +319,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
       {hook}
       {hero_html}
       <div class="overview">
-        <div class="ov-h">🎯 この単元でわかること</div>
+        <div class="ov-h">この単元でわかること</div>
         <ul class="ov-list">{learn_html}</ul>
       </div>
       {cheer_html}
@@ -322,12 +333,32 @@ def build(chapter: str) -> tuple[str, list[str]]:
             lead = (f'<div class="sec-lead">{narr.spans(s["lead"], esc)}</div>'
                     if s.get("lead") else "")
             body_html = narr.spans(s["body"])
-            point = (f'<div class="point"><span class="ptag">⭐ ここだけ覚える</span>'
+            # 節の横帯挿絵（本文の上・フル幅）。無ければ何も出さない。
+            sec_img = use_img(s.get("image", ""))
+            sec_fig = ""
+            if sec_img:
+                # 見た目に変化をつける: 既定は左右交互 float、データで
+                # imagePos("left"/"right"/"wide")・imageSize("sm"/"lg") 指定があれば優先。
+                pos = s.get("imagePos") or ("left" if si % 2 else "right")
+                cls = ["sec-fig"]
+                if s.get("imageFit") == "contain":  # 図版・地図は切らず全表示
+                    cls.append("fig-contain")
+                if pos == "left":
+                    cls.append("pos-left")
+                elif pos == "wide":
+                    cls.append("pos-wide")
+                if s.get("imageSize"):
+                    cls.append("size-" + s["imageSize"])
+                cap = (f'<figcaption>{esc(s.get("imageCaption", ""))}</figcaption>'
+                       if s.get("imageCaption") else "")
+                sec_fig = (f'<figure class="{" ".join(cls)}"><img class="zoomable" src="{sec_img}" alt="" '
+                           f'loading="lazy">{cap}</figure>')
+            point = (f'<div class="point"><span class="ptag">ここだけ覚える</span>'
                      f'<div class="ptxt">{narr.spans(s["point"])}</div></div>'
                      if s.get("point") else "")
             side_items = []
             if s.get("aside"):
-                side_items.append(f'<div class="tip">💡 {rich(s["aside"])}</div>')
+                side_items.append(f'<div class="tip">{rich(s["aside"])}</div>')
             for x in t.get("terms", []):
                 if x["term"] in used_terms or x["term"] not in s["body"]:
                     continue
@@ -343,6 +374,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
     <div class="step" data-label="{esc(s['heading'])}">
       <h3><span class="sec-no">{si + 1}</span>{heading_html}</h3>
       {lead}
+      {sec_fig}
       <p>{body_html}</p>
       {point}
       {side}
@@ -369,8 +401,8 @@ def build(chapter: str) -> tuple[str, list[str]]:
                 for x in t["terms"])
             steps.append(f"""
     <div class="step" data-label="重要語チェック">
-      <div class="terms-h">📖 重要語チェック<span class="terms-sub">説明を読んで用語を言えるかな？</span></div>
-      <div class="terms-tools"><div class="tt-btns"><button type="button" class="shuffle-btn">🔀 シャッフル</button><button type="button" class="swap-btn">🔁 裏表入れ替え</button></div><label class="both-toggle"><input type="checkbox" class="both-chk">両面表示</label></div>
+      <div class="terms-h">重要語チェック<span class="terms-sub">説明を読んで用語を言えるかな？</span></div>
+      <div class="terms-tools"><div class="tt-btns"><button type="button" class="shuffle-btn">シャッフル</button><button type="button" class="swap-btn">裏表入れ替え</button></div><label class="both-toggle"><input type="checkbox" class="both-chk">両面表示</label></div>
       <div class="tgrid">{cards}</div>
     </div>""")
 
@@ -391,17 +423,15 @@ def build(chapter: str) -> tuple[str, list[str]]:
         wb_btn = ""
         if t["topicId"] in wb_index:
             wb_btn = (f'<a class="wb-btn" href="../../wb/{ch_no}/index.html#t{wb_index[t["topicId"]]}">'
-                      f'<span class="ai-ico">✏️</span>'
                       f'<span class="ai-main">この単元の問題を解く<span class="ai-sub">'
                       f'Web問題集（要点穴埋め・一問一答・4択・記述）</span></span>'
                       f'<span class="ai-arrow">›</span></a>')
         steps.append(f"""
     <div class="step" data-label="30秒まとめ">
       {summary}
-      <div class="done">🎉 この単元はこれで完了！</div>
+      <div class="done">この単元はこれで完了！</div>
       {wb_btn}
       <a class="ai-btn" href="{url}" target="_blank" rel="noopener">
-        <span class="ai-ico">🤖</span>
         <span class="ai-main">AI先生に質問・理解度チェック<span class="ai-sub">LINEが開きます</span></span>
         <span class="ai-arrow">›</span>
       </a>
@@ -410,14 +440,16 @@ def build(chapter: str) -> tuple[str, list[str]]:
         if narr.ok:
             audio[i] = {"url": narr.url, "tl": narr.timeline()}
 
+        _key = f"{ch_no}-{t['topicId']}"
+        _lock = "" if _key in FREE_REFERENCE_KEYS else f' data-lock="{REF_LOCK_FROM}"'
         views.append(f"""
-<section class="view" data-t="{i}">
+<section class="view" data-t="{i}"{_lock}>
   <div class="tband"><span class="tno">{i}</span><h2>{esc(t['name'])}</h2>
-    <button class="play-unit" type="button" data-play="{i}" hidden>🔊 このページを読む</button></div>
+    <button class="play-unit" type="button" data-play="{i}" hidden><span class="pu-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>音声で聞く</button></div>
   {''.join(steps)}
 </section>""")
 
-    tabs = '<button class="tab tab-home" data-go="0" aria-label="目次">🏠</button>' + "".join(
+    tabs = "".join(
         f'<button class="tab" data-go="{i}" aria-label="{esc(t["name"])}">{i}</button>'
         for i, t in enumerate(spec["topics"], 1))
 
@@ -431,6 +463,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
             .replace("__TABS__", tabs)
             .replace("__STORAGE_KEY__", f"tzmref-{ch_no}")
             .replace("__CH_NO__", ch_no)
+            .replace("__GRADE__", grade_of_ch(ch_no))
             .replace("__AUDIO__", json.dumps(audio, ensure_ascii=False))
             .replace("__WB_VIEWS__", json.dumps(
                 [0] + [wb_index.get(t["topicId"], 0) for t in spec["topics"]]))
@@ -463,12 +496,26 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .s.read { color:#8a8279; }
   .s.now { background:#fcd34d; color:#1c1917; }
   .s.now .mark { background:none; }
-  /* 単元見出しの再生ボタン */
+  /* 単元見出しの音声ボタン（タップで読み上げ再生。適度に目立つ塗りボタン＋再生アイコン） */
   .play-unit { display:inline-flex; align-items:center; gap:6px; margin-left:auto; flex:none;
-               background:#fff; color:var(--brand); border:1.5px solid var(--line);
-               border-radius:20px; padding:4px 12px; font-size:12px; font-weight:bold;
-               font-family:inherit; cursor:pointer; }
+               background:linear-gradient(#f59e0b,#ea7a09); color:#fff;
+               border:none; border-radius:20px; padding:7px 15px 7px 9px; font-size:13px; font-weight:bold;
+               font-family:inherit; cursor:pointer; box-shadow:0 3px 0 #c2620a, 0 4px 9px rgba(217,119,6,.3);
+               transition:transform .12s, filter .12s; }
+  .pu-ic { flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.28);
+           display:inline-flex; align-items:center; justify-content:center; }
+  .pu-ic svg { width:13px; height:13px; fill:#fff; margin-left:1px; }
+  .play-unit:active { transform:translateY(2px); box-shadow:0 1px 0 #c2620a; }
+  @media (hover:hover) { .play-unit:hover { filter:brightness(1.06); } }
   .play-unit[hidden] { display:none; }
+  /* 問題集の「解説を読む」から来たときに出す「問題にもどる」ボタン（すぐ問題へ戻れる） */
+  .backpill { position:fixed; left:50%; transform:translateX(-50%); bottom:74px; z-index:40;
+              background:var(--brand); color:#fff; font-weight:bold; font-size:13.5px;
+              border-radius:22px; padding:9px 18px 9px 13px; text-decoration:none;
+              box-shadow:0 4px 14px rgba(120,50,10,.35); display:inline-flex; align-items:center; gap:5px; }
+  .backpill svg { width:16px; height:16px; fill:none; stroke:#fff; stroke-width:2.4;
+                  stroke-linecap:round; stroke-linejoin:round; }
+  .backpill[hidden] { display:none; }
   /* 下部プレーヤー（再生中だけ出す。ナビバーの上に重ねる） */
   .aplayer { position:fixed; left:0; right:0; bottom:58px; z-index:25;
              background:rgba(255,253,248,.98); border-top:1px solid #f0e6d2;
@@ -495,13 +542,18 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
      タブ列の 🏠 は「この本の目次」なので、こちらは 🗺＋文字でトップだと分かるようにする。 */
   .tophome { flex:none; height:30px; padding:0 12px; font-size:11.5px; font-weight:bold;
              color:#fff; background:var(--deep); border-radius:15px; text-decoration:none;
-             display:inline-flex; align-items:center; white-space:nowrap;
-             box-shadow:0 2px 0 #5b1e0b; }
-  .swap { flex:none; display:inline-flex; border:1.5px solid var(--line); border-radius:20px;
-          overflow:hidden; background:#fffbeb; }
-  .sw { font-size:11px; font-weight:bold; color:var(--brand); padding:3px 7px; text-decoration:none;
-        white-space:nowrap; cursor:pointer; }
-  .sw.on { background:var(--brand); color:#fff; }
+             display:inline-flex; align-items:center; gap:5px; white-space:nowrap;
+             box-shadow:0 2px 0 #5b1e0b; transition:filter .12s; }
+  .th-ic { width:14px; height:14px; fill:currentColor; flex:none; }
+  @media (hover:hover) { .tophome:hover { filter:brightness(1.12); } }
+  /* 参考書⇄問題の切りかえタブ。押せると分かるよう、非選択側は白ボタン風＋ホバー反応 */
+  .swap { flex:none; display:inline-flex; gap:3px; padding:2px; border-radius:16px;
+          background:#f0e2c3; }
+  .sw { font-size:11.5px; font-weight:bold; color:var(--brand); padding:4px 12px; text-decoration:none;
+        white-space:nowrap; cursor:pointer; border-radius:13px; background:#fff;
+        transition:filter .12s, background-color .12s; }
+  .sw.on { background:var(--brand); color:#fff; cursor:default; box-shadow:0 1px 2px rgba(180,83,9,.3); }
+  @media (hover:hover) { .sw:not(.on):hover { background:#fff8ec; filter:brightness(0.98); } }
   .sw[hidden] { display:none; }
   .bar-title { font-weight:bold; color:var(--deep); font-size:14px; flex:1;
                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -525,13 +577,15 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .tabs { display:flex; gap:5px; overflow-x:auto; padding:4px 0; width:100%;
           scrollbar-width:none; -webkit-overflow-scrolling:touch; }
   .tabs::-webkit-scrollbar { display:none; }
+  /* 単元タブ: 位置は動かさず、色で状態を示す（未読=クリーム／読んだ=緑／表示中=茶） */
   .tab { flex:none; width:30px; height:30px; border-radius:50%; border:1.5px solid var(--line);
          background:#fffbeb; color:var(--brand); font-size:15px; font-weight:bold;
-         display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
-  .tab.done { background:#fef3c7; }
+         display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+         transition:background-color .12s, border-color .12s; }
+  .tab.done { background:#dcfce7; border-color:#86efac; color:#15803d; }   /* 読んだ単元 */
   .tab.done::after { content:""; }
-  .tab.on { background:var(--brand); border-color:var(--brand); color:#fff;
-            box-shadow:0 2px 6px rgba(180,83,9,.35); }
+  .tab.on { background:var(--brand); border-color:var(--brand); color:#fff; }  /* いま表示中 */
+  @media (hover:hover) { .tab:not(.on):hover { background:#fff2d6; } }
   .pbar { height:3px; background:#f5ecd8; border-radius:2px; overflow:hidden; margin:0 0 0; }
   .pfill { height:100%; width:0; background:linear-gradient(90deg,var(--amber),#fbbf24);
            border-radius:2px; transition:width .25s ease; }
@@ -542,6 +596,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   @keyframes vfade { from { opacity:.6; } to { opacity:1; } }
   .step { display:none; }
   .step.on { display:block; }
+  .step::after { content:""; display:table; clear:both; }  /* 挿絵の float を内包 */
   /* 本物っぽいページめくり（2枚重ね）:
      進む = 今のページ自体が左とじに沿って手前にめくれて去り、下から次のページが現れる。
      戻る = 前のページが手前からめくり戻されて上に着地する。 */
@@ -586,8 +641,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .b-web { background:var(--amber); color:#fff; }
   .ht-title { font-size:41px; color:var(--deep); margin:12px 0 0; line-height:1.12; position:relative;
               display:inline-block; padding:0 6px; letter-spacing:.01em; }
-  .ht-title::before { content:"✨"; position:absolute; left:-22px; top:2px; font-size:19px; }
-  .ht-title::after { content:"✨"; position:absolute; right:-20px; bottom:4px; font-size:15px; }
+  .ht-title::before, .ht-title::after { content:none; }
   .ht-mascot { flex:none; position:relative; width:100px; padding-top:22px; text-align:center; }
   .ht-mascot img { height:74px; width:auto; }
   .ht-bubble { position:absolute; top:0; left:50%; transform:translateX(-50%); white-space:nowrap;
@@ -623,8 +677,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .toc { margin:16px 0 8px; background:#fff9ef; border:2px solid #f0e2c3; border-radius:16px; padding:12px; }
   .toc-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
   .toc-h { font-weight:bold; color:var(--deep); font-size:16px; display:flex; align-items:center; gap:8px; }
-  .toc-h::before { content:"📖"; display:inline-flex; align-items:center; justify-content:center;
-                   width:30px; height:30px; border-radius:50%; background:var(--brand); font-size:15px; }
+  .toc-h::before { content:""; flex:none; width:30px; height:30px; border-radius:50%;
+                   background:var(--brand) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M12 6.6C10.5 5.4 8.4 4.9 6 4.9c-1 0-2 .1-2.8.3v12.9c.8-.2 1.8-.3 2.8-.3 2.4 0 4.5.5 6 1.7 1.5-1.2 3.6-1.7 6-1.7 1 0 2 .1 2.8.3V5.2C20 5 19 4.9 18 4.9c-2.4 0-4.5.5-6 1.7z'/%3E%3C/svg%3E") center/17px no-repeat; }
   /* 単元カード（大きめサムネ＋番号＋名前＋右矢印） */
   .toc-item { display:flex; align-items:center; width:100%; margin-bottom:8px; padding:0;
               background:#fff; border:1.5px solid #f0e2c3; border-radius:12px; overflow:hidden;
@@ -703,6 +757,39 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
             border:1.5px solid var(--line); color:var(--brand); font-weight:bold;
             display:inline-flex; align-items:center; justify-content:center; font-size:12px; }
   .sec-lead { font-size:13px; color:var(--brand); font-weight:bold; margin:2px 0 4px 30px; }
+  /* 節の挿絵：既定は本文の右に小さく回り込ませる（補足的・目立ちすぎない） */
+  .sec-fig { float:right; width:46%; max-width:205px; margin:3px 0 8px 12px; }
+  .sec-fig.fig-contain { max-width:230px; }
+  .sec-fig img { width:100%; max-height:172px; object-fit:cover; display:block;
+                 border-radius:10px; border:1px solid #f0e6d2;
+                 box-shadow:0 1px 4px rgba(120,80,20,.10); background:#fff; cursor:zoom-in; }
+  /* 図版（関係図・地図）は切らずに全体を見せる（日本語ラベルが欠けないように） */
+  .sec-fig.fig-contain img { object-fit:contain; max-height:none; background:#fffdf8; }
+  .sec-fig figcaption { font-size:11px; color:#a8a29e; text-align:center; margin-top:4px; line-height:1.4; }
+  /* 変化をつける: 左回り込み／サイズ違い／横いっぱい */
+  .sec-fig.pos-left { float:left; margin:3px 12px 8px 0; }
+  .sec-fig.size-sm { max-width:150px; }
+  .sec-fig.size-lg { max-width:250px; }
+  .sec-fig.pos-wide { float:none; width:auto; max-width:100%; margin:10px 0; }
+  .sec-fig.pos-wide img { max-height:260px; }
+  .sec-fig.pos-wide.fig-contain img { max-height:340px; }  /* 地図・図はワイドで大きく読める */
+  .sec-fig.pos-wide figcaption { font-size:12px; }
+  /* 挿絵を含む節でも ⭐ここだけ覚える／用語は画像の下から始める */
+  .step .point, .step .words { clear:both; }
+  .cover-art img, .cover-img { cursor:zoom-in; }
+
+  /* 画像タップで拡大（ライトボックス） */
+  .lightbox { position:fixed; inset:0; z-index:200; background:rgba(20,14,8,.88);
+              display:flex; align-items:center; justify-content:center; padding:20px;
+              -webkit-tap-highlight-color:transparent; cursor:zoom-out; }
+  .lightbox[hidden] { display:none; }
+  .lightbox img { max-width:96vw; max-height:90vh; border-radius:10px; background:#fffdf8;
+                  box-shadow:0 8px 40px rgba(0,0,0,.55); }
+  .lb-close { position:fixed; top:14px; right:16px; width:42px; height:42px; border:none;
+              border-radius:50%; background:rgba(255,255,255,.92); color:#7c2d12; font-size:24px;
+              line-height:1; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.3); }
+  .lb-hint { position:fixed; bottom:20px; left:0; right:0; text-align:center; color:#fff;
+             font-size:12px; opacity:.7; pointer-events:none; }
   .step p { margin-top:8px; text-align:justify; }
   .point { background:#fff9c4; border-left:6px solid #fbbf24; border-radius:8px;
            padding:10px 12px; margin-top:12px; font-size:14px; line-height:1.8; }
@@ -807,6 +894,22 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .foot-note { margin-top:4px; font-size:12px; }
 
   /* ── 下部ナビ ── */
+  /* 教材ゲートのロック案内（頭出しの先） */
+  .lock-ov { position:fixed; inset:0; z-index:40; background:rgba(60,40,15,.5);
+             display:flex; align-items:center; justify-content:center; padding:20px; }
+  .lock-ov[hidden] { display:none; }
+  .lock-card { width:100%; max-width:360px; background:#fff; border-radius:18px; padding:24px 20px 18px;
+               text-align:center; box-shadow:0 10px 30px rgba(0,0,0,.3); }
+  .lock-ic { font-size:40px; }
+  .lock-t { font-size:18px; font-weight:bold; color:var(--deep); margin:6px 0 6px; }
+  .lock-d { font-size:13px; color:#78716c; line-height:1.8; margin-bottom:16px; }
+  .lock-btn { display:block; width:100%; margin-top:10px; border:none; border-radius:13px; padding:13px;
+              font-size:15px; font-weight:bold; text-decoration:none; cursor:pointer; font-family:inherit; }
+  .lb-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  .lb-buy { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .lock-close { display:block; width:100%; margin-top:12px; background:none; border:none; cursor:pointer;
+                color:#a8a29e; font-size:12.5px; font-family:inherit; text-decoration:underline; }
+
   .navbar { position:fixed; left:0; right:0; bottom:0; z-index:10;
             background:rgba(255,253,248,.97); border-top:1px solid #f0e6d2;
             padding:10px 16px calc(10px + env(safe-area-inset-bottom)); }
@@ -882,8 +985,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 </style></head><body>
 <div class="bar"><div class="bar-in">
   <div class="bar-row">
-    <a class="tophome" href="../../index.html" aria-label="単元一覧へもどる">単元一覧</a>
-    <div class="swap"><span class="sw on">📖 参考書</span><a class="sw" id="swWb">✏️ 問題</a></div>
+    <a class="tophome" href="../../index.html" aria-label="単元一覧へもどる"><svg class="th-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>単元一覧</a>
+    <div class="swap" role="tablist" aria-label="参考書と問題の切りかえ"><span class="sw on">参考書</span><a class="sw" id="swWb" role="tab">問題</a></div>
     <div class="tabs-wrap">
       <nav class="tabs" id="tabs">__TABS__</nav>
       <button class="tscroll tsl" id="tabsL" type="button" hidden aria-label="単元タブを左へ">‹</button>
@@ -894,6 +997,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   <div class="bar-title" hidden>__HEADBAR__</div>
   <div class="pbar"><div class="pfill" id="pfill"></div></div>
 </div></div>
+<a class="backpill" id="backPill" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 6l-6 6 6 6"/></svg>問題にもどる</a>
 <main class="wrap" id="views">
 __VIEWS__
 </main>
@@ -906,9 +1010,22 @@ __VIEWS__
   <button class="ap-close" id="apClose" aria-label="読み上げを止める">×</button>
 </div></div>
 <audio id="audio" preload="none"></audio>
+<div class="lightbox" id="lightbox" hidden>
+  <img id="lightboxImg" alt="">
+  <button class="lb-close" id="lbClose" aria-label="閉じる">×</button>
+  <div class="lb-hint">タップで閉じる</div>
+</div>
 <div class="navbar" id="navbar" hidden><div class="navbar-in">
   <button class="nb nb-prev" id="btnPrev">← まえへ</button>
   <button class="nb nb-next" id="btnNext">つぎへ →</button>
+</div></div>
+<div class="lock-ov" id="lockOv" hidden><div class="lock-card">
+  <div class="lock-ic">🔒</div>
+  <div class="lock-t">つづきは購入者向けです</div>
+  <div class="lock-d">ここまでは無料で読めます。つづきを読むには、つづもんのライセンスが必要です。</div>
+  <button class="lock-btn lb-line" id="lockLogin">📱 LINEでログイン（購入者の方）</button>
+  <a class="lock-btn lb-buy" href="../../index.html">つづもんを見てみる →</a>
+  <button class="lock-close" id="lockClose">とじる（ここまで読む）</button>
 </div></div>
 <button class="chat-fab" id="chatFab" aria-label="スタ先生に質問する">🤖</button>
 <section class="chat-panel" id="chatPanel" hidden>
@@ -933,6 +1050,8 @@ __VIEWS__
 (function () {
   var KEY = '__STORAGE_KEY__';
   var CH = '__CH_NO__';
+  var GRADE = '__GRADE__';        // この本の学年（中1/中2/中3）
+  var ENTITLEMENT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonEntitlement';
   var WB_VIEWS = __WB_VIEWS__;
   var AUDIO = __AUDIO__;          // {単元t: {url, tl:[[開始秒,長さ,ステップ], …]}}          // 参考書の単元t → 問題集のビュー番号（0＝対応なし）
   var views = [].slice.call(document.querySelectorAll('.view'));
@@ -1125,7 +1244,7 @@ __VIEWS__
       b.classList.toggle('on', bt === t);
       b.classList.toggle('done', bt > 0 && store()['d' + bt] === 1);
     });
-    var tabEl = tabs[t];
+    var tabEl = tabs.filter(function (b) { return +b.dataset.go === t; })[0];
     if (tabEl && tabEl.scrollIntoView) {
       tabEl.scrollIntoView({ block: 'nearest', inline: 'center' });
     }
@@ -1168,11 +1287,11 @@ __VIEWS__
       pfill.style.width = (((s + 1) / steps.length) * 100) + '%';
       var prev = document.getElementById('btnPrev');
       var next = document.getElementById('btnNext');
-      prev.textContent = s === 0 ? '🏠 目次' : '← まえへ';
+      prev.textContent = s === 0 ? '目次へ' : '← まえへ';
       if (s < steps.length - 1) {
         next.textContent = 'つぎへ →';
       } else {
-        next.textContent = t < N ? '次の単元へ →' : '🏠 目次にもどる';
+        next.textContent = t < N ? '次の単元へ →' : '目次にもどる';
       }
       // 進捗保存
       var st = store();
@@ -1231,6 +1350,23 @@ __VIEWS__
     a.href = wbHref(state.t);
   }
 
+  // ── 教材ゲート（中間案・ゆるめ「頭出しは見せる」）──
+  //   有料単元は表紙＋最初の1節まで誰でも読める。その先は購入者（この学年のライセンス）だけ。
+  //   判定は localStorage['tzm-lic']（開放学年の配列）を見るだけ。ログイン時に entitlement で更新。
+  function isLicensed() {
+    try { return (JSON.parse(localStorage.getItem('tzm-lic') || '[]')).indexOf(GRADE) >= 0; }
+    catch (e) { return false; }
+  }
+  function lockFrom(t) { var v = views[t]; return v ? +(v.getAttribute('data-lock') || 0) : 0; }
+  function gateBlocks(t, s) {
+    var lk = lockFrom(t);
+    return lk > 0 && !isLicensed() && s >= lk;
+  }
+  function showLock() { var ov = document.getElementById('lockOv'); if (ov) ov.hidden = false; }
+  function hideLock() { var ov = document.getElementById('lockOv'); if (ov) ov.hidden = true; }
+  // entitlement 反映後に module script から呼ばれる。解除できたらロックを閉じる。
+  window.tzmRefreshGate = function () { if (isLicensed()) hideLock(); };
+
   function go(t, s, dir) {
     if (typeof reading !== 'undefined' && reading.step != null) stopAudio();
     lastDir = dir || 1;
@@ -1238,9 +1374,17 @@ __VIEWS__
     state.s = Math.max(0, s || 0);
     if (state.t > 0) {
       state.s = Math.min(state.s, stepsOf(state.t).length - 1);
+      // 頭出しの先へ行こうとしたら、頭出しの最後で止めてロック案内を出す
+      if (gateBlocks(state.t, state.s)) {
+        state.s = Math.max(0, lockFrom(state.t) - 1);
+        render();
+        showLock();
+        return;
+      }
     } else {
       state.s = 0;
     }
+    hideLock();
     render();
   }
 
@@ -1258,6 +1402,12 @@ __VIEWS__
     else go(0, 0, -1);
   }
 
+  // ロック案内のボタン: ログイン（共通ログインページ経由で戻る）／閉じる
+  document.getElementById('lockLogin').addEventListener('click', function () {
+    var here = location.pathname + '#t' + state.t + (state.s > 0 ? 's' + state.s : '');
+    location.href = '../../login/?next=' + encodeURIComponent(here);
+  });
+  document.getElementById('lockClose').addEventListener('click', hideLock);
   document.getElementById('btnNext').addEventListener('click', next);
   document.getElementById('btnPrev').addEventListener('click', prev);
   document.addEventListener('click', function (e) {
@@ -1334,8 +1484,21 @@ __VIEWS__
     }
   }, { passive: true });
 
+  // 画像タップで拡大（ライトボックス）。ページ送りタップ／スワイプと競合しない。
+  var lb = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lightboxImg');
+  function openLb(src) { lbImg.src = src; lb.hidden = false; document.body.style.overflow = 'hidden'; }
+  function closeLb() { lb.hidden = true; lbImg.removeAttribute('src'); document.body.style.overflow = ''; }
+  document.addEventListener('click', function (e) {
+    var z = e.target.closest('img.zoomable');
+    if (z) { e.preventDefault(); e.stopPropagation(); openLb(z.currentSrc || z.src); }
+  });
+  lb.addEventListener('click', closeLb);
+  document.getElementById('lbClose').addEventListener('click', function (e) { e.stopPropagation(); closeLb(); });
+
   // キーボード操作（PC）: ←→ でページ送り、PageUp/Down も同じ、Home で目次へ
   document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !lb.hidden) { closeLb(); return; }
     var tag = e.target && e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === 'Enter') { next(); e.preventDefault(); }
@@ -1350,6 +1513,16 @@ __VIEWS__
   }
   window.addEventListener('hashchange', fromHash);
   fromHash();
+
+  // 問題集の「解説を読む」から来たとき（?back=）だけ「問題にもどる」を出す
+  (function () {
+    var m = /[?&]back=([^&#]+)/.exec(location.search);
+    var pill = document.getElementById('backPill');
+    if (m && pill) {
+      try { pill.href = decodeURIComponent(m[1]); } catch (e) { pill.href = m[1]; }
+      pill.hidden = false;
+    }
+  })();
 })();
 </script>
 <script type="module">
@@ -1493,8 +1666,26 @@ window.addEventListener('hashchange', function () {
   if (!panel.hidden && user && loadedTopic !== currentTopicKey()) loadHistory();
 });
 
+// 教材ゲート用: ログイン済みなら開放学年を取得して localStorage['tzm-lic'] に保存し、
+// 通常script のロックを解除できるか再評価する（users/{uid} 1 read）。
+var ENTITLEMENT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonEntitlement';
+async function refreshEntitlement(u) {
+  try {
+    var idToken = await u.getIdToken();
+    var res = await fetch(ENTITLEMENT_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken }),
+    });
+    if (!res.ok) return;
+    var data = await res.json();
+    try { localStorage.setItem('tzm-lic', JSON.stringify((data && data.grades) || [])); } catch (e) {}
+    if (window.tzmRefreshGate) window.tzmRefreshGate();
+  } catch (e) { /* ゲートは localStorage フォールバックのまま */ }
+}
+
 onAuthStateChanged(auth, function (u) {
   user = u;
+  if (u) refreshEntitlement(u);
   if (panel.hidden) return;
   if (!u) { showLogin(); return; }
   loadHistory();
