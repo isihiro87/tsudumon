@@ -263,6 +263,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .gtabs { display:none; gap:8px; justify-content:center; margin:6px 0 0; }
   .gtabs.show { display:flex; }
   .gtab { border:2px solid #c9a978; background:#fffaf0; color:var(--brand); font-weight:bold;
+          transition:transform .12s, filter .12s, background-color .12s;
           border-radius:22px; padding:7px 22px; font-size:14px; cursor:pointer; font-family:inherit;
           box-shadow:0 3px 0 #d8bd91; }
   .gtab.on { background:linear-gradient(#b45309,#8a3f07); color:#fff8ec; border-color:#7c2d12;
@@ -272,20 +273,24 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .panel { background:linear-gradient(#fffdf6,#f8eed9); border:2px solid #ddc39a;
            border-radius:16px; padding:10px 14px 11px; margin-top:10px;
            box-shadow:0 4px 0 #ddc39a, 0 6px 14px rgba(120,80,20,.14); }
-  .p-h { font-size:12.5px; font-weight:bold; color:var(--deep); text-align:center; }
-  .big { text-align:center; margin:2px 0 7px; font-weight:bold; color:var(--deep); }
-  .big b { font-size:30px; color:var(--brand); line-height:1; }
-  .big .sm { font-size:14px; }
+  /* 見出しと「N / M マス（％）」を横一行に。狭い端末では文字が縮んで折り返さない */
+  .p-top { display:flex; align-items:baseline; justify-content:center; flex-wrap:nowrap;
+           gap:6px; margin-bottom:7px; white-space:nowrap; }
+  .p-h { font-size:clamp(10px,3vw,12.5px); font-weight:bold; color:var(--deep); }
+  .big { font-weight:bold; color:var(--deep); }
+  .big b { font-size:clamp(17px,5.2vw,22px); color:var(--brand); line-height:1; }
+  .big .sm { font-size:clamp(10.5px,3vw,13px); }
   .ov-bar { height:18px; background:#f1e6cf; border-radius:10px; overflow:hidden;
             border:2px solid #ddc39a; position:relative; }
   .ov-fill { height:100%; width:0; border-radius:8px; transition:width .5s cubic-bezier(.22,.72,.32,1);
              background:linear-gradient(90deg,#fbbf24,#f59e0b 70%,#d97706); }
 
-  /* 凡例（2行に折り返す） */
-  .legend { display:flex; flex-wrap:wrap; gap:8px 14px; justify-content:center;
-            margin-top:10px; font-size:11.5px; color:#6b5a3c; }
-  .lg { display:inline-flex; align-items:center; gap:5px; }
-  .dot { width:14px; height:14px; border-radius:50%; border:2px solid rgba(0,0,0,.12); background:#fff; }
+  /* 凡例（5項目を横一行に収める。狭い端末でも文字が縮んで折り返さない） */
+  .legend { display:flex; flex-wrap:nowrap; gap:5px; justify-content:space-between;
+            margin-top:10px; font-size:clamp(8px,2.6vw,10px); color:#6b5a3c; white-space:nowrap; }
+  .lg { display:inline-flex; align-items:center; gap:2.5px; flex:none; }
+  .dot { width:clamp(9px,2.7vw,10px); aspect-ratio:1; border-radius:50%;
+         border:1.5px solid rgba(0,0,0,.12); background:#fff; flex:none; }
   .dot.d-ref { background:var(--s-ref); } .dot.d-some { background:var(--s-some); }
   .dot.d-all { background:var(--s-all); } .dot.d-perfect { background:var(--s-perfect); }
 
@@ -296,7 +301,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .ch-mascot { width:42px; height:auto; flex:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
   .ms-body { flex:1; min-width:0; }
   .ms-h { font-size:12px; font-weight:bold; color:#b45309; }
-  .ms-txt { font-size:14px; font-weight:bold; color:var(--deep); margin-top:2px; }
+  .ms-txt { font-size:14px; font-weight:bold; color:var(--deep); margin-top:2px;
+            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .ms-steps { display:flex; gap:6px; margin-top:7px; }
   .ms-step { width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid #ddc39a;
              display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
@@ -388,8 +394,15 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
                             transform:translateX(-50%); font-size:16px;
                             filter:drop-shadow(0 2px 2px rgba(0,0,0,.25)); }
 
-  @media (hover:hover) { .cell:hover .tok { transform:translateY(-3px); } }
+  /* ホバーでの反応を全ボタンで統一（マウス端末のみ・少し浮く／明るくなる＝押せると分かる） */
+  @media (hover:hover) {
+    .cell:hover .tok { transform:translateY(-3px); }
+    .gtab:hover { transform:translateY(-1px); filter:brightness(1.03); }
+    .u-btn.wb:hover { transform:translateY(-1px); filter:brightness(1.1); }
+    .u-btn.ref:hover { transform:translateY(-1px); background:#eff5ff; }
+  }
   .cell:active .tok { transform:translateY(3px); box-shadow:0 2px 0 #e2cfa4,0 3px 5px rgba(120,80,20,.18); }
+  .gtab:active, .u-btn:active { transform:translateY(1px); }
 
   /* ゴール：ふだんは色を抜いて「まだ先」を演出。全マスクリアで .goal.done なら点灯 */
   .goal { margin:8px 0 0; }
@@ -410,9 +423,9 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* ───── 単元一覧 ───── */
   .books { margin-top:18px; }
   .books-h { text-align:center; margin-bottom:10px; }
-  .books-h h2 { display:inline-block; font-size:16px; color:var(--deep);
-                background:linear-gradient(#fffdf6,#f4e7cd); border:2px solid #ddc39a;
-                border-radius:11px; padding:6px 22px; box-shadow:0 3px 0 #ddc39a; }
+  /* セクション見出し（ボタンではなくタイトル。下線アクセントで見出しと分かるように） */
+  .books-h h2 { display:inline-block; font-size:17px; color:var(--deep); font-weight:900;
+                padding:2px 4px 6px; border-bottom:3px solid var(--amber); }
   .book { background:var(--paper); border:2px solid #ddc39a; border-radius:12px; margin-bottom:8px;
           overflow:hidden; box-shadow:0 3px 0 #e6d3ae; }
   /* 章の帯（冒険N）。カンプの学年帯と同じ役目 */
@@ -433,7 +446,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
             text-overflow:ellipsis; white-space:nowrap; }
   .u-state { flex:none; font-size:12px; width:15px; text-align:center; }
   .u-btn { flex:none; text-decoration:none; font-size:10.5px; font-weight:bold; border-radius:7px;
-           padding:3px 9px; white-space:nowrap; }
+           padding:3px 9px; white-space:nowrap; transition:transform .12s, filter .12s, background-color .12s; }
   .u-btn.wb { background:linear-gradient(#b45309,#8a3f07); color:#fff8ec; box-shadow:0 2px 0 #5c2508; }
   .u-btn.ref { background:#fff; color:#1d4ed8; border:1.5px solid #bfdbfe; box-shadow:0 2px 0 #e6efff; }
   .u-btn.off { color:#d6d3d1; border-color:#eee; box-shadow:none; background:#fff; }
@@ -441,9 +454,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* ───── 冒険のきろく ───── */
   .record { margin-top:22px; }
   .rec-h { text-align:center; margin-bottom:10px; }
-  .rec-h h2 { display:inline-block; font-size:16px; color:var(--deep);
-              background:linear-gradient(#fffdf6,#f4e7cd); border:2px solid #ddc39a;
-              border-radius:12px; padding:6px 22px; box-shadow:0 3px 0 #ddc39a; }
+  .rec-h h2 { display:inline-block; font-size:17px; color:var(--deep); font-weight:900;
+              padding:2px 4px 6px; border-bottom:3px solid var(--amber); }
   .counts { display:flex; gap:8px; }
   .cnt { flex:1; text-align:center; background:#fffdf6; border:2px solid #ddc39a; border-radius:12px;
          padding:9px 2px 7px; box-shadow:0 3px 0 #e6d3ae; }
@@ -476,9 +488,11 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   <div class="gtabs" id="gtabs"></div>
 
   <div class="panel">
-    <div class="p-h">あなたの冒険の進み具合</div>
-    <div class="big"><b id="ovNum">0</b><span class="sm"> / <span id="ovTotal">0</span> マス</span>
-      <span class="sm" id="ovPct">（0%）</span></div>
+    <div class="p-top">
+      <span class="p-h">あなたの冒険の進み具合</span>
+      <span class="big"><b id="ovNum">0</b><span class="sm"> / <span id="ovTotal">0</span> マス</span>
+        <span class="sm" id="ovPct">（0%）</span></span>
+    </div>
     <div class="ov-bar"><div class="ov-fill" id="ovFill"></div></div>
     <div class="legend">
       <span class="lg"><span class="dot"></span>まだ</span>
@@ -738,15 +752,24 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     if (nextIdx < cells.length) cells[nextIdx].classList.add('current');
     else if (lastCleared < 0 && cells[0]) cells[0].classList.add('current');
 
-    var pct = cells.length ? Math.round((cleared / cells.length) * 100) : 0;
+    // 進捗％は「どこまで解いたか」の深さで数える。全マスで全問解き終えて初めて100%。
+    //   まだ=0 / 参考書を読んだ=0.15 / 一部を解いた=0.5 / 全部解いた・全問正解=1.0
+    // 参考書を読んだ・一部だけ、では 100% にならない（端数で99→100に化けないようガード）。
+    var done = n.all + n.perfect;                       // 全問解き終えたマス数
+    var weighted = n.ref * 0.15 + n.some * 0.5 + done;  // 進み具合の重み合計
+    var pct = 0;
+    if (cells.length) {
+      pct = (done >= cells.length) ? 100
+          : Math.min(99, Math.round(weighted / cells.length * 100));
+    }
     document.getElementById('ovFill').style.width = pct + '%';
-    document.getElementById('ovNum').textContent = cleared;
+    document.getElementById('ovNum').textContent = done;
     document.getElementById('ovPct').textContent = '（' + pct + '%）';
 
     // 冒険のきろく（いまの学年ぶん）
     var goalEl = document.querySelector('.goal');
-    if (goalEl) goalEl.classList.toggle('done', cells.length > 0 && cleared >= cells.length);
-    document.getElementById('cCleared').textContent = cleared;
+    if (goalEl) goalEl.classList.toggle('done', cells.length > 0 && done >= cells.length);
+    document.getElementById('cCleared').textContent = done;
     document.getElementById('cStamp').textContent = n.all + n.perfect;
     document.getElementById('cPerfect').textContent = n.perfect;
 

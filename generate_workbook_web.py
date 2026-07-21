@@ -200,6 +200,22 @@ def build(folder: str) -> tuple[str, list[str]]:
         # B 一問一答（1問1ステップ・セルフ採点）
         n_itto = resolve_count(spec, "nItto", N_ITTOITTO, len(topic["flashcards"]))
         cards = pick_flashcards(topic["flashcards"], n_itto)
+        # おすすめ順で「短答」に入る手前で、答え合わせのやり方を選ぶステップ（mode=all のときだけ流れに入る）
+        if cards:
+            steps.append(f"""
+    <div class="step mb-step" data-label="短答のやり方" data-sec="MB">
+      <div class="sec-h"><span class="sec-tag">▶</span>ここからは一問一答<span class="sec-note">答え合わせのやり方をえらぼう</span></div>
+      <button class="mode-btn mb-pick" type="button" data-ansall="type">
+        <span class="mode-ic ic-b">⌨️</span>
+        <span class="mode-main"><span class="mode-t">入力して答え合わせ</span>
+          <span class="mode-sub">こたえを打つと自動で正誤判定</span></span>
+        <span class="mode-arrow">›</span></button>
+      <button class="mode-btn mb-pick" type="button" data-ansall="check">
+        <span class="mode-ic ic-a">👀</span>
+        <span class="mode-main"><span class="mode-t">答えを見て自己採点</span>
+          <span class="mode-sub">こたえを見て ○ △ をタップ</span></span>
+        <span class="mode-arrow">›</span></button>
+    </div>""")
         for i, card in enumerate(cards, 1):
             qid = f"qa-{tid}-{i}"
             expl = (f'<div class="qa-expl">{esc(card["explanation"])}</div>'
@@ -399,7 +415,7 @@ def build(folder: str) -> tuple[str, list[str]]:
             mode_btn_d = (
                 '<div class="mode-card"><button class="mode-btn" type="button" data-mode="D">'
                 '<span class="mode-ic ic-d">📝</span>'
-                f'<span class="mode-main"><span class="mode-t">記述だけ</span>'
+                f'<span class="mode-main"><span class="mode-t">記述</span>'
                 f'<span class="mode-sub">{len(written)}問・模範解答つき</span></span>'
                 '<span class="mode-arrow">›</span></button></div>')
         mode_step = f"""
@@ -412,12 +428,12 @@ def build(folder: str) -> tuple[str, list[str]]:
         <span class="mode-arrow">›</span></button>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="A">
         <span class="mode-ic ic-a">✏️</span>
-        <span class="mode-main"><span class="mode-t">穴埋め（要点まとめ）だけ</span>
+        <span class="mode-main"><span class="mode-t">穴埋め（要点まとめ）</span>
           <span class="mode-sub">（　）をタップして確かめる</span></span>
         <span class="mode-arrow">›</span></button></div>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="B">
         <span class="mode-ic ic-b">🔥</span>
-        <span class="mode-main"><span class="mode-t">一問一答（短答）だけ</span>
+        <span class="mode-main"><span class="mode-t">一問一答（短答）</span>
           <span class="mode-sub">{len(cards)}問・入力して自動で正誤判定</span></span>
         <span class="mode-arrow">›</span></button>
         <div class="mode-opts">
@@ -428,7 +444,7 @@ def build(folder: str) -> tuple[str, list[str]]:
       </div>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="C">
         <span class="mode-ic ic-c">✅</span>
-        <span class="mode-main"><span class="mode-t">4択（選択）だけ</span>
+        <span class="mode-main"><span class="mode-t">4択（選択）</span>
           <span class="mode-sub">{len(quiz)}問・タップで即判定</span></span>
         <span class="mode-arrow">›</span></button>
         <div class="mode-opts">
@@ -500,12 +516,11 @@ def build(folder: str) -> tuple[str, list[str]]:
     </div>
     <div class="ht-mascot">{char("char_manabi_sm.png", "wchar")}<span class="ht-bubble">いっしょに<br>がんばろう！</span></div>
   </header>
-  <div class="howto home-howto"><span class="hint-ic">💡</span><span>タブか下のリストから単元を選ぼう！<br>やり方（おすすめ順・穴埋め・一問一答・4択・記述）は単元を開いてから選べるよ。</span></div>
   <button class="resume" id="resumeBtn" hidden>▶ つづきから解く<span id="resumeWhere"></span></button>
   <nav class="toc">
     <div class="toc-head">
-      <div class="toc-h">この単元</div>
-      <button class="toc-cal" data-go="1">📅 {esc(check_title)}</button>
+      <div class="toc-h">単元を選択</div>
+      <button class="toc-cal" data-go="1">📅 {esc(check_title)}<span class="cal-go">›</span></button>
     </div>
     {''.join(toc_items)}
   </nav>
@@ -696,9 +711,21 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .toc-h { font-weight:bold; color:var(--deep); font-size:16px; display:flex; align-items:center; gap:8px; }
   .toc-h::before { content:"📖"; display:inline-flex; align-items:center; justify-content:center;
                    width:30px; height:30px; border-radius:50%; background:var(--brand); font-size:15px; }
-  .toc-cal { flex:none; border:1.5px solid var(--line); background:#fff; color:var(--brand);
-             font-weight:bold; border-radius:20px; padding:6px 12px; font-size:12px; cursor:pointer;
-             font-family:inherit; white-space:nowrap; box-shadow:0 2px 0 #f0e2c3; }
+  /* 「年表でチェック」へ飛ぶボタン。押せると気づかれるよう塗り＋矢印＋押し込み影で目立たせる */
+  .toc-cal { flex:none; border:none; background:linear-gradient(#fbbf24,#f59e0b); color:#fff;
+             font-weight:bold; border-radius:20px; padding:8px 8px 8px 14px; font-size:12.5px;
+             cursor:pointer; font-family:inherit; white-space:nowrap;
+             display:inline-flex; align-items:center; gap:6px;
+             box-shadow:0 3px 0 #c2740a, 0 4px 8px rgba(217,119,6,.3);
+             transition:transform .12s, box-shadow .12s, filter .12s; }
+  @media (hover:hover) {
+    .toc-cal:hover { transform:translateY(-2px); filter:brightness(1.06);
+                     box-shadow:0 5px 0 #c2740a, 0 7px 12px rgba(217,119,6,.38); }
+    .toc-cal:hover .cal-go { background:rgba(255,255,255,.55); }
+  }
+  .toc-cal:active { transform:translateY(2px); box-shadow:0 1px 0 #c2740a; }
+  .cal-go { display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px;
+            border-radius:50%; background:rgba(255,255,255,.35); font-size:14px; line-height:1; }
   /* 単元カード（大きめサムネ＋番号＋名前＋右矢印） */
   .toc-item { display:flex; align-items:center; width:100%; margin-bottom:8px; padding:0;
               background:#fff; border:1.5px solid #f0e2c3; border-radius:12px; overflow:hidden;
@@ -972,6 +999,9 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     .bar, .navbar, .resume, .reveal, .marks, .reveal-all-row, .w-input, .line-mini,
     .big-btn, .qa-expl, .expl, .tap-hint, .toc-state, .home-howto, .howto, .m-btns { display:none !important; }
     .mode-step, .qa-batch-step, .b-inrow, .b-idk, .b-batch-judge, .b-result { display:none !important; }
+    /* 問題選択・短答のやり方・結果などの操作用ページは紙に出さない（問題と解答だけ印刷） */
+    .mode-step, .mb-step, .done-step, .next-modes, .chip-mode, .print-btn,
+    .retry-btn, .home-btn, .wrong-btn { display:none !important; }
     .print-only { display:block !important; }
     .view { display:block !important; }
     .step { display:block !important; margin-bottom:14px; break-inside:avoid; }
@@ -1277,10 +1307,14 @@ __VIEWS__
     } else {
       var steps = stepsOf(t);
       // 一問一答「入力して判定」モードのときだけ入力UIを出す（CSS は .ans-type 起点）
+      // おすすめ順（all）は、短答手前の MB ステップで選んだ ansAll に従う。
       var cfgB = modeCfg(t);
       views[t].classList.toggle(
         'ans-type',
-        !!(cfgB && (cfgB.mode === 'B' || cfgB.mode === 'wrong') && cfgB.ans !== 'check')
+        !!(cfgB && (
+          ((cfgB.mode === 'B' || cfgB.mode === 'wrong') && cfgB.ans !== 'check')
+          || (cfgB.mode === 'all' && cfgB.ansAll === 'type')
+        ))
       );
       // 問題の切り替えは即時（めくりアニメ無し）。リズムよく次々と解けるように。
       domSteps(t).forEach(function (el) {
@@ -1405,6 +1439,16 @@ __VIEWS__
       [].forEach.call(chipBtn.parentElement.querySelectorAll('.opt-chip'), function (b) {
         b.classList.toggle('on', b === chipBtn);
       });
+      return;
+    }
+    // おすすめ順の「短答のやり方」選択（.mb-pick は .mode-btn でもあるので先に処理）
+    var pick = e.target.closest('.mb-pick');
+    if (pick) {
+      var pt = state.t;
+      var pcfg = modeCfg(pt) || { mode: 'all' };
+      pcfg.ansAll = pick.dataset.ansall;   // 'type'=入力して判定 / 'check'=見て自己採点
+      var pst = store(); pst['m' + pt] = pcfg; save(pst);
+      go(pt, state.s + 1, 1);              // 次（最初の一問一答）へ。render() で入力/確認が切り替わる
       return;
     }
     var mb = e.target.closest('.mode-btn');

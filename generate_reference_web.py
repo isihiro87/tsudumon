@@ -256,7 +256,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
   </header>
   <button class="resume" id="resumeBtn" hidden>▶ つづきから読む<span id="resumeWhere"></span></button>
   <nav class="toc">
-    <div class="toc-head"><div class="toc-h">この単元</div></div>
+    <div class="toc-head"><div class="toc-h">単元を選択</div></div>
     {toc_items}
   </nav>
   {f'<a class="wb-home" href="../../wb/{ch_no}/index.html">✏️ 問題集を開く（この本の問題を解く）</a>' if wb_index else ''}
