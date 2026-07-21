@@ -633,11 +633,12 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .home-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; }
   .hometop { display:flex; align-items:flex-start; gap:6px; padding:8px 2px 2px; text-align:left; }
   .ht-main { flex:1; min-width:0; text-align:center; }
-  .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
-            box-shadow:0 2px 4px rgba(120,80,20,.2); }
-  .badge3 span { padding:4px 11px; display:inline-flex; align-items:center; white-space:nowrap; }
-  .b-vol { background:var(--brand); color:#fff; }
-  .b-kind { background:#fff; color:var(--deep); }
+  /* 本のラベル（押せない表示）: トグルに見えないようフラットな1トーンのタグに */
+  .badge3 { display:inline-flex; align-items:center; gap:6px; border-radius:8px;
+            background:#f4ecdb; padding:3px 10px; font-size:11.5px; font-weight:bold; }
+  .badge3 span { padding:0; display:inline-flex; align-items:center; white-space:nowrap; }
+  .b-vol { color:var(--brand); }
+  .b-kind { color:#9a7b4f; }
   .b-web { background:var(--amber); color:#fff; }
   .ht-title { font-size:41px; color:var(--deep); margin:12px 0 0; line-height:1.12; position:relative;
               display:inline-block; padding:0 6px; letter-spacing:.01em; }
@@ -1262,25 +1263,47 @@ __VIEWS__
       var steps = stepsOf(t);
       // 同じ単元内のページ送りだけ「めくり」演出（古いページと新しいページを重ねる）
       var animFrom = rendered && rendered.t === t && rendered.s !== s ? rendered.s : null;
-      [].forEach.call(steps, function (el, i) {
+      var oldEl = animFrom !== null ? steps[animFrom] : null;
+      var newEl = steps[s];
+      // クラスを切り替える前に「めくり始める瞬間の旧ページの見え方（画面上の位置・幅）」を測る。
+      // これを position:fixed で固定したままめくり、その裏で window を先頭へ戻すことで
+      // 「今いる高さのままページがめくれ、めくり終わると新ページは一番上から」を実現する。
+      var oldRect = oldEl ? oldEl.getBoundingClientRect() : null;
+      var resetTurn = function (el) {
         el.classList.remove('turn-out', 'turn-in', 'turn-under');
+        el.style.position = ''; el.style.top = ''; el.style.left = '';
+        el.style.width = ''; el.style.transformOrigin = '';
+        el.style.maxHeight = ''; el.style.overflow = '';
+      };
+      [].forEach.call(steps, function (el, i) {
+        resetTurn(el);
         el.classList.toggle('on', i === s);
       });
-      if (animFrom !== null && steps[animFrom] && steps[s]) {
-        var oldEl = steps[animFrom], newEl = steps[s];
-        var clear = function () {
-          oldEl.classList.remove('turn-out', 'turn-under');
-          newEl.classList.remove('turn-in');
+      if (animFrom !== null && oldEl && newEl && oldRect) {
+        // 旧ページを、今見えていた画面上の位置・幅にそのまま貼り付けて固定する
+        var pin = function (el) {
+          el.style.position = 'fixed';
+          el.style.top = oldRect.top + 'px';
+          el.style.left = oldRect.left + 'px';
+          el.style.width = oldRect.width + 'px';
         };
+        var clear = function () { resetTurn(oldEl); resetTurn(newEl); };
         if (lastDir > 0) {
+          // 進む: 旧ページを今の位置に固定したまま左とじでめくって去らせる。
+          // 透視の消失点を今の画面中央に合わせ、スクロール位置に依らず自然に見せる。
+          pin(oldEl);
+          oldEl.style.transformOrigin = '0 ' + ((innerHeight / 2) - oldRect.top) + 'px';
           oldEl.classList.add('turn-out');      // 今のページがめくれて去る
           oldEl.addEventListener('animationend', clear, { once: true });
         } else {
+          // 戻る: 旧（現在）ページを今の位置に固定して下に敷き、前ページを上へめくり戻す。
+          pin(oldEl);
+          oldEl.style.maxHeight = 'none'; oldEl.style.overflow = 'visible';
           oldEl.classList.add('turn-under');    // 下に敷いたまま
           newEl.classList.add('turn-in');       // 前のページがめくり戻ってくる
           newEl.addEventListener('animationend', clear, { once: true });
         }
-        setTimeout(clear, 700); // アニメ未発火時の保険
+        setTimeout(clear, 900); // アニメ未発火時の保険
       }
       navbar.hidden = false;
       barStep.textContent = (s + 1) + ' / ' + steps.length;

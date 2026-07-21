@@ -128,6 +128,17 @@ def blanks_html(text: str, start: int = 0) -> tuple[str, list[str]]:
     return "".join(out), answers
 
 
+# 教材ゲート（中間案・ゆるめ「頭出しは見せる」）。無料単元は tsudumonCore と一致。
+FREE_WORKBOOK_TOPICS = {"律令国家と奈良時代"}
+# 頭出し = やり方をえらぶ(step0)+要点まとめ(step1) まで。step>=2 で購入者判定。
+WB_LOCK_FROM = 2
+
+
+def grade_of_ch(ch_no: str) -> str:
+    n = int(ch_no)
+    return "中1" if n <= 6 else "中2" if n <= 12 else "中3"
+
+
 def build(folder: str) -> tuple[str, list[str]]:
     spec = BOOKS[folder]
     ch_no = folder[:2]
@@ -477,7 +488,7 @@ def build(folder: str) -> tuple[str, list[str]]:
         steps.insert(0, mode_step)
 
         views.append(f"""
-<section class="view" data-t="{vt}">
+<section class="view" data-t="{vt}"{'' if topic['name'] in FREE_WORKBOOK_TOPICS else f' data-lock="{WB_LOCK_FROM}"'}>
   <div class="tband"><span class="tno">{t_i}</span><h2>{esc(topic['name'])}</h2>{char(char_rotate[(t_i - 1) % len(char_rotate)], "wchar tchar")}</div>
   {''.join(steps)}
 </section>""")
@@ -584,6 +595,7 @@ def build(folder: str) -> tuple[str, list[str]]:
             .replace("__TABS__", tabs)
             .replace("__STORAGE_KEY__", f"tzmwb-{ch_no}")
             .replace("__CH_NO__", ch_no)
+            .replace("__GRADE__", grade_of_ch(ch_no))
             .replace("__GRADE_API__", GRADE_API)
             .replace("__FIREBASE_WEB_CONFIG__", json.dumps(firebase_web_config()))
             .replace("__REF_VIEWS__", json.dumps(ref_views))
@@ -710,11 +722,12 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .home-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; }
   .hometop { display:flex; align-items:flex-start; gap:6px; padding:8px 2px 2px; text-align:left; }
   .ht-main { flex:1; min-width:0; text-align:center; }
-  .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
-            box-shadow:0 2px 4px rgba(120,80,20,.2); }
-  .badge3 span { padding:4px 11px; display:inline-flex; align-items:center; white-space:nowrap; }
-  .b-vol { background:var(--brand); color:#fff; }
-  .b-kind { background:#fff; color:var(--deep); }
+  /* 本のラベル（押せない表示）: トグルに見えないようフラットな1トーンのタグに */
+  .badge3 { display:inline-flex; align-items:center; gap:6px; border-radius:8px;
+            background:#f4ecdb; padding:3px 10px; font-size:11.5px; font-weight:bold; }
+  .badge3 span { padding:0; display:inline-flex; align-items:center; white-space:nowrap; }
+  .b-vol { color:var(--brand); }
+  .b-kind { color:#9a7b4f; }
   .b-web { background:var(--amber); color:#fff; }
   .ht-title { font-size:41px; color:var(--deep); margin:12px 0 0; line-height:1.12; position:relative;
               display:inline-block; padding:0 6px; letter-spacing:.01em; }

@@ -1,0 +1,46 @@
+# 参考書Web版 節挿絵 全学年横展開 進捗トラッカー
+
+方針: 各節に挿絵1枚（本文左右交互＋一部ワイド＝地図/図/見せ場・サイズ変化）。画像タップで拡大（ライトボックス実装済み）。
+画像は codex image-2（水彩フラット・文字なしシーン）＋実データ地図（`tools/history_maps.py`）＋良質な既存図の流用。
+**地図はAI生成しない**（実データで正確に）。欠陥のある既存地図は作り直す。
+生成フロー: ブリーフ`assets/reference/CODEX_BRIEF_SEC_HISTNN.md`→`codex exec`背景生成→`tmp/gen/*.png`→PIL webp化→JSON配線→`generate_reference_web.py`再生成→コンタクトシートでQA。
+ローカル確認: `output/web` を `python -m http.server 8765`／`http://127.0.0.1:8765/ref/NN/index.html`。
+
+## 章別ステータス
+- [x] 04 古代の国家（23枚）: 完成・QA済み。白村江=実データ地図。レイアウト変化＋タップ拡大の基準章。
+- [x] 05 武士と鎌倉幕府（16枚）: 完成・QA済み。御恩と奉公図=流用。
+- [x] 06 室町と中世（22枚）: 元寇マップ=実データ＋codexシーン21/21・**QA済み良好**・22/22再生成済。
+- [x] 07 ヨーロッパと天下統一（16枚）: 新航路=実データ世界地図＋codexシーン15/15変換済・**QA済み良好**・再生成済。
+
+## 別件: 問題集WebのUI（絵文字→SVGラインアイコン・2026-07-21）
+- generate_workbook_web.py に IC(SVG辞書)追加。「やり方をえらぼう」画面の絵文字(⭐✏️🔥✅📝⌨️👀)→統一SVG、丸背景1トーン化。フロー改行修正→**その後ユーザー指示で「おすすめ順で解く」に短縮＋順番表示は削除**。ボタン=「答えを入力/見て確認」。
+- **codexイラストアイコン採用（ユーザー選択A）**: assets/ui-icons/ic-{star,ana,qa,yon,doc}.png（codex製・透明144px）→各章img/にコピー参照。IC辞書でSVGより優先。`.mode-ic:has(.mi-img){background:transparent}`。※ヘッダーのkbd/eyeはSVGのまま。
+- 記述: 「AI採点/わからない」横並び(.wr-actions)・書けた/もう一度削除・空欄でAI採点disabled(syncAiBtn)。
+- **未回答ガード**: qa/qa-batch/qz/wr ステップは回答するまで「つぎへ」locked（グレー化 .nb-next.locked/:disabled）。refreshNextLock()。
+- 年表タブ: 「年」丸→「年表」横長ピル(.tab-year)。
+- ボタン文言: おすすめ順で解く（ぜんぶ削除・順番表示削除）／答えを入力・見て確認。
+- **全19章 再生成済**（codexアイコン5/5・年表タブ・記述・未回答ロック 反映）。**絵文字は一掃済み**（⭕🔺📅🖨👆👇❌⭐🔒📱→SVG/除去。残置は✓といたのみ＝通常チェック文字）。※このファイルは**外部でも編集されていた**（絵文字の大半は既に除去済みだった）。
+- **未処理**: 参考書側ヘッダー絵文字(📖✏️🏠)統一は未。本番デプロイ(--deploy)は未（ユーザー承認待ち）。
+- [~] 08 幕藩体制の確立（23枚）: 鎖国四窓口マップ=流用済／codexシーン22枚 **生成中(b9c980rf8)**／JSON配線済。
+- [ ] 09 近代の世界: 未。※triangular-trade-opium(概ね良)。
+- [ ] 10 幕末・開国: 未。※treaty-ports-map(**A/B空ラベル→要作り直し**)。
+- [ ] 11 明治初期: 未。※meiji-constitution-org・land-tax-reform 流用可。
+- [ ] 12 明治後期: 未。※sino-japanese-war-caricature・treaty改正。
+- [ ] 13 第一次大戦: 未。※ww1-two-alliances-map(**空ラベル→要作り直し**)・versailles。
+- [ ] 14 大正デモクラシー: 未。※voter-increase-bar 流用可。
+- [ ] 15 昭和恐慌・戦争: 未。※manchuria-war-route(**①空ラベル→要作り直し**)。
+- [ ] 16 第二次大戦: 未。※pacific-war-relations(良・流用)。
+- [ ] 17 戦後日本: 未。※land-reform-bar・constitution 流用可。
+- [ ] 18 冷戦: 未。※cold-war-blocs(**化け→要作り直し**)。
+- [ ] 19 現代世界: 未。※berlin・sdgs。
+- [ ] 01 歴史のはじめ / 02 古代文明 / 03 日本の始まり: 未（既にヒーロー画像は多い。02=four-civilizations-map 概ね良）。
+
+## 実データ地図ツール `tools/history_maps.py` の MAKERS
+- [x] hakusukinoe（白村江・章04）
+- [x] genko（元寇・章06）
+- [x] voyage（新航路世界地図・章07）
+- [ ] treaty-ports（開港地5港・章10）
+- [ ] ww1-alliances（三国同盟/協商・章13）
+- [ ] manchuria（満州事変/日中戦争・章15）
+- [ ] cold-war（東西陣営・章18）
+- [ ] （勘合 kango は地図でなく図→codexシーン化で対応済み/章06）

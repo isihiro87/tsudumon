@@ -28,5 +28,11 @@
   "source": "File:Byōdō-in, Phoenix Hall.jpg",
   "license": "CC0",
   "artist": "Marco Almbauer"
+ },
+ {
+  "file": "reference/hist04-sec-hakusukinoe.webp",
+  "source": "Natural Earth 50m Admin0 (coastlines) + tools/history_maps.py で自作ラベル・矢印",
+  "license": "Public domain (Natural Earth)",
+  "artist": "Natural Earth / 自作"
  }
 ]
