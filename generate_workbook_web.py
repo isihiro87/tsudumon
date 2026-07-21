@@ -29,6 +29,8 @@ from generate_history_workbook import (
     pick_flashcards, pick_quiz, rebalance_quiz, resolve_count,
     split_blanks, ruby_base, to_ruby, c_num, KATAKANA,
 )
+# 記述AI採点に使う Firebase Web 設定（marutto-study/.env から読む・参考書Web版と共通）
+from generate_reference_web import firebase_web_config
 
 BASE = Path(__file__).parent
 OUT_DIR = BASE / "output" / "web" / "wb"
@@ -37,6 +39,8 @@ DEPLOY_DIR = BASE.parent / "marutto-study" / "public" / "tsudumon" / "wb"
 REF_DIR = BASE / "reference"
 
 LIFF_ID_UNITS = "2009587166-LjyCza2c"
+# 記述AI採点 Cloud Function（referenceChat と同じ関数群・購入者ゲートつき）
+GRADE_API = "https://asia-northeast1-chatstudy-63477.cloudfunctions.net/gradeWritten"
 
 
 def esc(s: str) -> str:
@@ -311,6 +315,8 @@ def build(folder: str) -> tuple[str, list[str]]:
       {ref_help(tid, *(w.get("keywords") or []), w.get("a", ""))}
       <textarea class="w-input print-hide" rows="3" placeholder="ここに書いてみよう（書かずに頭の中で説明してもOK）"></textarea>
       <div class="wline print-only"></div><div class="wline print-only"></div>
+      <button class="ai-grade print-hide" type="button" data-bankid="q-wbw-history-{ch_no}-{tid}-{i}">🤖 AIに採点してもらう</button>
+      <div class="ai-result" hidden></div>
       <button class="reveal" type="button">模範解答を見る</button>
       <div class="hidden-until">
         <div class="qa-a">{esc(w['a'])}</div>
@@ -318,7 +324,6 @@ def build(folder: str) -> tuple[str, list[str]]:
           <button class="mk mk-ok" type="button" data-v="1">⭕ 書けた</button>
           <button class="mk mk-ng" type="button" data-v="0">🔺 もう一度</button>
         </div>
-        <a class="line-mini" href="{liff_wb(topic['name'])}" target="_blank" rel="noopener">🤖 自分の答えをAIに採点してもらう（LINE）</a>
       </div>
     </div>""")
 
@@ -565,6 +570,8 @@ def build(folder: str) -> tuple[str, list[str]]:
             .replace("__TABS__", tabs)
             .replace("__STORAGE_KEY__", f"tzmwb-{ch_no}")
             .replace("__CH_NO__", ch_no)
+            .replace("__GRADE_API__", GRADE_API)
+            .replace("__FIREBASE_WEB_CONFIG__", json.dumps(firebase_web_config()))
             .replace("__REF_VIEWS__", json.dumps(ref_views))
             .replace("__VIEWS__", home + "".join(views) + print_answers))
     return page, images
@@ -871,6 +878,35 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .hidden-until { display:none; }
   .show .hidden-until { display:block; }
   .show .reveal { display:none; }
+
+  /* 記述のAIその場採点 */
+  .ai-grade { display:block; width:100%; margin-top:12px; border:none; border-radius:12px;
+              background:linear-gradient(#b45309,#8a3f07); color:#fff8ec; font-weight:bold;
+              font-size:15px; padding:12px; cursor:pointer; font-family:inherit;
+              box-shadow:0 2px 6px rgba(180,83,9,.3); }
+  .ai-grade:disabled { opacity:.6; cursor:default; }
+  @media (hover:hover) { .ai-grade:hover:not(:disabled) { filter:brightness(1.07); } }
+  .ai-result { margin-top:12px; border-radius:14px; padding:12px 14px; border:2px solid var(--line);
+               background:#fff; }
+  .ai-result[hidden] { display:none; }
+  .ai-result.v-correct { border-color:#bbe3cc; background:#f0fdf4; }
+  .ai-result.v-partial { border-color:#fde68a; background:#fffbeb; }
+  .ai-result.v-incorrect { border-color:#fecaca; background:#fef2f2; }
+  .ai-result.v-info { border-color:var(--line); background:#fffbeb; }
+  .air-head { display:flex; align-items:center; gap:8px; font-weight:bold; font-size:16px; }
+  .air-badge { flex:none; width:30px; height:30px; border-radius:50%; display:inline-flex;
+               align-items:center; justify-content:center; color:#fff; font-size:17px; }
+  .v-correct .air-badge { background:var(--ok); }
+  .v-partial .air-badge { background:var(--amber); }
+  .v-incorrect .air-badge { background:var(--ng); }
+  .air-line { margin-top:8px; font-size:13.5px; line-height:1.7; color:#44403c; }
+  .air-line b { color:var(--deep); }
+  .air-login { display:inline-block; margin-top:6px; color:var(--brand); font-weight:bold;
+               text-decoration:underline; cursor:pointer; }
+  .air-spin { display:inline-block; width:16px; height:16px; border:2px solid #e2d5bd;
+              border-top-color:var(--brand); border-radius:50%; animation:airspin .7s linear infinite;
+              vertical-align:-3px; margin-right:6px; }
+  @keyframes airspin { to { transform:rotate(360deg); } }
   .qa-a { margin-top:12px; background:#fff; border:2px solid var(--amber); border-radius:12px;
           padding:10px 14px; font-size:18px; font-weight:bold; color:var(--deep); text-align:center; }
   .qa-expl { font-size:13.5px; color:#57534e; background:#fffbeb; border-radius:10px;
@@ -1001,7 +1037,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     .mode-step, .qa-batch-step, .b-inrow, .b-idk, .b-batch-judge, .b-result { display:none !important; }
     /* 問題選択・短答のやり方・結果などの操作用ページは紙に出さない（問題と解答だけ印刷） */
     .mode-step, .mb-step, .done-step, .next-modes, .chip-mode, .print-btn,
-    .retry-btn, .home-btn, .wrong-btn { display:none !important; }
+    .retry-btn, .home-btn, .wrong-btn, .ai-grade, .ai-result, .print-hide { display:none !important; }
     .print-only { display:block !important; }
     .view { display:block !important; }
     .step { display:block !important; margin-bottom:14px; break-inside:avoid; }
@@ -1054,10 +1090,41 @@ __VIEWS__
   <button class="nb nb-prev" id="btnPrev">← まえへ</button>
   <button class="nb nb-next" id="btnNext">つぎへ →</button>
 </div></div>
+
+<script type="module">
+// 記述AI採点のログイン（www.chatstudy.jp の LINE Login＝Firebase Auth。参考書ページと同じ）。
+// 通常のスクリプトからは window.__tzmAuth 経由で使う（module は個別スコープのため）。
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  initializeAuth, browserLocalPersistence, browserSessionPersistence,
+  inMemoryPersistence, onAuthStateChanged,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+try {
+  var app = initializeApp(__FIREBASE_WEB_CONFIG__);
+  var auth = initializeAuth(app, {
+    persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+  });
+  window.__tzmAuth = {
+    ready: false,
+    user: null,
+    idToken: function () { return this.user ? this.user.getIdToken() : Promise.resolve(null); },
+    login: function () {
+      location.href = '/welcome?next=' + encodeURIComponent(location.pathname + location.hash);
+    },
+  };
+  onAuthStateChanged(auth, function (u) {
+    window.__tzmAuth.user = u;
+    window.__tzmAuth.ready = true;
+    document.dispatchEvent(new CustomEvent('tzm-auth'));
+  });
+} catch (e) { /* 設定が無ければ採点はフォールバック（自己採点）に倒れる */ }
+</script>
+
 <script>
 (function () {
   var KEY = '__STORAGE_KEY__';
   var CH = '__CH_NO__';
+  var GRADE_API = '__GRADE_API__';      // 記述AI採点 Cloud Function
   var REF_VIEWS = __REF_VIEWS__;        // 問題集のビューt → 参考書の単元番号（0＝対応なし）
   var views = [].slice.call(document.querySelectorAll('.view'));
   var tabs = [].slice.call(document.querySelectorAll('.tab'));
@@ -1106,6 +1173,109 @@ __VIEWS__
     };
     bar.addEventListener('click', function () { bar.hidden = true; });
   })();
+
+  // ───── 記述問題のAIその場採点 ─────
+  function escHtml(s) {
+    return String(s || '').replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+  function setAiResult(step, cls, html) {
+    var box = step.querySelector('.ai-result');
+    if (!box) return;
+    box.className = 'ai-result ' + cls;
+    box.innerHTML = html;
+    box.hidden = false;
+  }
+  function aiFallback(step, msg) {
+    setAiResult(step, 'v-info', '<div class="air-line">' + escHtml(msg) + '</div>');
+    step.classList.add('show');   // 模範解答＋自己採点(○△)を出してフォロー
+  }
+  function renderGradeCard(step, r) {
+    var v = r.verdict;
+    var mark = v === 'correct' ? '○' : v === 'partial' ? '△' : '×';
+    var head = v === 'correct' ? 'よくできました！'
+             : v === 'partial' ? 'おしい！あと少し' : 'もう一度チャレンジ';
+    var h = '<div class="air-head"><span class="air-badge">' + mark + '</span>' + head + '</div>';
+    if (r.good) h += '<div class="air-line"><b>よかった点</b>：' + escHtml(r.good) + '</div>';
+    if (r.missing) h += '<div class="air-line"><b>足りない点</b>：' + escHtml(r.missing) + '</div>';
+    if (r.hint) h += '<div class="air-line"><b>つぎのヒント</b>：' + escHtml(r.hint) + '</div>';
+    setAiResult(step, 'v-' + v, h);
+  }
+  function loginPrompt(step) {
+    setAiResult(step, 'v-info',
+      '<div class="air-line">AI採点は、購入者ログインで使えます。</div>'
+      + '<span class="air-login" data-ai-login>ログインする</span>');
+  }
+  function gradeWritten(step, btn) {
+    if (!step || !btn) return;
+    var ta = step.querySelector('.w-input');
+    var answer = ta ? ta.value.trim() : '';
+    if (answer.length < 2) {
+      setAiResult(step, 'v-info', '<div class="air-line">まず自分の言葉で書いてみよう。書けたら採点するよ。</div>');
+      return;
+    }
+    var auth = window.__tzmAuth;
+    if (!auth) { aiFallback(step, 'いまAI採点を準備中です。模範解答を見て自己採点もできます。'); return; }
+    if (!auth.ready) {
+      setAiResult(step, 'v-info', '<span class="air-spin"></span>ログイン状態を確認中…');
+      document.addEventListener('tzm-auth', function once() {
+        document.removeEventListener('tzm-auth', once);
+        gradeWritten(step, btn);
+      });
+      return;
+    }
+    if (!auth.user) { loginPrompt(step); return; }
+    var bankid = btn.dataset.bankid;
+    btn.disabled = true;
+    setAiResult(step, 'v-info', '<span class="air-spin"></span>AIが採点しています…');
+    auth.idToken().then(function (token) {
+      if (!token) throw new Error('no token');
+      return fetch(GRADE_API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: token, id: bankid, answer: answer.slice(0, 500) }),
+      });
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; })
+        .then(function (data) { return { status: res.status, data: data }; });
+    }).then(function (r) {
+      btn.disabled = false;
+      if (r.status === 200 && r.data && r.data.result) {
+        var result = r.data.result;
+        renderGradeCard(step, result);
+        // 進捗保存: correct のみ 1（＝全問正解=perfect の対象）。
+        //          partial/incorrect は 0（解答済みだが正解ではない＝some/all には数える）。
+        var st = store(); st.r = st.r || {}; st.g = st.g || {};
+        st.r[step.dataset.qid] = result.verdict === 'correct' ? 1 : 0;
+        st.g[step.dataset.qid] = result;
+        save(st);
+        return;
+      }
+      if (r.status === 402) {
+        setAiResult(step, 'v-info', '<div class="air-line">'
+          + escHtml((r.data && r.data.message) || 'この単元は購入者向けです。') + '</div>');
+        return;
+      }
+      if (r.status === 401 || r.status === 403) { loginPrompt(step); return; }
+      if (r.status === 429) {
+        setAiResult(step, 'v-info', '<div class="air-line">'
+          + escHtml((r.data && r.data.message) || 'きょうのAI利用が上限に達しました。また明日どうぞ。') + '</div>');
+        return;
+      }
+      aiFallback(step, 'いまAI採点に失敗しました。模範解答を見て自己採点してね。');
+    }).catch(function () {
+      btn.disabled = false;
+      aiFallback(step, '通信に失敗しました。模範解答を見て自己採点してね。');
+    });
+  }
+  // 再訪時に、保存済みの採点結果カードを復元する
+  function restoreGradeCards() {
+    var g = (store() || {}).g || {};
+    [].forEach.call(document.querySelectorAll('.wr-step'), function (step) {
+      var r = g[step.dataset.qid];
+      if (r) renderGradeCard(step, r);
+    });
+  }
 
   // 単元タブの左右矢印: まだ隠れているタブがある側だけ出す
   function updateTabArrows() {
@@ -1533,6 +1703,11 @@ __VIEWS__
     var rev = e.target.closest('.reveal');
     if (rev) { rev.closest('.step').classList.add('show'); return; }
 
+    var ag = e.target.closest('.ai-grade');
+    if (ag) { gradeWritten(ag.closest('.wr-step'), ag); return; }
+    var aiLogin = e.target.closest('[data-ai-login]');
+    if (aiLogin) { if (window.__tzmAuth) window.__tzmAuth.login(); return; }
+
     var mk = e.target.closest('.mk');
     if (mk) {
       var st = store(); st.r = st.r || {};
@@ -1674,6 +1849,7 @@ __VIEWS__
   }
   window.addEventListener('hashchange', fromHash);
   fromHash();
+  restoreGradeCards();   // 再訪時に保存済みのAI採点カードを復元
 })();
 </script>
 </body></html>"""
