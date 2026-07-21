@@ -577,7 +577,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* 目次ページのヘッダー（画像デザイン：3分割バッジ＋左寄せタイトル＋右にマスコット） */
   .home-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; }
   .hometop { display:flex; align-items:flex-start; gap:6px; padding:8px 2px 2px; text-align:left; }
-  .ht-main { flex:1; min-width:0; }
+  .ht-main { flex:1; min-width:0; text-align:center; }
   .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
             box-shadow:0 2px 4px rgba(120,80,20,.2); }
   .badge3 span { padding:4px 11px; display:inline-flex; align-items:center; white-space:nowrap; }

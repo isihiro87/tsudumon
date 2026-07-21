@@ -121,8 +121,12 @@ def build(folder: str) -> tuple[str, list[str]]:
             if hits > best_hits:
                 best, best_hits = si, hits
         frag = f"s{best}" if best else ""
+        # 別タブで開く（問題タブが残るので解いている問題にすぐ戻れる）。
+        # 万一ポップアップ制限で同タブ遷移しても、参考書側ヘッダーの「✏️問題」切替で
+        # 解いていた位置に戻れる（相手側の last を読んで着地）。
         return (f'<a class="sec-help" href="../../ref/{ch_no}/index.html'
-                f'#t{ref_index[tid]}{frag}">📖 解説を読む（ヒント）</a>')
+                f'#t{ref_index[tid]}{frag}" target="_blank" rel="noopener">'
+                f'📖 解説を読む（ヒント）</a>')
 
     images: list[str] = []
 
@@ -659,7 +663,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* 目次ページのヘッダー（画像デザイン：3分割バッジ＋左寄せタイトル＋右にマスコット） */
   .home-topline { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:2px; }
   .hometop { display:flex; align-items:flex-start; gap:6px; padding:8px 2px 2px; text-align:left; }
-  .ht-main { flex:1; min-width:0; }
+  .ht-main { flex:1; min-width:0; text-align:center; }
   .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
             box-shadow:0 2px 4px rgba(120,80,20,.2); }
   .badge3 span { padding:4px 11px; display:inline-flex; align-items:center; white-space:nowrap; }
