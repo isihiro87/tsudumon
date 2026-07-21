@@ -959,7 +959,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     .mk:hover, .mopt:hover, .line-mini:hover { filter: brightness(0.94); }
     /* 白・枠線ボタン／リストは薄いアンバーで下地を変えて分かりやすく */
     .toc-item:hover, .mode-btn:hover, .opt-chip:hover, .reveal-all:hover,
-    .ref-link:hover, .b-idk:hover, .blank:hover,
+    .ref-link:hover, .b-idk:hover, .blank:hover, .chip-mode:hover, .sec-help:hover,
     .qz-step:not(.answered) .qopt:hover { background-color: #fff8ec; }
     .b-in:hover { border-color: var(--amber); }
     /* 回答済みの4択・対応は押せないのでカーソルも通常に */
@@ -1241,9 +1241,9 @@ __VIEWS__
     }
     var qa = count('.qa-step'), qz = count('.qz-step'), wr = count('.wr-step');
     var rows = [];
-    if (qa.total) rows.push('<div class="score-row"><span>B 一問一答</span><b>⭕ ' + qa.done + ' / ' + qa.total + '</b></div>');
-    if (qz.total) rows.push('<div class="score-row"><span>C 実戦4択</span><b>正解 ' + qz.done + ' / ' + qz.total + '</b></div>');
-    if (wr.total) rows.push('<div class="score-row"><span>D 記述</span><b>⭕ ' + wr.done + ' / ' + wr.total + '</b></div>');
+    if (qa.tried) rows.push('<div class="score-row"><span>B 一問一答</span><b>⭕ ' + qa.done + ' / ' + qa.tried + '</b></div>');
+    if (qz.tried) rows.push('<div class="score-row"><span>C 実戦4択</span><b>正解 ' + qz.done + ' / ' + qz.tried + '</b></div>');
+    if (wr.tried) rows.push('<div class="score-row"><span>D 記述</span><b>⭕ ' + wr.done + ' / ' + wr.tried + '</b></div>');
     box.innerHTML = rows.join('') || 'このページの問題はタップ形式だよ。';
     // 「まちがえた問題だけやり直す」ボタン: B/C/D で r===0 の数だけ表示
     var wrongBtn = view.querySelector('.wrong-btn');
@@ -1280,7 +1280,7 @@ __VIEWS__
       var cfgB = modeCfg(t);
       views[t].classList.toggle(
         'ans-type',
-        !!(cfgB && cfgB.mode === 'B' && cfgB.ans !== 'check')
+        !!(cfgB && (cfgB.mode === 'B' || cfgB.mode === 'wrong') && cfgB.ans !== 'check')
       );
       // 問題の切り替えは即時（めくりアニメ無し）。リズムよく次々と解けるように。
       domSteps(t).forEach(function (el) {
@@ -1391,6 +1391,8 @@ __VIEWS__
       }
       save(stR);
       var rcfg = { mode: rm };
+      // まちがい直しは、直前の解き方（入力/確認）を引き継ぐ（既定は入力）
+      if (rm === 'wrong') { rcfg.ans = (modeCfg(state.t) || {}).ans || 'type'; }
       if (rm === 'B') { rcfg.ans = 'type'; rcfg.batch = false; rcfg.shuf = false; rcfg.order = null; }
       if (rm === 'C') { rcfg.shuf = false; rcfg.order = null; }
       applyMode(state.t, rcfg);
