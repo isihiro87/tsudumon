@@ -386,24 +386,50 @@ def build(folder: str) -> tuple[str, list[str]]:
 
         # やり方（モード）選択: 単元の最初に出す。推奨順=従来の全ステップ。
         # 短答は「一問ずつ/まとめて採点」、短答・4択は「シャッフル」を選べる。
+        flow = ["要点まとめ", "一問一答", "4択", "記述"]
+        if spec.get("shiryo", {}).get(tid):
+            flow.append("資料")
+        flow_html = '<span class="flow-arr">→</span>'.join(f'<span class="flow-chip">{f}</span>' for f in flow)
         mode_btn_d = ""
         if written:
-            mode_btn_d = (f'<button class="mode-btn" type="button" data-mode="D">📝 記述だけ'
-                          f'<span class="mode-sub">{len(written)}問・模範解答つき</span></button>')
+            mode_btn_d = (
+                '<div class="mode-card"><button class="mode-btn" type="button" data-mode="D">'
+                '<span class="mode-ic ic-d">📝</span>'
+                f'<span class="mode-main"><span class="mode-t">記述だけ</span>'
+                f'<span class="mode-sub">{len(written)}問・模範解答つき</span></span>'
+                '<span class="mode-arrow">›</span></button></div>')
         mode_step = f"""
     <div class="step mode-step" data-label="やり方をえらぶ" data-sec="M">
       <div class="sec-h"><span class="sec-tag">▶</span>やり方をえらぼう<span class="sec-note">目次にもどれば何度でも変えられるよ</span></div>
-      <button class="mode-btn mode-reco" type="button" data-mode="all">⭐ おすすめ順でぜんぶ解く<span class="mode-sub">要点まとめ → 一問一答 → 4択 → 記述{'' if not spec.get('shiryo', {}).get(tid) else ' → 資料'}</span></button>
-      <button class="mode-btn" type="button" data-mode="A">🕳 穴埋め（要点まとめ）だけ<span class="mode-sub">（　）をタップして確かめる</span></button>
-      <button class="mode-btn" type="button" data-mode="B">✍️ 一問一答（短答）だけ<span class="mode-sub">{len(cards)}問・入力して自動で正誤判定</span></button>
-      <div class="mode-opts">
-        <div class="opt-row">解答：<button class="opt-chip on" type="button" data-opt="ansB" data-val="0">⌨️ 入力して判定</button><button class="opt-chip" type="button" data-opt="ansB" data-val="1">入力せず答えだけ確認</button></div>
-        <div class="opt-row">採点：<button class="opt-chip on" type="button" data-opt="batch" data-val="0">一問ずつ</button><button class="opt-chip" type="button" data-opt="batch" data-val="1">まとめて</button></div>
-        <div class="opt-row">順番：<button class="opt-chip on" type="button" data-opt="shufB" data-val="0">そのまま</button><button class="opt-chip" type="button" data-opt="shufB" data-val="1">シャッフル</button></div>
+      <button class="mode-btn mode-reco" type="button" data-mode="all">
+        <span class="mode-ic ic-star">⭐</span>
+        <span class="mode-main"><span class="mode-t">おすすめ順でぜんぶ解く</span>
+          <span class="mode-flow">{flow_html}</span></span>
+        <span class="mode-arrow">›</span></button>
+      <div class="mode-card"><button class="mode-btn" type="button" data-mode="A">
+        <span class="mode-ic ic-a">✏️</span>
+        <span class="mode-main"><span class="mode-t">穴埋め（要点まとめ）だけ</span>
+          <span class="mode-sub">（　）をタップして確かめる</span></span>
+        <span class="mode-arrow">›</span></button></div>
+      <div class="mode-card"><button class="mode-btn" type="button" data-mode="B">
+        <span class="mode-ic ic-b">🔥</span>
+        <span class="mode-main"><span class="mode-t">一問一答（短答）だけ</span>
+          <span class="mode-sub">{len(cards)}問・入力して自動で正誤判定</span></span>
+        <span class="mode-arrow">›</span></button>
+        <div class="mode-opts">
+          <div class="opt-row"><span class="opt-lb">解答</span><button class="opt-chip on" type="button" data-opt="ansB" data-val="0">⌨️ 入力して判定</button><button class="opt-chip" type="button" data-opt="ansB" data-val="1">入力せず答えだけ確認</button></div>
+          <div class="opt-row"><span class="opt-lb">採点</span><button class="opt-chip on" type="button" data-opt="batch" data-val="0">一問ずつ</button><button class="opt-chip" type="button" data-opt="batch" data-val="1">まとめて</button></div>
+          <div class="opt-row"><span class="opt-lb">順番</span><button class="opt-chip on" type="button" data-opt="shufB" data-val="0">そのまま</button><button class="opt-chip" type="button" data-opt="shufB" data-val="1">シャッフル</button></div>
+        </div>
       </div>
-      <button class="mode-btn" type="button" data-mode="C">✅ 4択（選択）だけ<span class="mode-sub">{len(quiz)}問・タップで即判定</span></button>
-      <div class="mode-opts">
-        <div class="opt-row">順番：<button class="opt-chip on" type="button" data-opt="shufC" data-val="0">そのまま</button><button class="opt-chip" type="button" data-opt="shufC" data-val="1">シャッフル</button></div>
+      <div class="mode-card"><button class="mode-btn" type="button" data-mode="C">
+        <span class="mode-ic ic-c">✅</span>
+        <span class="mode-main"><span class="mode-t">4択（選択）だけ</span>
+          <span class="mode-sub">{len(quiz)}問・タップで即判定</span></span>
+        <span class="mode-arrow">›</span></button>
+        <div class="mode-opts">
+          <div class="opt-row"><span class="opt-lb">順番</span><button class="opt-chip on" type="button" data-opt="shufC" data-val="0">そのまま</button><button class="opt-chip" type="button" data-opt="shufC" data-val="1">シャッフル</button></div>
+        </div>
       </div>
       {mode_btn_d}
     </div>"""
@@ -431,20 +457,18 @@ def build(folder: str) -> tuple[str, list[str]]:
         answer_sections[-1] = (f"{t_i}　{topic['name']}", groups)
 
     # ---------- ホーム ----------
-    toc_items = [
-        '<button class="toc-item" data-go="1"><span class="toc-no">年</span>'
-        f'<span class="toc-name">{esc(check_title)}</span><span class="toc-state" data-state-t="1"></span></button>'
-    ]
     def toc_thumb(tid):
         img = ref_image.get(tid)
         u = use_img("reference/" + img) if img else None
         return f'<img class="toc-thumb" src="{u}" alt="" loading="lazy">' if u else '<span class="toc-thumb ph"></span>'
+    toc_items = []
     for i, t in enumerate(topics, 1):
         toc_items.append(
             f'<button class="toc-item" data-go="{i + 1}">{toc_thumb(t["topicId"])}'
             f'<span class="toc-no">{i}</span>'
             f'<span class="toc-name">{esc(t["name"])}</span>'
-            f'<span class="toc-state" data-state-t="{i + 1}"></span></button>')
+            f'<span class="toc-state" data-state-t="{i + 1}"></span>'
+            f'<span class="toc-arrow">›</span></button>')
 
     ref_home = ""
     if ref_index:
@@ -462,17 +486,21 @@ def build(folder: str) -> tuple[str, list[str]]:
     home = f"""
 <section class="view home" data-t="0">
   <a class="home-link" href="../../index.html">単元一覧にもどる</a>
-  <header class="top">
-    <div class="badge">{esc(spec['volume'])}　問題集 <span class="webtag">Web版</span></div>
-    <h1>{esc(spec['title'])}</h1>
-    <div class="sub">{esc(spec['subtitle'])}</div>
-    <div class="home-cheer">{char("char_manabi_sm.png", "wchar")}<span class="sp-bubble sp-taill">いっしょに がんばろう！</span></div>
-    <div class="howto home-howto">タブか下のリストから単元を選ぼう！<br>
-    やり方（おすすめ順・穴埋め・一問一答・4択・記述）は単元を開いてから選べるよ。</div>
+  <header class="top hometop">
+    <div class="ht-main">
+      <div class="badge3"><span class="b-vol">{esc(spec['volume'])}</span><span class="b-kind">問題集</span><span class="b-web">Web版</span></div>
+      <h1 class="ht-title">{esc(spec['title'])}</h1>
+      <div class="sub">{esc(spec['subtitle'])}</div>
+    </div>
+    <div class="ht-mascot">{char("char_manabi_sm.png", "wchar")}<span class="ht-bubble">いっしょに<br>がんばろう！</span></div>
   </header>
+  <div class="howto home-howto"><span class="hint-ic">💡</span><span>タブか下のリストから単元を選ぼう！<br>やり方（おすすめ順・穴埋め・一問一答・4択・記述）は単元を開いてから選べるよ。</span></div>
   <button class="resume" id="resumeBtn" hidden>▶ つづきから解く<span id="resumeWhere"></span></button>
   <nav class="toc">
-    <div class="toc-h">✏️ この本の問題</div>
+    <div class="toc-head">
+      <div class="toc-h">この単元</div>
+      <button class="toc-cal" data-go="1">📅 {esc(check_title)}</button>
+    </div>
     {''.join(toc_items)}
   </nav>
   {ref_home}
@@ -625,29 +653,58 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
            padding:4px 16px; border-radius:20px; font-size:13px; }
   .webtag { background:rgba(255,255,255,.25); border-radius:10px; padding:1px 8px; font-size:11px; margin-left:4px; }
   .top h1 { font-size:29px; color:var(--deep); margin-top:12px; line-height:1.4; }
-  .sub { color:#92400e; font-size:14px; margin-top:2px; }
+  .sub { color:#92400e; font-size:14px; margin-top:4px; }
+  /* 目次ページのヘッダー（画像デザイン：3分割バッジ＋左寄せタイトル＋右にマスコット） */
+  .hometop { display:flex; align-items:flex-start; gap:6px; padding:16px 2px 2px; text-align:left; }
+  .ht-main { flex:1; min-width:0; }
+  .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
+            box-shadow:0 2px 4px rgba(120,80,20,.2); }
+  .badge3 span { padding:4px 11px; display:inline-flex; align-items:center; white-space:nowrap; }
+  .b-vol { background:var(--brand); color:#fff; }
+  .b-kind { background:#fff; color:var(--deep); }
+  .b-web { background:var(--amber); color:#fff; }
+  .ht-title { font-size:33px; color:var(--deep); margin:12px 0 0; line-height:1.15; position:relative;
+              display:inline-block; padding:0 6px; }
+  .ht-title::before { content:"✨"; position:absolute; left:-20px; top:0; font-size:16px; }
+  .ht-title::after { content:"✨"; position:absolute; right:-18px; bottom:2px; font-size:13px; }
+  .ht-mascot { flex:none; position:relative; width:100px; padding-top:22px; text-align:center; }
+  .ht-mascot .wchar { height:74px; }
+  .ht-bubble { position:absolute; top:0; left:50%; transform:translateX(-50%); white-space:nowrap;
+               background:#fffbeb; border:1.5px solid #f0b558; border-radius:12px; padding:4px 10px;
+               font-size:11px; font-weight:bold; color:#92400e; line-height:1.25; text-align:center;
+               box-shadow:0 2px 4px rgba(0,0,0,.1); }
+  .ht-bubble::after { content:""; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+                      border:5px solid transparent; border-top-color:#f0b558; }
   .howto { font-size:13.5px; color:#57534e; }
-  .home-howto { margin-top:14px; background:#fffbeb; border:1.5px dashed var(--line);
-                border-radius:12px; padding:10px 14px; text-align:left; }
+  .home-howto { display:flex; align-items:flex-start; gap:10px; margin-top:14px; background:#fffbeb;
+                border:1.5px dashed var(--line); border-radius:14px; padding:11px 13px; text-align:left; }
+  .hint-ic { flex:none; width:30px; height:30px; border-radius:50%; background:var(--amber);
+             display:inline-flex; align-items:center; justify-content:center; font-size:15px; }
   .resume { display:block; width:100%; margin:16px 0 0; background:var(--brand); color:#fff;
             border:none; border-radius:14px; padding:13px; font-size:15px; font-weight:bold;
             cursor:pointer; box-shadow:0 3px 8px rgba(180,83,9,.3); font-family:inherit; }
   .resume span { font-weight:normal; font-size:12px; opacity:.9; margin-left:8px; }
-  .toc { margin:16px 0 12px; background:#fff; border:2px solid var(--line); border-radius:14px; padding:14px; }
-  .toc-h { font-weight:bold; color:var(--deep); margin-bottom:6px; font-size:15px; }
-  .toc-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 6px;
-              background:none; border:none; border-top:1px solid #faf1dc; cursor:pointer;
-              color:#44403c; font-weight:bold; font-size:15px; text-align:left;
-              font-family:inherit; line-height:1.4; }
-  .toc-item:first-of-type { border-top:none; }
-  /* 目次の単元サムネ（Codex製の水彩挿絵）。目次を絵入りで見やすく */
-  .toc-thumb { flex:none; width:56px; height:42px; border-radius:9px; object-fit:cover;
-               border:1.5px solid var(--line); background:#fff7e6; box-shadow:0 1px 3px rgba(120,80,20,.15); }
-  .toc-thumb.ph { background:linear-gradient(135deg,#fef3c7,#fde68a); }
-  .toc-no { flex:none; min-width:24px; height:24px; border-radius:50%; background:var(--amber);
+  .toc { margin:16px 0 12px; background:#fff9ef; border:2px solid #f0e2c3; border-radius:16px; padding:12px; }
+  .toc-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .toc-h { font-weight:bold; color:var(--deep); font-size:16px; display:flex; align-items:center; gap:8px; }
+  .toc-h::before { content:"📖"; display:inline-flex; align-items:center; justify-content:center;
+                   width:30px; height:30px; border-radius:50%; background:var(--brand); font-size:15px; }
+  .toc-cal { flex:none; border:1.5px solid var(--line); background:#fff; color:var(--brand);
+             font-weight:bold; border-radius:20px; padding:6px 12px; font-size:12px; cursor:pointer;
+             font-family:inherit; white-space:nowrap; box-shadow:0 2px 0 #f0e2c3; }
+  /* 単元カード（大きめサムネ＋番号＋名前＋右矢印） */
+  .toc-item { display:flex; align-items:center; width:100%; margin-bottom:8px; padding:0;
+              background:#fff; border:1.5px solid #f0e2c3; border-radius:12px; overflow:hidden;
+              box-shadow:0 2px 0 #ecdcbb; cursor:pointer; color:#44403c; font-weight:bold;
+              font-size:15px; text-align:left; font-family:inherit; line-height:1.35; min-height:62px; }
+  .toc-item:last-child { margin-bottom:0; }
+  .toc-thumb { flex:none; width:80px; align-self:stretch; object-fit:cover; border:none; background:#fff7e6; }
+  .toc-thumb.ph { background:linear-gradient(135deg,#fef3c7,#fde68a); align-self:stretch; }
+  .toc-no { flex:none; margin-left:12px; min-width:26px; height:26px; border-radius:50%; background:var(--amber);
             color:#fff; display:inline-flex; align-items:center; justify-content:center;
-            font-size:12px; padding:0 4px; }
-  .toc-name { flex:1; }
+            font-size:13px; padding:0 5px; }
+  .toc-name { flex:1; padding:10px 6px 10px 10px; }
+  .toc-arrow { flex:none; color:var(--brand); font-size:22px; font-weight:bold; padding:0 12px 0 4px; }
   /* 高さ固定: ✓ が絵文字グリフで描画される環境でも行高が揺れないように */
   .toc-state { flex:none; font-size:11px; font-weight:bold; line-height:1;
                display:inline-flex; align-items:center; height:20px; }
@@ -683,18 +740,38 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
               border-radius:16px; padding:5px 14px; margin-bottom:10px; }
 
   /* ── やり方（モード）選択 ── */
-  .mode-btn { display:block; width:100%; text-align:left; margin-top:10px; border:1.5px solid #e2d5bd;
-              border-radius:14px; padding:12px 16px; font-size:15px; font-weight:bold; color:#44403c;
-              background:#fff; cursor:pointer; font-family:inherit; line-height:1.5; }
-  .mode-btn .mode-sub { display:block; font-weight:normal; font-size:12px; color:#a8a29e; margin-top:2px; }
-  .mode-reco { background:var(--brand); border-color:var(--brand); color:#fff;
-               box-shadow:0 3px 8px rgba(180,83,9,.3); }
-  .mode-reco .mode-sub { color:rgba(255,255,255,.85); }
-  .mode-opts { margin:6px 0 2px 10px; display:flex; flex-direction:column; gap:5px; }
-  .opt-row { font-size:12.5px; font-weight:bold; color:#78716c; display:flex; align-items:center; gap:6px; }
-  .opt-chip { border:1.5px solid #e2d5bd; background:#fff; color:#78716c; border-radius:14px;
-              padding:3px 12px; font-size:12px; font-weight:bold; cursor:pointer; font-family:inherit; }
-  .opt-chip.on { background:#fffbeb; border-color:var(--amber); color:var(--brand); }
+  /* やり方をえらぶ: 各モードを丸アイコン＋本文＋右矢印のカードに（画像デザイン） */
+  .mode-card { background:#fff; border:1.5px solid #f0e2c3; border-radius:16px; margin-top:12px;
+               padding:6px 6px 10px; box-shadow:0 2px 0 #ecdcbb; }
+  .mode-card .mode-btn { margin-top:0; border:none; box-shadow:none; background:none; padding:8px 6px; }
+  .mode-btn { display:flex; align-items:center; gap:12px; width:100%; text-align:left; margin-top:12px;
+              border:none; border-radius:16px; padding:12px 10px; font-size:16px; font-weight:bold;
+              color:#44403c; background:#fff; cursor:pointer; font-family:inherit; line-height:1.35;
+              box-shadow:0 2px 0 #ecdcbb; border:1.5px solid #f0e2c3; }
+  .mode-ic { flex:none; width:52px; height:52px; border-radius:50%; display:inline-flex;
+             align-items:center; justify-content:center; font-size:24px; background:#f1ece0; }
+  .ic-star { background:#fff; }
+  .ic-a { background:#e3edff; } .ic-b { background:#ffe6d6; }
+  .ic-c { background:#dcfce7; } .ic-d { background:#ece9fb; }
+  .mode-main { flex:1; min-width:0; }
+  .mode-t { display:block; }
+  .mode-btn .mode-sub { display:block; font-weight:normal; font-size:12.5px; color:#a8a29e; margin-top:3px; }
+  .mode-arrow { flex:none; color:var(--brand); font-size:24px; font-weight:bold; padding-right:6px; }
+  /* おすすめ順（オレンジの目立つカード） */
+  .mode-reco { background:linear-gradient(#f59e0b,#ea7a09); border:none; color:#fff; margin-top:0;
+               box-shadow:0 4px 0 #c2620a, 0 6px 12px rgba(180,83,9,.3); border-radius:18px; padding:14px 12px; }
+  .mode-reco .mode-arrow { color:#fff; }
+  .mode-flow { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:6px; }
+  .flow-chip { background:rgba(255,255,255,.95); color:var(--brand); font-size:11.5px; font-weight:bold;
+               border-radius:12px; padding:2px 9px; }
+  .flow-arr { color:#fff; font-weight:bold; font-size:12px; }
+  /* オプション（一問一答・4択の中） */
+  .mode-opts { margin:2px 8px 4px 70px; display:flex; flex-direction:column; gap:7px; }
+  .opt-row { font-size:12.5px; font-weight:bold; color:#78716c; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .opt-lb { flex:none; color:#57534e; }
+  .opt-chip { border:1.5px solid #e2d5bd; background:#fff; color:#78716c; border-radius:16px;
+              padding:5px 14px; font-size:12.5px; font-weight:bold; cursor:pointer; font-family:inherit; }
+  .opt-chip.on { background:var(--brand); border-color:var(--brand); color:#fff; }
 
   /* ── 一問一答 まとめて採点 ── */
   .bq-item { border-top:1px dashed #e2d5bd; padding:10px 0; }

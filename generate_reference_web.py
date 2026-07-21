@@ -237,23 +237,24 @@ def build(chapter: str) -> tuple[str, list[str]]:
         f'{toc_thumb(t)}'
         f'<span class="toc-no">{i}</span>'
         f'<span class="toc-name">{esc(t["name"])}</span>'
-        f'<span class="toc-state" data-state-t="{i}"></span></button>'
+        f'<span class="toc-state" data-state-t="{i}"></span>'
+        f'<span class="toc-arrow">›</span></button>'
         for i, t in enumerate(spec["topics"], 1))
 
     views = [f"""
 <section class="view home" data-t="0">
   <a class="home-link" href="../../index.html">単元一覧にもどる</a>
-  <header class="top">
-    <div class="badge">{esc(spec['volume'])}　参考書 <span class="webtag">Web版</span></div>
-    <h1>{esc(spec['title'])}</h1>
-    <div class="sub">{esc(spec['subtitle'])}</div>
-    <div class="cover-navi">{navi_html}
-      <div class="bubble">こんにちは！タブか下の単元をえらんで、1ページずつ読み進めよう！</div>
+  <header class="top hometop">
+    <div class="ht-main">
+      <div class="badge3"><span class="b-vol">{esc(spec['volume'])}</span><span class="b-kind">参考書</span><span class="b-web">Web版</span></div>
+      <h1 class="ht-title">{esc(spec['title'])}</h1>
+      <div class="sub">{esc(spec['subtitle'])}</div>
     </div>
+    <div class="ht-mascot">{navi_html}<span class="ht-bubble">いっしょに<br>読もう！</span></div>
   </header>
   <button class="resume" id="resumeBtn" hidden>▶ つづきから読む<span id="resumeWhere"></span></button>
   <nav class="toc">
-    <div class="toc-h">📚 この本の単元</div>
+    <div class="toc-head"><div class="toc-h">この単元</div></div>
     {toc_items}
   </nav>
   {f'<a class="wb-home" href="../../wb/{ch_no}/index.html">✏️ 問題集Web版を開く（この本の問題を解く）</a>' if wb_index else ''}
@@ -570,7 +571,28 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .webtag { background:rgba(255,255,255,.25); border-radius:10px; padding:1px 8px;
             font-size:11px; margin-left:4px; }
   .top h1 { font-size:29px; color:var(--deep); margin-top:12px; line-height:1.4; }
-  .sub { color:#92400e; font-size:14px; margin-top:2px; }
+  .sub { color:#92400e; font-size:14px; margin-top:4px; }
+  /* 目次ページのヘッダー（画像デザイン：3分割バッジ＋左寄せタイトル＋右にマスコット） */
+  .hometop { display:flex; align-items:flex-start; gap:6px; padding:16px 2px 2px; text-align:left; }
+  .ht-main { flex:1; min-width:0; }
+  .badge3 { display:inline-flex; border-radius:18px; overflow:hidden; font-size:12px; font-weight:bold;
+            box-shadow:0 2px 4px rgba(120,80,20,.2); }
+  .badge3 span { padding:4px 11px; display:inline-flex; align-items:center; white-space:nowrap; }
+  .b-vol { background:var(--brand); color:#fff; }
+  .b-kind { background:#fff; color:var(--deep); }
+  .b-web { background:var(--amber); color:#fff; }
+  .ht-title { font-size:33px; color:var(--deep); margin:12px 0 0; line-height:1.15; position:relative;
+              display:inline-block; padding:0 6px; }
+  .ht-title::before { content:"✨"; position:absolute; left:-20px; top:0; font-size:16px; }
+  .ht-title::after { content:"✨"; position:absolute; right:-18px; bottom:2px; font-size:13px; }
+  .ht-mascot { flex:none; position:relative; width:100px; padding-top:22px; text-align:center; }
+  .ht-mascot img { height:74px; width:auto; }
+  .ht-bubble { position:absolute; top:0; left:50%; transform:translateX(-50%); white-space:nowrap;
+               background:#fff; border:2px solid var(--amber); border-radius:12px; padding:4px 10px;
+               font-size:11px; font-weight:bold; color:var(--deep); line-height:1.25; text-align:center;
+               box-shadow:0 2px 4px rgba(0,0,0,.1); }
+  .ht-bubble::after { content:""; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
+                      border:5px solid transparent; border-top-color:var(--amber); }
   .cover-navi { display:flex; align-items:center; gap:12px; justify-content:center;
                 margin:18px auto 4px; max-width:420px; text-align:left; }
   .navi { width:56px; height:56px; border-radius:50%; object-fit:cover; flex:none;
@@ -595,22 +617,23 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
             border:none; border-radius:14px; padding:13px; font-size:15px; font-weight:bold;
             cursor:pointer; box-shadow:0 3px 8px rgba(180,83,9,.3); }
   .resume span { font-weight:normal; font-size:12px; opacity:.9; margin-left:8px; }
-  .toc { margin:16px 0 8px; background:#fff; border:2px solid var(--line); border-radius:14px;
-         padding:14px; }
-  .toc-h { font-weight:bold; color:var(--deep); margin-bottom:6px; font-size:15px; }
-  .toc-item { display:flex; align-items:center; gap:10px; width:100%; padding:9px 6px;
-              background:none; border:none; border-top:1px solid #faf1dc; cursor:pointer;
-              color:#44403c; font-weight:bold; font-size:15px; text-align:left;
-              font-family:inherit; line-height:1.4; }
-  .toc-item:first-of-type { border-top:none; }
-  /* 目次の単元サムネ（Codex製の水彩挿絵）。目次を絵入りで見やすく */
-  .toc-thumb { flex:none; width:56px; height:42px; border-radius:9px; object-fit:cover;
-               border:1.5px solid var(--line); background:#fff7e6; box-shadow:0 1px 3px rgba(120,80,20,.15); }
-  .toc-thumb.ph { background:linear-gradient(135deg,#fef3c7,#fde68a); }
-  .toc-no { flex:none; width:24px; height:24px; border-radius:50%; background:var(--amber);
-            color:#fff; display:inline-flex; align-items:center; justify-content:center;
-            font-size:13px; }
-  .toc-name { flex:1; }
+  .toc { margin:16px 0 8px; background:#fff9ef; border:2px solid #f0e2c3; border-radius:16px; padding:12px; }
+  .toc-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; }
+  .toc-h { font-weight:bold; color:var(--deep); font-size:16px; display:flex; align-items:center; gap:8px; }
+  .toc-h::before { content:"📖"; display:inline-flex; align-items:center; justify-content:center;
+                   width:30px; height:30px; border-radius:50%; background:var(--brand); font-size:15px; }
+  /* 単元カード（大きめサムネ＋番号＋名前＋右矢印） */
+  .toc-item { display:flex; align-items:center; width:100%; margin-bottom:8px; padding:0;
+              background:#fff; border:1.5px solid #f0e2c3; border-radius:12px; overflow:hidden;
+              box-shadow:0 2px 0 #ecdcbb; cursor:pointer; color:#44403c; font-weight:bold;
+              font-size:15px; text-align:left; font-family:inherit; line-height:1.35; min-height:62px; }
+  .toc-item:last-child { margin-bottom:0; }
+  .toc-thumb { flex:none; width:80px; align-self:stretch; object-fit:cover; border:none; background:#fff7e6; }
+  .toc-thumb.ph { background:linear-gradient(135deg,#fef3c7,#fde68a); align-self:stretch; }
+  .toc-no { flex:none; margin-left:12px; width:26px; height:26px; border-radius:50%; background:var(--amber);
+            color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
+  .toc-name { flex:1; padding:10px 6px 10px 10px; }
+  .toc-arrow { flex:none; color:var(--brand); font-size:22px; font-weight:bold; padding:0 12px 0 4px; }
   /* 高さを固定して、✓（環境により絵文字グリフで行ボックスが太る）でも
      行の高さが他の行と変わらないようにする */
   .toc-state { flex:none; font-size:11px; font-weight:bold; line-height:1;

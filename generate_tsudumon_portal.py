@@ -391,15 +391,19 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   @media (hover:hover) { .cell:hover .tok { transform:translateY(-3px); } }
   .cell:active .tok { transform:translateY(3px); box-shadow:0 2px 0 #e2cfa4,0 3px 5px rgba(120,80,20,.18); }
 
-  /* ゴール */
+  /* ゴール：ふだんは色を抜いて「まだ先」を演出。全マスクリアで .goal.done なら点灯 */
   .goal { margin:8px 0 0; }
   .goal .g-box { display:flex; align-items:center; gap:12px;
-                 background:linear-gradient(#fffdf6,#fdf0cf); border:2px solid var(--amber);
-                 border-radius:16px; padding:9px 14px; box-shadow:0 4px 0 #eab308; }
+                 background:#f3ecdd; border:2px solid #d8c9a8;
+                 border-radius:16px; padding:9px 14px; box-shadow:0 4px 0 #d8c9a8;
+                 filter:grayscale(.85) opacity(.72); transition:filter .4s, background-color .4s, border-color .4s; }
+  .goal.done .g-box { background:linear-gradient(#fffdf6,#fdf0cf); border-color:var(--amber);
+                      box-shadow:0 4px 0 #eab308; filter:none; }
   .g-chest { width:56px; height:auto; flex:none; }
-  .goal .g-flag { display:inline-block; background:linear-gradient(#e0453a,#b91c1c); color:#fff8ec;
+  .goal .g-flag { display:inline-block; background:#a89a7c; color:#fff8ec;
                   font-weight:bold; border-radius:5px; padding:2px 12px; font-size:12px;
-                  letter-spacing:.1em; box-shadow:0 2px 0 #7f1d1d; }
+                  letter-spacing:.1em; box-shadow:0 2px 0 #857a5f; }
+  .goal.done .g-flag { background:linear-gradient(#e0453a,#b91c1c); box-shadow:0 2px 0 #7f1d1d; }
   .goal .g-t { font-weight:bold; color:var(--deep); font-size:14.5px; margin-top:4px; }
   .goal .g-s { font-size:11px; color:#92400e; }
 
@@ -740,6 +744,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     document.getElementById('ovPct').textContent = '（' + pct + '%）';
 
     // 冒険のきろく（いまの学年ぶん）
+    var goalEl = document.querySelector('.goal');
+    if (goalEl) goalEl.classList.toggle('done', cells.length > 0 && cleared >= cells.length);
     document.getElementById('cCleared').textContent = cleared;
     document.getElementById('cStamp').textContent = n.all + n.perfect;
     document.getElementById('cPerfect').textContent = n.perfect;
