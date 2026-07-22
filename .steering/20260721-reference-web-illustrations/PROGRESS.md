@@ -39,7 +39,8 @@
 - ★グラフは **matplotlib で作り直すと日本語ラベルが正確**（history_maps.py と同じ手法）。以降のグラフ章(⑰land-reform-bar・⑱high-growth/bubble)も同様に。
 - [x] 14 大正デモクラシー（11枚）: 有権者グラフをmatplotlibで作り直し＋codex10・QA済み・**コミット済(84aeebf)**。
 - [~] 15 昭和の危機（12枚）: 満州事変/日中戦争マップ=**実データで作り直し済**(manchuria・柳条湖/北京→南京/重慶/凡例)／codexシーン11枚を2バッチ生成中(bgil3m9l9=6, bnnkumtrt=5)／JSON配線済。※南京事件は節度ある描写を指示。
-- [ ] 16 第二次大戦: 未。※pacific-war-relations(良・流用)。
+- [x] 15 昭和の危機（12枚）: 満州事変/日中戦争マップ実データ＋codex11・QA済み・**コミット済(16d701f)**。
+- [~] 16 第二次世界大戦と日本（14枚）: 枢軸/連合の関係図=流用(良)／codexシーン13枚を2バッチ生成中(b70wjr4my=7, brof5diwq=6)／JSON配線済。※ホロコースト・原爆・沖縄戦は節度ある静かな描写を厳命。
 - [ ] 17 戦後日本: 未。※land-reform-bar・constitution 流用可。
 - [ ] 18 冷戦: 未。※cold-war-blocs(**化け→要作り直し**)。
 - [ ] 19 現代世界: 未。※berlin・sdgs。
