@@ -249,8 +249,39 @@ def ww1_alliances():
     save(fig, "hist13-sec-ww1-alliances")
 
 
+def manchuria():
+    """満州事変(1931)と日中戦争(1937)。歴史⑮ manchurian-incident 節0。"""
+    fig, ax = base_map((100, 146, 23.5, 49),
+                       lands=("China", "North Korea", "South Korea", "Japan", "Russia", "Mongolia"))
+    lab(ax, 108, 34.5, "中国", 24, color="#6b5a3a")
+    lab(ax, 126.5, 45.3, "満州", 20, color="#7a2d12")
+    lab(ax, 127.2, 40.2, "朝鮮", 16, color="#6b5a3a")
+    lab(ax, 138.5, 37, "日本", 20, color="#6b5a3a")
+    # ① 満州事変(1931) 柳条湖
+    ax.plot(123.4, 41.8, "o", color="#c0392b", markersize=13, zorder=8, mec="#fff", mew=1.5)
+    lab(ax, 123.8, 42.6, "①柳条湖", 14, color="#a01e12", ha="left", va="bottom")
+    # ② 日中戦争(1937): 北京→南京 の南下
+    bj, nj = (116.4, 39.9), (118.8, 32.05)
+    for pt, name, ha, va in [(bj, "北京", "right", "center"), (nj, "南京", "left", "top")]:
+        ax.plot(*pt, "s", color="#333", markersize=8, zorder=8, mec="#fff", mew=1.2)
+        lab(ax, pt[0] + (-0.5 if ha == "right" else 0.5), pt[1] + (-0.5 if va == "top" else 0),
+            name, 15, ha=ha, va=va)
+    ax.plot(106.5, 29.5, "s", color="#333", markersize=8, zorder=8, mec="#fff", mew=1.2)
+    lab(ax, 106.0, 29.0, "重慶", 15, ha="right", va="top")
+    ax.add_patch(FancyArrowPatch(bj, (nj[0] + 0.2, nj[1] + 0.4), connectionstyle="arc3,rad=-0.2",
+                 arrowstyle="-|>", mutation_scale=26, lw=4, color="#c0392b", zorder=6))
+    # 凡例
+    for k, (col, name) in enumerate([("#c0392b", "① 満州事変（1931）"), ("#c0392b", "② 日中戦争（1937）")]):
+        y = 25.5 + k * 2.3
+        ax.plot(102.5, y, "o" if k == 0 else "s", color=col, markersize=11, mec="#fff", mew=1.2, zorder=7)
+        lab(ax, 104, y, name, 14, ha="left", va="center")
+    save(fig, "hist15-sec-manchuria")
+
+
 MAKERS = {"hakusukinoe": hakusukinoe, "genko": genko, "voyage": voyage,
-          "treaty_ports": treaty_ports, "ww1_alliances": ww1_alliances}
+          "treaty_ports": treaty_ports, "ww1_alliances": ww1_alliances,
+          "manchuria": manchuria}
+
 
 if __name__ == "__main__":
     import sys

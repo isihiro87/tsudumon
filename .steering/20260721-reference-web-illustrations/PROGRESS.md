@@ -37,7 +37,8 @@
 - [x] 13 第一次世界大戦と日本（14枚）: 二大陣営マップ実データ＋codex13・QA済み・**コミット済(cb779a0)**。
 - [~] 14 大正デモクラシー（11枚）: 有権者グラフ=**matplotlibで作り直し**(旧は「1925年普通選挙法」化け・データ同じ)／codexシーン10枚 生成中(bji4dq6sx)／JSON配線済。
 - ★グラフは **matplotlib で作り直すと日本語ラベルが正確**（history_maps.py と同じ手法）。以降のグラフ章(⑰land-reform-bar・⑱high-growth/bubble)も同様に。
-- [ ] 15 昭和恐慌・戦争: 未。※manchuria-war-route(**①空ラベル→要作り直し**)。
+- [x] 14 大正デモクラシー（11枚）: 有権者グラフをmatplotlibで作り直し＋codex10・QA済み・**コミット済(84aeebf)**。
+- [~] 15 昭和の危機（12枚）: 満州事変/日中戦争マップ=**実データで作り直し済**(manchuria・柳条湖/北京→南京/重慶/凡例)／codexシーン11枚を2バッチ生成中(bgil3m9l9=6, bnnkumtrt=5)／JSON配線済。※南京事件は節度ある描写を指示。
 - [ ] 16 第二次大戦: 未。※pacific-war-relations(良・流用)。
 - [ ] 17 戦後日本: 未。※land-reform-bar・constitution 流用可。
 - [ ] 18 冷戦: 未。※cold-war-blocs(**化け→要作り直し**)。
