@@ -278,9 +278,50 @@ def manchuria():
     save(fig, "hist15-sec-manchuria")
 
 
+def cold_war():
+    """冷戦の東西two陣営（西側=アメリカ中心 / 東側=ソ連中心）。歴史⑱ cold-war 節0。"""
+    import numpy as np
+    feats = _load_features()
+    LON0, LON1, LAT0, LAT1 = -168, 190, -56, 80
+    ml = 25
+    fig = plt.figure(figsize=(15, 15 * ((LAT1 - LAT0) / np.cos(np.deg2rad(ml))) / (LON1 - LON0)))
+    ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(LON0, LON1); ax.set_ylim(LAT0, LAT1)
+    ax.set_aspect(1 / np.cos(np.deg2rad(ml))); ax.axis("off")
+    ax.add_patch(plt.Rectangle((LON0, LAT0), LON1 - LON0, LAT1 - LAT0, facecolor=SEA, zorder=0))
+    WEST = {"United States of America", "Canada", "United Kingdom", "France", "Germany",
+            "Italy", "Spain", "Portugal", "Netherlands", "Belgium", "Norway", "Greece",
+            "Turkey", "Japan", "South Korea", "Australia", "New Zealand"}
+    EAST = {"Russia", "China", "North Korea", "Mongolia", "Poland", "Czechia", "Slovakia",
+            "Hungary", "Romania", "Bulgaria", "Cuba", "Vietnam", "Belarus", "Ukraine"}
+    C_W, C_E = "#8fb4d6", "#d98a86"
+    for f in feats:
+        nm = f["properties"].get("NAME")
+        if nm == "Antarctica":
+            continue
+        fc = C_W if nm in WEST else C_E if nm in EAST else LAND
+        for ring in _rings(f):
+            arr = np.array(ring)
+            ax.add_patch(MplPoly(arr, closed=True, facecolor=fc, edgecolor="#a9ad8e",
+                                 linewidth=0.3, zorder=1))
+            if arr[:, 0].min() < -168:  # 端でロシア等が切れる分を右に複製
+                a2 = arr.copy(); a2[:, 0] += 360
+                ax.add_patch(MplPoly(a2, closed=True, facecolor=fc, edgecolor="#a9ad8e",
+                                     linewidth=0.3, zorder=1))
+    lab(ax, -100, 42, "アメリカ", 24, color="#1c4f7c")
+    lab(ax, 95, 64, "ソ連", 26, color="#8a2d24")
+    lab(ax, 103, 35, "中国", 17, color="#8a2d24")
+    lab(ax, 139, 37, "日本", 15, color="#1c4f7c")
+    for k, (col, name) in enumerate([(C_W, "西側（アメリカ中心）"), (C_E, "東側（ソ連中心）")]):
+        y = LAT0 + 6 + k * 9
+        ax.add_patch(plt.Rectangle((LON0 + 6, y), 9, 6, facecolor=col, edgecolor="#a9ad8e",
+                                   linewidth=0.8, zorder=6))
+        lab(ax, LON0 + 18, y + 3, name, 16, ha="left", va="center")
+    save(fig, "hist18-sec-cold-war")
+
+
 MAKERS = {"hakusukinoe": hakusukinoe, "genko": genko, "voyage": voyage,
           "treaty_ports": treaty_ports, "ww1_alliances": ww1_alliances,
-          "manchuria": manchuria}
+          "manchuria": manchuria, "cold_war": cold_war}
 
 
 if __name__ == "__main__":
