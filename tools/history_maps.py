@@ -213,8 +213,44 @@ def treaty_ports():
     save(fig, "hist10-sec-treaty-ports")
 
 
+def ww1_alliances():
+    """第一次世界大戦前の二大陣営（三国同盟 vs 三国協商）。歴史⑬ ww1-outbreak 節0。"""
+    import numpy as np
+    feats = _load_features()
+    LON0, LON1, LAT0, LAT1 = -12, 46, 35, 61
+    ml = (LAT0 + LAT1) / 2
+    fig = plt.figure(figsize=(12, 12 * ((LAT1 - LAT0) / np.cos(np.deg2rad(ml))) / (LON1 - LON0)))
+    ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(LON0, LON1); ax.set_ylim(LAT0, LAT1)
+    ax.set_aspect(1 / np.cos(np.deg2rad(ml))); ax.axis("off")
+    ax.add_patch(plt.Rectangle((LON0, LAT0), LON1 - LON0, LAT1 - LAT0, facecolor=SEA, zorder=0))
+    ALLIANCE = {"Germany", "Austria", "Hungary", "Italy"}      # 三国同盟
+    ENTENTE = {"United Kingdom", "France", "Russia"}           # 三国協商
+    C_AL, C_EN = "#e8a06a", "#8fb4d6"
+    for f in feats:
+        nm = f["properties"].get("NAME")
+        fc = C_AL if nm in ALLIANCE else C_EN if nm in ENTENTE else LAND
+        for ring in _rings(f):
+            ax.add_patch(MplPoly(np.array(ring), closed=True, facecolor=fc,
+                                 edgecolor="#9aa07e", linewidth=0.4, zorder=1))
+    lab(ax, 10.4, 51.3, "ドイツ", 19, color="#8a4a1e")
+    lab(ax, 16.2, 47.3, "オーストリア", 14, color="#8a4a1e")
+    lab(ax, 12.7, 42.7, "イタリア", 16, color="#8a4a1e")
+    lab(ax, -2.2, 53.4, "イギリス", 16, color="#1c4f7c")
+    lab(ax, 2.4, 47.3, "フランス", 16, color="#1c4f7c")
+    lab(ax, 37, 57.5, "ロシア", 20, color="#1c4f7c")
+    lab(ax, 21.6, 42.3, "バルカン半島", 13, color="#7a2d12")
+    lab(ax, 21.6, 41.4, "（火薬庫）", 12, color="#7a2d12")
+    # 凡例（左下）
+    for k, (col, name) in enumerate([(C_AL, "三国同盟"), (C_EN, "三国協商")]):
+        y = LAT0 + 1.4 + k * 2.1
+        ax.add_patch(plt.Rectangle((LON0 + 1.2, y), 1.8, 1.3, facecolor=col,
+                                   edgecolor="#9aa07e", linewidth=0.8, zorder=6))
+        lab(ax, LON0 + 3.4, y + 0.6, name, 14, ha="left", va="center")
+    save(fig, "hist13-sec-ww1-alliances")
+
+
 MAKERS = {"hakusukinoe": hakusukinoe, "genko": genko, "voyage": voyage,
-          "treaty_ports": treaty_ports}
+          "treaty_ports": treaty_ports, "ww1_alliances": ww1_alliances}
 
 if __name__ == "__main__":
     import sys

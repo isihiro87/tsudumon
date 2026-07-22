@@ -32,7 +32,8 @@
 - [~] 12 日清・日露の時代（20枚）: 日清の風刺画も**欠陥(①/空ラベル)→image-2で作り直し**／codexシーン19＋風刺図1を**2バッチ生成中(bf3juegcn=10, bje6z1tit=10)**／JSON配線済。
 - ★教訓: codexの大バッチは**2バッチ(各≤10)に分割**が安定。**⚠️バックグラウンドのcodex exec は必ず `< /dev/null` を付ける**（付けないと「Reading additional input from stdin...」でstdin待ちブロック＝画像0枚で停滞。ch11/ch12のbatch1で発生→停止して`</dev/null`付きで再投入し復旧）。ログは`> file 2>&1`。
 - [ ] 12 明治後期: 未。※sino-japanese-war-caricature・treaty改正。
-- [ ] 13 第一次大戦: 未。※ww1-two-alliances-map(**空ラベル→要作り直し**)・versailles。
+- [x] 12 日清・日露の時代（20枚）: codex19＋日清風刺図をimage-2で作り直し・QA済み・**コミット済(8ae276f)**。
+- [~] 13 第一次世界大戦と日本（14枚）: 二大陣営マップ=**実データで作り直し済**(ww1_alliances・同盟橙/協商青/凡例)／codexシーン13枚を2バッチ生成中(b8qf5akw6=7, bg9ffkxv9=6・`</dev/null`付)／JSON配線済。
 - [ ] 14 大正デモクラシー: 未。※voter-increase-bar 流用可。
 - [ ] 15 昭和恐慌・戦争: 未。※manchuria-war-route(**①空ラベル→要作り直し**)。
 - [ ] 16 第二次大戦: 未。※pacific-war-relations(良・流用)。
