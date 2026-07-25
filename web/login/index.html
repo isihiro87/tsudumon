@@ -1,0 +1,153 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>LINEでログイン｜つづもん</title>
+<style>
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --cream:#fffdf8; --line:#fde68a; --ng:#dc2626; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
+         display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+  .card { width:100%; max-width:400px; background:#fff; border:2px solid var(--line); border-radius:20px;
+          padding:28px 22px 26px; box-shadow:0 8px 24px rgba(120,80,20,.14); text-align:center; }
+  .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
+           padding:4px 16px; border-radius:20px; font-size:13px; }
+  h1 { font-size:21px; color:var(--deep); margin:14px 0 6px; }
+  .lead { font-size:14px; color:#78716c; line-height:1.8; margin-bottom:18px; }
+  .spinner { width:36px; height:36px; margin:12px auto; border:4px solid #f1e6cf;
+             border-top-color:var(--amber); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .big-btn { display:block; width:100%; margin-top:10px; border:none; border-radius:14px; padding:14px;
+             font-size:16px; font-weight:bold; text-decoration:none; cursor:pointer; font-family:inherit; }
+  .btn-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  .btn-sub { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .note { font-size:12px; color:#a8a29e; margin-top:14px; line-height:1.7; }
+  .hidden { display:none; }
+</style></head><body>
+<div class="card">
+  <span class="badge">つづもん</span>
+  <section id="stLoading">
+    <h1>ログインを確認しています…</h1>
+    <div class="spinner"></div>
+  </section>
+  <section id="stLogin" class="hidden">
+    <h1>LINEでログイン</h1>
+    <div class="lead">購入者の方は、公式LINEでログインすると教材の続きが読めます。<br>
+      コードの入力は不要です。</div>
+    <button class="big-btn btn-line" id="loginBtn" type="button">LINEでログイン</button>
+    <div class="note">はじめての方は、ログインと同時に公式LINEの友だち追加になります。</div>
+  </section>
+  <section id="stErr" class="hidden">
+    <h1>ログインできませんでした</h1>
+    <div class="lead" id="errMsg"></div>
+    <button class="big-btn btn-sub" id="retryBtn" type="button">もう一度ためす</button>
+  </section>
+</div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  initializeAuth, browserLocalPersistence, browserSessionPersistence,
+  inMemoryPersistence, onAuthStateChanged, signInWithCustomToken,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+// 教材ページ共通のログインページ。?next=<戻り先> を受け、LINE Login OAuth を
+// このページで完結させてから next へ戻す。
+// REDIRECT_URI は LINE Console のコールバックURLに登録した値と完全一致する必要がある
+// （つづもんは /login/ と /activate/ の2本を登録している。詳細は web/README.md）。
+var CHANNEL_ID = '2009587166';
+var TOKEN_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/createLineCustomToken';
+var REDIRECT_URI = location.origin + '/login/';
+
+var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
+var auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+});
+
+function show(id) {
+  ['stLoading', 'stLogin', 'stErr'].forEach(function (s) {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+function put(k, v) { try { localStorage.setItem(k, v); } catch (e) {} try { sessionStorage.setItem(k, v); } catch (e) {} }
+function get(k) { var v = null; try { v = localStorage.getItem(k); } catch (e) {} return v || (function () { try { return sessionStorage.getItem(k); } catch (e) { return null; } })(); }
+function del(k) { try { localStorage.removeItem(k); } catch (e) {} try { sessionStorage.removeItem(k); } catch (e) {} }
+
+// 戻り先。?next= を保存し OAuth 往復でも復元。
+// 同一オリジンの相対パスだけを許可する（オープンリダイレクト防止）。
+// 独自ドメイン化でつづもんがルート直下に移ったため、条件は「/tsudumon/ 配下」から
+// 「/ で始まり、// や /\ では始まらない」に変えた。//evil.com や /\evil.com は
+// ブラウザがプロトコル相対URL＝別オリジンとして解釈するので必ず弾く。
+function getNext() {
+  var m = /[?&]next=([^&]+)/.exec(location.search);
+  var n = m ? decodeURIComponent(m[1]) : (get('tzm-login-next') || '/');
+  if (n.charAt(0) !== '/' || n.charAt(1) === '/' || n.charAt(1) === '\\') n = '/';
+  put('tzm-login-next', n);
+  return n;
+}
+var NEXT = getNext();
+
+var qs = new URLSearchParams(location.search);
+var authCode = qs.get('code');
+var authState = qs.get('state');
+
+onAuthStateChanged(auth, function (user) {
+  if (user) { del('tzm-login-next'); location.replace(NEXT); }
+});
+
+if (authCode && authState) {
+  handleReturn(authCode, authState);
+} else {
+  setTimeout(function () {
+    if (auth.currentUser) return;
+    // LINE内ブラウザで ?auto=1 のときは、無操作で OAuth を1回だけ試す。
+    // sessionStorage['tzm-auto-tried'] で「タブ内1回だけ」に制限（失敗して戻ったらボタン表示に落とす）。
+    var auto = qs.get('auto') === '1';
+    var inLine = / Line\//.test(navigator.userAgent);
+    var tried = false;
+    try { tried = !!sessionStorage.getItem('tzm-auto-tried'); } catch (e) {}
+    if (auto && inLine && !tried) {
+      try { sessionStorage.setItem('tzm-auto-tried', '1'); } catch (e) {}
+      location.href = loginUrl();
+      return;
+    }
+    showLogin();
+  }, 400);
+}
+
+function loginUrl() {
+  var state = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+  put('tzm-line-state', state);
+  var p = new URLSearchParams({
+    response_type: 'code', client_id: CHANNEL_ID, redirect_uri: REDIRECT_URI,
+    state: state, scope: 'profile openid', bot_prompt: 'aggressive',
+  });
+  return 'https://access.line.me/oauth2/v2.1/authorize?' + p.toString();
+}
+function showLogin() {
+  show('stLogin');
+  document.getElementById('loginBtn').onclick = function () { location.href = loginUrl(); };
+}
+function showErr(msg) {
+  show('stErr'); document.getElementById('errMsg').textContent = msg;
+  document.getElementById('retryBtn').onclick = function () { location.href = REDIRECT_URI + '?next=' + encodeURIComponent(NEXT); };
+}
+
+async function handleReturn(code, state) {
+  show('stLoading');
+  if (state !== get('tzm-line-state')) { showErr('ログインの確認に失敗しました。もう一度お試しください。'); return; }
+  del('tzm-line-state');
+  try {
+    var res = await fetch(TOKEN_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, redirectUri: REDIRECT_URI }),
+    });
+    if (!res.ok) { showErr('ログインに失敗しました。もう一度お試しください。'); return; }
+    var data = await res.json();
+    await signInWithCustomToken(auth, data.customToken);
+  } catch (e) {
+    showErr('通信エラーが起きました。電波の良いところでもう一度お試しください。');
+  }
+}
+</script>
+</body></html>

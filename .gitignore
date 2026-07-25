@@ -16,6 +16,13 @@ node_modules/
 lp/node_modules/
 dist/
 
+# 配信ビルド（Firebase Hosting の public）。deploy_tsudumon.py と lp/build-lp.mjs が
+# 生成する。正本はジェネレータ・web/・lp/ 側なので追跡しない。
+dist-web/
+
+# Firebase CLI のローカルキャッシュ
+.firebase/
+
 # --- OS / エディタ ---
 .DS_Store
 Thumbs.db

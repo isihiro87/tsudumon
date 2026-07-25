@@ -1,0 +1,52 @@
+{
+  "hosting": [
+    {
+      "site": "tsudumon",
+      "public": "dist-web",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "cleanUrls": false,
+      "redirects": [
+        {
+          "source": "/tsudumon",
+          "destination": "/",
+          "type": 301
+        },
+        {
+          "source": "/tsudumon/:rest*",
+          "destination": "/:rest*",
+          "type": 301
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/dl",
+          "function": {
+            "functionId": "tsudumonDownload",
+            "region": "asia-northeast1"
+          }
+        },
+        {
+          "source": "/api/chat",
+          "function": {
+            "functionId": "tsudumonLpChat",
+            "region": "asia-northeast1"
+          }
+        }
+      ],
+      "headers": [
+        {
+          "source": "/img/**",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+        },
+        {
+          "source": "/_shared/img/**",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+        },
+        {
+          "source": "**/*.html",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=600" }]
+        }
+      ]
+    }
+  ]
+}

@@ -34,8 +34,8 @@
   画像の仕様は CODEX_BRIEF_QUEST_MOBILE.md を参照。
 
 出力:
-  python -X utf8 generate_tsudumon_portal.py            # output/web/index.html
-  python -X utf8 generate_tsudumon_portal.py --deploy   # marutto-study/public/tsudumon/index.html
+  python -X utf8 generate_tsudumon_portal.py            # output/web/map/index.html
+  python -X utf8 generate_tsudumon_portal.py --deploy   # dist-web/map/index.html
 """
 import argparse
 import html
@@ -53,8 +53,8 @@ REF_DIR = BASE / "reference"
 CHAR_DIR = BASE / "assets" / "characters"
 PORTAL_IMG_DIR = BASE / "assets" / "portal"     # Codex 製イラストの置き場（無くてよい）
 QUEST_IMG_DIR = BASE / "assets" / "quest"       # 同上（歴史クエスト用）
-OUT_FILE = BASE / "output" / "web" / "index.html"
-DEPLOY_FILE = BASE.parent / "marutto-study" / "public" / "tsudumon" / "index.html"
+OUT_FILE = BASE / "output" / "web" / "map" / "index.html"
+DEPLOY_FILE = BASE / "dist-web" / "map" / "index.html"
 
 GRADES = ["中1", "中2", "中3"]
 
@@ -146,6 +146,12 @@ def img_tag(name: str, cls: str, alt: str = "") -> str:
 def build_html() -> str:
     manifest = build_manifest()
     total_units = sum(len(c["units"]) for c in manifest)
+    # 「今日のミッション」の応援マスコット（ポータル全体で1箇所だけの表示）。
+    # 章ごとに男女交互、という運用ルールに沿わせるため、先頭の章番号の偶奇で決める
+    # （偶数章＝お姉さん / 奇数章＝先生）。1章始まり・全体で1箇所のみの表示なので、
+    # 実質は常に同じ結果になる（章カードが複数あるわけではない）。
+    _mascot_ch_no = manifest[0]["no"] if manifest else 1
+    mascot_img = "char_sensei_f_sm.png" if _mascot_ch_no % 2 == 0 else "char_sensei_m_sm.png"
     # 学年ごとのマス数（進捗の分母は「その学年の中で」数える）
     grade_total = {g: sum(len(c["units"]) for c in manifest if c["grade"] == g) for g in GRADES}
 
@@ -180,8 +186,8 @@ def build_html() -> str:
             f'<span class="u-no">{i}</span>'
             f'<span class="u-name">{esc(u["name"])}</span>'
             f'<span class="u-state"></span>'
-            f'<a class="u-btn wb" href="wb/{c["ch"]}/index.html#t{u["wbView"]}">問題</a>'
-            + (f'<a class="u-btn ref" href="ref/{c["ch"]}/index.html#t{u["refView"]}">参考書</a>'
+            f'<a class="u-btn wb" href="../wb/{c["ch"]}/index.html#t{u["wbView"]}">問題</a>'
+            + (f'<a class="u-btn ref" href="../ref/{c["ch"]}/index.html#t{u["refView"]}">参考書</a>'
                if u["refView"] else '<span class="u-btn ref off">—</span>')
             + '</li>'
             for i, u in enumerate(c["units"], 1))
@@ -209,11 +215,12 @@ def build_html() -> str:
             .replace("__CHEST__", img_tag("quest-chest.webp", "g-chest", ""))
             .replace("__EXPLORER__", img_tag("quest-explorer.webp", "ch-explorer", ""))
             .replace("__BIRD__", img_tag("quest-bird.webp", "ch-bird", ""))
-            .replace("__MASCOT__", img_tag("char_manabi_sm.png", "ch-mascot", ""))
+            .replace("__MASCOT__", img_tag(mascot_img, "ch-mascot", ""))
             .replace("__MANIFEST__", json.dumps(manifest_min, ensure_ascii=False)))
 
 
 TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>つづもん 歴史クエスト｜本一覧</title>
@@ -298,7 +305,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .mission { display:flex; align-items:center; gap:10px; margin-top:10px;
              background:linear-gradient(#fffdf6,#fdf3e0);
              border:2px dashed var(--amber); border-radius:14px; padding:8px 12px; }
-  .ch-mascot { width:42px; height:auto; flex:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
+  .ch-mascot { height:62px; width:auto; flex:none; margin-right:8px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
   .ms-body { flex:1; min-width:0; }
   .ms-h { font-size:12px; font-weight:bold; color:#b45309; }
   .ms-txt { font-size:14px; font-weight:bold; color:var(--deep); margin-top:2px;
@@ -822,7 +829,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     }
     // マスをタップ → その単元の問題集へ
     var cell = e.target.closest('.cell[data-tid]');
-    if (cell) { location.href = 'wb/' + cell.dataset.ch + '/index.html'; return; }  // まず章の目次へ
+    if (cell) { location.href = '../ref/' + cell.dataset.ch + '/index.html'; return; }  // まず章の参考書（目次）へ
   });
 
   // ロゴ画像が実際に表示できたときだけ、CSS文字版のタイトルと差し替える
@@ -854,7 +861,7 @@ def copy_assets(dest_root: Path) -> None:
     """キャラ画像と（あれば）Codex 製のイラストを img/ へ配る。"""
     img_dir = dest_root / "img"
     img_dir.mkdir(parents=True, exist_ok=True)
-    for name in ("char_manabi_sm.png", "char_owl_sm.webp"):
+    for name in ("char_sensei_f_sm.png", "char_sensei_m_sm.png"):
         src = CHAR_DIR / name
         if src.exists():
             shutil.copyfile(src, img_dir / name)
@@ -879,7 +886,7 @@ def generate(dest: Path) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--deploy", action="store_true",
-                    help="marutto-study/public/tsudumon/index.html へ出力")
+                    help="dist-web/map/index.html へ出力")
     args = ap.parse_args()
     generate(DEPLOY_FILE if args.deploy else OUT_FILE)
 

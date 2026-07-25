@@ -30,9 +30,6 @@ try:
 except ImportError:
     segno = None
 
-# 公式LINE（チャットでスタディ）のベーシックID。oaMessage リンクの宛先。
-# Messaging API GET /v2/bot/info の basicId で確認済み（@chatstudy はLP用の飾りIDで不可）。
-LINE_BASIC_ID = "@824cebif"
 # QR即出題用 LIFF（units の LIFF にパス /wb を連結して使う。VITE_LIFF_ID_UNITS と同じ値）。
 # QRを読むと LIFF が開き、送信操作なしにワーク開始カードがトークに push される。
 LIFF_ID_UNITS = "2009587166-LjyCza2c"

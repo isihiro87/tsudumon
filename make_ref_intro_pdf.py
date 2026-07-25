@@ -22,7 +22,7 @@ BASE = Path(__file__).parent
 REF_DIR = BASE / "reference"
 OUT_HTML = BASE / "output" / "_参考書はじめにお読みください.html"
 
-FRIEND_URL = "https://lin.ee/wxDOngU"
+FRIEND_URL = "https://lin.ee/XGIhuYi"
 
 GRADE_HISTORY = {**{f"{i:02d}": "中1" for i in range(1, 7)},
                  **{f"{i:02d}": "中2" for i in range(7, 13)},

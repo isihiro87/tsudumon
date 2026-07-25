@@ -14,9 +14,9 @@ PDF は A4 紙面・印刷・所有用、Web 版はスマホで読む「レッ�
 
 使い方:
   python -X utf8 generate_reference_web.py            # 全19冊 → output/web/ref/{NN}/index.html
-  python -X utf8 generate_reference_web.py --deploy 04  # 指定の章を marutto-study の公開ディレクトリへ
+  python -X utf8 generate_reference_web.py --deploy 04  # 指定の章を配信ビルド dist-web/ref/ へ
 
-デプロイ先: marutto-study/public/tsudumon/ref/{NN}/（chatstudy.jp/tsudumon/ref/{NN}/）
+デプロイ先: dist-web/ref/{NN}/（tsudumon.jp/ref/{NN}/）
 ※ 現状は検証・サンプル用の限定公開（LP からリンクしない・noindex）。
    全巻の購入者向け公開はライセンスゲートの設計が決まってから。
 """
@@ -36,9 +36,16 @@ OUT_DIR = BASE / "output" / "web" / "ref"
 ASSET_DIR = BASE / "assets" / "reference"
 
 # Firebase Web SDK 設定（ブラウザに配布される公開クライアント設定）。
-# 秘密ではないが、ソースへ直書きしないよう SPA と同じ env（VITE_FIREBASE_*）から読む。
-# 生成時に marutto-study/.env（gitignore 済み）を優先的に読み込む。
-_FB_ENV = BASE.parent / "marutto-study" / ".env"
+# 秘密ではないが、ソースへ直書きしないよう env（VITE_FIREBASE_*）から読む。
+#
+# 探索順は pdf-workbook/.env → marutto-study/.env（どちらも gitignore 済み）。
+# つづもんは独自ドメイン化で配信面が marutto-study から独立したが、Firebase プロジェクト
+# （chatstudy-63477）は共有のままなので設定値は同じ。pdf-workbook 単体でもビルドできるよう
+# 自前の .env を先に見て、無ければ従来どおり marutto-study 側にフォールバックする。
+_FB_ENV_CANDIDATES = [
+    BASE / ".env",
+    BASE.parent / "marutto-study" / ".env",
+]
 
 
 def _load_env_file(path: Path) -> dict:
@@ -55,7 +62,11 @@ def _load_env_file(path: Path) -> dict:
 
 
 def firebase_web_config() -> dict:
-    env = {**_load_env_file(_FB_ENV), **os.environ}
+    # 後ろの候補ほど優先度が低いので、先に見つかった値が勝つように逆順で重ねる
+    env = {}
+    for path in reversed(_FB_ENV_CANDIDATES):
+        env.update(_load_env_file(path))
+    env.update(os.environ)
     cfg = {
         "apiKey": env.get("VITE_FIREBASE_API_KEY", ""),
         "authDomain": env.get("VITE_FIREBASE_AUTH_DOMAIN", ""),
@@ -66,13 +77,14 @@ def firebase_web_config() -> dict:
     if missing:
         raise SystemExit(
             "Firebase Web 設定が未取得です（" + ", ".join(missing) + "）。\n"
-            "marutto-study/.env に VITE_FIREBASE_API_KEY / _AUTH_DOMAIN / _PROJECT_ID / _APP_ID "
+            "pdf-workbook/.env（または marutto-study/.env）に "
+            "VITE_FIREBASE_API_KEY / _AUTH_DOMAIN / _PROJECT_ID / _APP_ID "
             "を設定してから再生成してください。"
         )
     return cfg
 # Web埋め込み用のコンパクト版単元表紙（codex量産: gen_web_topic_covers.py）
 WEB_COVER_DIR = BASE / "covers" / "out" / "webtopics"
-DEPLOY_DIR = BASE.parent / "marutto-study" / "public" / "tsudumon" / "ref"
+DEPLOY_DIR = BASE / "dist-web" / "ref"
 
 LIFF_ID_UNITS = "2009587166-LjyCza2c"
 
@@ -237,7 +249,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
         images.append(str(src) + "|" + flat)
         return f'<img class="{cls}" src="img/{flat}" alt="">'
 
-    navi_html = (char_web("char_owl_sm.png", "navi navi-char")
+    navi_html = (char_web("char_sensei_m_sm.png", "navi navi-char")
                  or '<div class="navi navi-emoji">🦉</div>')
 
     # ── ホーム（表紙＋目次。進捗表示は JS が data-t を見て差し込む）──
@@ -310,7 +322,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
             learn_html = "".join(
                 f'<li><span class="ov-num">{n}</span><span>{rich(x)}</span></li>'
                 for n, x in enumerate(learn, 1))
-            cheer_char = char_web("manabi_banzai.png", "cheer-char")
+            cheer_char = char_web("sensei_m_banzai.png", "cheer-char")
             cheer_html = (f'<div class="cheer">{cheer_char}'
                           '<div class="cheer-bubble">この単元もがんばろう！</div></div>'
                           ) if cheer_char else ""
@@ -474,6 +486,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
 
 
 TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>__TITLE__</title>
@@ -643,14 +656,14 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .ht-title { font-size:41px; color:var(--deep); margin:12px 0 0; line-height:1.12; position:relative;
               display:inline-block; padding:0 6px; letter-spacing:.01em; }
   .ht-title::before, .ht-title::after { content:none; }
-  .ht-mascot { flex:none; position:relative; width:100px; padding-top:22px; text-align:center; }
-  .ht-mascot img { height:74px; width:auto; }
-  .ht-bubble { position:absolute; top:0; left:50%; transform:translateX(-50%); white-space:nowrap;
-               background:#fff; border:2px solid var(--amber); border-radius:12px; padding:4px 10px;
-               font-size:11px; font-weight:bold; color:var(--deep); line-height:1.25; text-align:center;
+  .ht-mascot { flex:none; display:flex; align-items:center; flex-direction:row-reverse; gap:9px; }
+  .ht-mascot img { height:84px; width:auto; }
+  .ht-bubble { position:relative; white-space:nowrap;
+               background:#fff; border:2px solid var(--amber); border-radius:12px; padding:6px 11px;
+               font-size:11px; font-weight:bold; color:var(--deep); line-height:1.3; text-align:center;
                box-shadow:0 2px 4px rgba(0,0,0,.1); }
-  .ht-bubble::after { content:""; position:absolute; bottom:-8px; left:50%; transform:translateX(-50%);
-                      border:5px solid transparent; border-top-color:var(--amber); }
+  .ht-bubble::after { content:""; position:absolute; right:-8px; top:50%; transform:translateY(-50%);
+                      border:5px solid transparent; border-left-color:var(--amber); }
   .cover-navi { display:flex; align-items:center; gap:12px; justify-content:center;
                 margin:18px auto 4px; max-width:420px; text-align:left; }
   .navi { width:56px; height:56px; border-radius:50%; object-fit:cover; flex:none;
@@ -906,8 +919,18 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .lock-d { font-size:13px; color:#78716c; line-height:1.8; margin-bottom:16px; }
   .lock-btn { display:block; width:100%; margin-top:10px; border:none; border-radius:13px; padding:13px;
               font-size:15px; font-weight:bold; text-decoration:none; cursor:pointer; font-family:inherit; }
+  .lb-trial { background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; font-size:16px;
+              box-shadow:0 4px 12px rgba(217,119,6,.42); }
+  .lb-trial:disabled { opacity:.6; cursor:default; box-shadow:none; }
+  .lb-sub { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
+  .lb-sub:disabled { opacity:.6; cursor:default; box-shadow:none; }
   .lb-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
   .lb-buy { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .lock-msg { margin-top:13px; padding:10px 12px; border-radius:11px; font-size:13px; line-height:1.7;
+              background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+  .lock-msg.ok { background:#ecfdf5; color:#047857; border-color:#a7f3d0; }
+  .lock-msg.warn { background:#fef2f2; color:#b91c1c; border-color:#fecaca; }
+  .lock-msg[hidden] { display:none; }
   .lock-close { display:block; width:100%; margin-top:12px; background:none; border:none; cursor:pointer;
                 color:#a8a29e; font-size:12.5px; font-family:inherit; text-decoration:underline; }
 
@@ -986,7 +1009,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 </style></head><body>
 <div class="bar"><div class="bar-in">
   <div class="bar-row">
-    <a class="tophome" href="../../index.html" aria-label="単元一覧へもどる"><svg class="th-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>単元一覧</a>
+    <a class="tophome" href="../../map/index.html" aria-label="単元一覧へもどる"><svg class="th-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg>単元一覧</a>
     <div class="swap" role="tablist" aria-label="参考書と問題の切りかえ"><span class="sw on">参考書</span><a class="sw" id="swWb" role="tab">問題</a></div>
     <div class="tabs-wrap">
       <nav class="tabs" id="tabs">__TABS__</nav>
@@ -1024,8 +1047,11 @@ __VIEWS__
   <div class="lock-ic">🔒</div>
   <div class="lock-t">つづきは購入者向けです</div>
   <div class="lock-d">ここまでは無料で読めます。つづきを読むには、つづもんのライセンスが必要です。</div>
+  <button class="lock-btn lb-trial" id="lockTrial">🎁 3日間ぜんぶ無料で試す</button>
+  <button class="lock-btn lb-sub" id="lockSub">月額プランに登録（1,280円/月）</button>
   <button class="lock-btn lb-line" id="lockLogin">📱 LINEでログイン（購入者の方）</button>
   <a class="lock-btn lb-buy" href="../../index.html">つづもんを見てみる →</a>
+  <div class="lock-msg" id="lockMsg" hidden></div>
   <button class="lock-close" id="lockClose">とじる（ここまで読む）</button>
 </div></div>
 <button class="chat-fab" id="chatFab" aria-label="スタ先生に質問する">🤖</button>
@@ -1039,7 +1065,7 @@ __VIEWS__
   <div class="chat-body" id="chatBody"></div>
   <div class="chat-login" id="chatLogin" hidden>
     <p>LINEログインすると、このページでスタ先生に質問できるよ。<br>会話のつづきは公式LINEでも話せる！</p>
-    <a class="chat-login-btn" id="chatLoginBtn" href="/welcome">LINEでログイン</a>
+    <a class="chat-login-btn" id="chatLoginBtn" href="/login/">LINEでログイン</a>
   </div>
   <form class="chat-input" id="chatForm" hidden>
     <input type="text" id="chatText" placeholder="この単元の質問をどうぞ！" maxlength="300" autocomplete="off">
@@ -1375,17 +1401,37 @@ __VIEWS__
 
   // ── 教材ゲート（中間案・ゆるめ「頭出しは見せる」）──
   //   有料単元は表紙＋最初の1節まで誰でも読める。その先は購入者（この学年のライセンス）だけ。
-  //   判定は localStorage['tzm-lic']（開放学年の配列）を見るだけ。ログイン時に entitlement で更新。
+  //   判定は localStorage['tzm-lic']（v2: {g:開放学年の配列, exp:期限ms}）を見るだけ。ログイン時に entitlement で更新。
   function isLicensed() {
-    try { return (JSON.parse(localStorage.getItem('tzm-lic') || '[]')).indexOf(GRADE) >= 0; }
-    catch (e) { return false; }
+    try {
+      var raw = localStorage.getItem('tzm-lic');
+      if (!raw) return false;
+      var obj = JSON.parse(raw);
+      if (Array.isArray(obj)) { localStorage.removeItem('tzm-lic'); return false; }
+      if (!obj || !obj.exp || Date.now() >= obj.exp) { localStorage.removeItem('tzm-lic'); return false; }
+      return (obj.g || []).indexOf(GRADE) >= 0;
+    } catch (e) { return false; }
   }
   function lockFrom(t) { var v = views[t]; return v ? +(v.getAttribute('data-lock') || 0) : 0; }
   function gateBlocks(t, s) {
     var lk = lockFrom(t);
     return lk > 0 && !isLicensed() && s >= lk;
   }
-  function showLock() { var ov = document.getElementById('lockOv'); if (ov) ov.hidden = false; }
+  // ロックカードを出す前に、LINE内ブラウザで未ログインなら一度だけ無操作ログインを試みる。
+  //   ログイン状態は module script が公開する window.tzmAuthUser で判定（module はスコープが別）。
+  //   sessionStorage['tzm-auto-login'] で「タブ内1回だけ」に制限（失敗しても2度目は普通にロック表示）。
+  function tzmMaybeAutoLogin() {
+    if (window.tzmAuthUser) return false;
+    if (!/ Line\\//.test(navigator.userAgent)) return false;
+    try {
+      if (sessionStorage.getItem('tzm-auto-login')) return false;
+      sessionStorage.setItem('tzm-auto-login', '1');
+    } catch (e) { return false; }
+    var here = location.pathname + '#t' + state.t + (state.s > 0 ? 's' + state.s : '');
+    location.href = '../../login/?auto=1&next=' + encodeURIComponent(here);
+    return true;
+  }
+  function showLock() { if (tzmMaybeAutoLogin()) return; var ov = document.getElementById('lockOv'); if (ov) ov.hidden = false; }
   function hideLock() { var ov = document.getElementById('lockOv'); if (ov) ov.hidden = true; }
   // entitlement 反映後に module script から呼ばれる。解除できたらロックを閉じる。
   window.tzmRefreshGate = function () { if (isLicensed()) hideLock(); };
@@ -1425,7 +1471,17 @@ __VIEWS__
     else go(0, 0, -1);
   }
 
-  // ロック案内のボタン: ログイン（共通ログインページ経由で戻る）／閉じる
+  // ロック案内のボタン: 3日間無料体験／ログイン（共通ログインページ経由で戻る）／閉じる
+  //   体験開始の実処理は module script の window.tzmStartTrial（Firebase Auth が要る）。
+  document.getElementById('lockTrial').addEventListener('click', function () {
+    var here = location.pathname + '#t' + state.t + (state.s > 0 ? 's' + state.s : '');
+    if (window.tzmStartTrial) window.tzmStartTrial(here);
+  });
+  // 月額プラン登録: 体験ボタンと同型のログイン往復 → Stripe Checkout へ遷移
+  document.getElementById('lockSub').addEventListener('click', function () {
+    var here = location.pathname + '#t' + state.t + (state.s > 0 ? 's' + state.s : '');
+    if (window.tzmStartCheckout) window.tzmStartCheckout(here);
+  });
   document.getElementById('lockLogin').addEventListener('click', function () {
     var here = location.pathname + '#t' + state.t + (state.s > 0 ? 's' + state.s : '');
     location.href = '../../login/?next=' + encodeURIComponent(here);
@@ -1551,8 +1607,8 @@ __VIEWS__
 <script type="module">
 // ── ページ内チャット（スタ先生）──
 // 公式LINEの参考書AI（ref_ask）と知識・会話履歴・1日回数枠を共有する。
-// 認証は www.chatstudy.jp の LINE Login（Firebase Auth）。marutto-study の
-// SPA と同じ localStorage 永続化なので、一度 /welcome でログインすれば共有される。
+// 認証は tsudumon.jp/login/ の LINE Login（Firebase Auth）。localStorage 永続化なので、
+// 一度 /login/ でログインすればつづもんの全ページで共有される。
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {
   initializeAuth, browserLocalPersistence, browserSessionPersistence,
@@ -1602,7 +1658,7 @@ function showLogin() {
   loginBox.hidden = false;
   form.hidden = true;
   document.getElementById('chatLoginBtn').href =
-    '/welcome?next=' + encodeURIComponent(location.pathname + location.hash);
+    '/login/?next=' + encodeURIComponent(location.pathname + location.hash);
 }
 function showChat() { loginBox.hidden = true; form.hidden = false; }
 
@@ -1701,14 +1757,148 @@ async function refreshEntitlement(u) {
     });
     if (!res.ok) return;
     var data = await res.json();
-    try { localStorage.setItem('tzm-lic', JSON.stringify((data && data.grades) || [])); } catch (e) {}
+    var grades = (data && data.grades) || [];
+    try {
+      if (grades.length === 0) {
+        localStorage.removeItem('tzm-lic');
+      } else {
+        var exp = Math.min(Number(data.expiresAtMs) || (Date.now() + 30 * 24 * 3600 * 1000), Date.now() + 30 * 24 * 3600 * 1000);
+        localStorage.setItem('tzm-lic', JSON.stringify({ g: grades, exp: exp }));
+      }
+    } catch (e) {}
     if (window.tzmRefreshGate) window.tzmRefreshGate();
   } catch (e) { /* ゲートは localStorage フォールバックのまま */ }
 }
 
+// ── 3日間無料体験（ロックカードの主ボタン）──
+//   1 uid 1回。サーバ（tsudumonTrialStart）で判定→成功なら refreshEntitlement で解錠。
+var TRIAL_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonTrialStart';
+var TRIAL_LABEL = '🎁 3日間ぜんぶ無料で試す';
+function tzmTrialMsg(text, kind) {
+  var el = document.getElementById('lockMsg');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'lock-msg' + (kind ? ' ' + kind : '');
+  el.hidden = false;
+}
+function tzmTrialBtn(disabled, label) {
+  var b = document.getElementById('lockTrial');
+  if (!b) return;
+  b.disabled = disabled;
+  if (label != null) b.textContent = label;
+}
+async function tzmDoTrial() {
+  var u = auth.currentUser;
+  if (!u) return;
+  tzmTrialBtn(true, '開始しています…');   // 連打防止
+  try {
+    var idToken = await u.getIdToken();
+    var res = await fetch(TRIAL_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken }),
+    });
+    var data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (res.ok && data && data.ok) {
+      tzmTrialBtn(true, '✓ 体験を開始しました');
+      tzmTrialMsg('体験開始！' + (data.expiresLabel || '3日後') + 'まで全単元つかえます 🎉', 'ok');
+      setTimeout(function () { refreshEntitlement(u); }, 1600);   // 解錠＋ロックを閉じる
+      return;
+    }
+    var reason = data && data.reason;
+    if (reason === 'already_licensed') {
+      tzmTrialBtn(true, '✓ ご利用いただけます');
+      tzmTrialMsg(data.message || 'すでにご利用いただけます。解錠します。', 'ok');
+      setTimeout(function () { refreshEntitlement(u); }, 1200);
+      return;
+    }
+    if (reason === 'trial_used') {
+      tzmTrialBtn(true, '体験は利用ずみです');
+      tzmTrialMsg(data.message || '無料体験はご利用ずみです。購入すると続きが読めます。', 'warn');
+      return;
+    }
+    tzmTrialBtn(false, TRIAL_LABEL);
+    tzmTrialMsg((data && data.message) || '体験を開始できませんでした。もう一度お試しください。', 'warn');
+  } catch (e) {
+    tzmTrialBtn(false, TRIAL_LABEL);
+    tzmTrialMsg('通信エラー。電波の良いところでもう一度お試しください', 'warn');
+  }
+}
+// 通常script のクリックハンドラから呼ばれる。ログイン済みなら即実行、未ログインなら
+// pending を立ててログインへ（LINE内は無操作／外部はボタン式。戻ってきたら下で継続）。
+window.tzmStartTrial = function (next) {
+  if (auth.currentUser) { tzmDoTrial(); return; }
+  try { localStorage.setItem('tzm-trial-pending', '1'); } catch (e) {}
+  var here = next || (location.pathname + location.hash);
+  location.href = '../../login/?auto=1&next=' + encodeURIComponent(here);
+};
+
+// ── 月額サブスク登録（ロックカードの「月額プランに登録」ボタン）──
+//   Stripe Checkout 直付け。tzmStartCheckout はログイン往復（trial と同型）→
+//   tsudumonCreateCheckout POST → 成功で Checkout URL へ遷移。
+var CHECKOUT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonCreateCheckout';
+var SUB_LABEL = '月額プランに登録（1,280円/月）';
+function tzmSubBtn(disabled, label) {
+  var b = document.getElementById('lockSub');
+  if (!b) return;
+  b.disabled = disabled;
+  if (label != null) b.textContent = label;
+}
+async function tzmDoCheckout() {
+  var u = auth.currentUser;
+  if (!u) return;
+  tzmSubBtn(true, '準備しています…');   // 連打防止（成功時はそのまま遷移）
+  try {
+    var idToken = await u.getIdToken();
+    var res = await fetch(CHECKOUT_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken }),
+    });
+    var data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (res.ok && data && data.ok && data.url) {
+      location.href = data.url;   // Stripe Checkout へ
+      return;
+    }
+    var reason = data && data.reason;
+    if (reason === 'already_subscribed') {
+      tzmSubBtn(true, '✓ 登録ずみです');
+      tzmTrialMsg(data.message || 'すでに月額プランにご登録いただいています。解錠します。', 'ok');
+      setTimeout(function () { refreshEntitlement(u); }, 1200);
+      return;
+    }
+    // not_configured / stripe_error / 通信失敗 はいずれも準備中として案内
+    tzmSubBtn(false, SUB_LABEL);
+    tzmTrialMsg('決済の準備中です。公式LINEでお知らせします。', 'warn');
+  } catch (e) {
+    tzmSubBtn(false, SUB_LABEL);
+    tzmTrialMsg('決済の準備中です。公式LINEでお知らせします。', 'warn');
+  }
+}
+// ログイン済みなら即実行、未ログインなら pending を立ててログインへ（戻ってきたら下で継続）。
+window.tzmStartCheckout = function (next) {
+  if (auth.currentUser) { tzmDoCheckout(); return; }
+  try { localStorage.setItem('tzm-sub-pending', '1'); } catch (e) {}
+  var here = next || (location.pathname + location.hash);
+  location.href = '../../login/?auto=1&next=' + encodeURIComponent(here);
+};
+
 onAuthStateChanged(auth, function (u) {
   user = u;
+  window.tzmAuthUser = u || null;   // 通常script のゲート自動ログイン判定用
   if (u) refreshEntitlement(u);
+  // 体験／登録ボタン→ログイン往復から戻ってきた継続: pending が立っていれば自動で続行
+  if (u) {
+    try {
+      if (localStorage.getItem('tzm-trial-pending')) {
+        localStorage.removeItem('tzm-trial-pending');
+        tzmDoTrial();
+      } else if (localStorage.getItem('tzm-sub-pending')) {
+        localStorage.removeItem('tzm-sub-pending');
+        tzmDoCheckout();
+      }
+    } catch (e) {}
+  }
   if (panel.hidden) return;
   if (!u) { showLogin(); return; }
   loadHistory();
@@ -1734,7 +1924,7 @@ def generate(chapter: str, dest_root: Path) -> None:
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--deploy", metavar="NN",
-                    help="指定の章番号（例 04）を marutto-study/public/tsudumon/ref/ へ出力")
+                    help="指定の章番号（例 04）を dist-web/ref/ へ出力")
     args = ap.parse_args()
 
     if args.deploy:

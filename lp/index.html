@@ -2,19 +2,21 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>つづもん｜“日本一つづけやすい”を目指す問題集。LINEで解いて、AIがすぐ採点【中学 歴史】</title>
-<meta name="description" content="“日本一つづけやすい”を目指す問題集「つづもん」。問題がLINEに届き、解いた瞬間にAIが採点・解説。中学歴史の問題集＋参考書（全38冊・総511ページ）つきで、紙でじっくり解く使い方もOK。三日坊主の子でも続く。まずは無料で1単元。">
+<title>つづもん｜“日本一つづけやすい”を目指す学習教材。今日やることをAIが決めてLINEに届く【中学 歴史】</title>
+<meta name="description" content="“日本一つづけやすい”を目指す学習教材「つづもん」。今日やることをAIが決めてLINEに届き、LINEでもWebでも解ける。中学歴史 全19単元の参考書＋問題集がスマホで使い放題、月額1,280円（税込）でいつでも解約OK。三日坊主の子でも続く。まずは3日間、全19単元を無料でお試し。">
 
-<link rel="canonical" href="https://www.chatstudy.jp/tsudumon/">
-<meta property="og:url" content="https://www.chatstudy.jp/tsudumon/">
+<link rel="canonical" href="https://tsudumon.jp/">
+<meta property="og:url" content="https://tsudumon.jp/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="つづもん">
-<meta property="og:title" content="つづもん｜“日本一つづけやすい”を目指す問題集【中学 歴史】">
-<meta property="og:description" content="LINEで解いて、AIがすぐ採点。解いた瞬間に丸がつくから、三日坊主の子でも続く。中学歴史の問題集＋参考書つき。まずは無料で1単元。">
-<meta property="og:image" content="https://www.chatstudy.jp/tsudumon/img/ogp.png">
+<meta property="og:title" content="つづもん｜“日本一つづけやすい”を目指す学習教材【中学 歴史】">
+<meta property="og:description" content="今日やることは、AIが決めてLINEに届く。だから、毎日かんたんに続けられる。中学歴史の参考書＋問題集つき。まずは3日間、全19単元を無料でお試し。">
+<meta property="og:image" content="https://tsudumon.jp/img/ogp.png">
 <meta property="og:locale" content="ja_JP">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://tsudumon.jp/img/ogp.png">
 
 <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
@@ -62,10 +64,11 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
   backdrop-filter:blur(8px);
   border-bottom:1px solid var(--border);
 }
-.header .inner{display:flex;align-items:center;gap:24px;height:64px}
-.logo{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:22px;color:var(--brand-deep);letter-spacing:.04em;line-height:1.1}
+.header .inner{display:flex;align-items:center;gap:18px;height:64px;flex-wrap:nowrap}
+.logo{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:22px;color:var(--brand-deep);letter-spacing:.04em;line-height:1.1;text-decoration:none;cursor:pointer}
 .logo small{display:block;font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.08em;line-height:1.3;margin-top:2px}
-.gnav{margin-left:auto;display:flex;gap:26px;font-size:14px;font-weight:500;color:#5d4f3d}
+.gnav{margin-left:auto;display:flex;gap:22px;font-size:14px;font-weight:500;color:#5d4f3d;white-space:nowrap}
+.logo small{white-space:nowrap}
 .gnav a:hover{color:var(--brand)}
 .header .btn{padding:10px 20px;font-size:14px}
 .menu-btn{display:none}
@@ -136,12 +139,22 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
     rgba(253,249,242,.5) 54%,
     rgba(253,249,242,0) 76%);
 }
+@media(max-width:820px){
+  .hero::before{
+    background:linear-gradient(180deg,
+      rgba(253,249,242,.95) 0%,
+      rgba(253,249,242,.9) 52%,
+      rgba(253,249,242,.5) 72%,
+      rgba(253,249,242,0) 92%);
+  }
+}
 .hero .inner{
-  position:relative;display:flex;align-items:center;
+  position:relative;display:flex;align-items:center;gap:36px;
   min-height:min(88vh,820px);
   padding-top:56px;padding-bottom:110px;
 }
 .hero .copy{max-width:620px}
+.hero-visual{flex:0 0 auto;width:300px;max-width:300px;margin-left:auto}
 .scroll-cue{
   position:absolute;left:0;right:0;bottom:18px;margin:0 auto;width:max-content;
   display:flex;align-items:center;gap:9px;
@@ -162,6 +175,10 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
   padding:6px 16px;font-size:13px;font-weight:700;color:var(--brand-deep);
   box-shadow:var(--shadow);margin-bottom:22px;
 }
+@media(max-width:820px){
+  .hero .inner{padding-bottom:44px}
+  .scroll-cue{display:none}
+}
 .hero h1{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:900;
   font-size:clamp(30px,3.9vw,46px);line-height:1.42;letter-spacing:.02em;
@@ -171,7 +188,31 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
   display:block;font-size:clamp(20px,2.4vw,28px);color:var(--brand-deep);
   margin-bottom:8px;letter-spacing:.05em;
 }
-.hero h1 .accent{color:var(--brand);background:linear-gradient(transparent 70%,#ffdfae 70%)}
+.hero h1 .h1-lead{display:block;font-size:clamp(18px,2vw,24px);font-weight:800;color:var(--ink);letter-spacing:.04em;margin-bottom:2px}
+.hero h1 .h1-punch{display:block;white-space:nowrap}
+.hero h1 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae 68%);
+  background-repeat:no-repeat;background-size:0% 100%;animation:markerGrow .6s ease .5s forwards}
+@keyframes markerGrow{to{background-size:100% 100%}}
+.hero .btn-arrow{margin-left:1px;transition:transform .15s ease}
+.hero-cta .btn:hover .btn-arrow{transform:translateX(3px)}
+.hero-trust{display:flex;flex-wrap:wrap;gap:10px 20px;margin-top:18px;font-size:14px;font-weight:700;color:#6b5a44}
+.hero-trust span{display:inline-flex;align-items:center;gap:6px}
+.hero-trust .tk{width:17px;height:17px;color:var(--brand);flex:none}
+.hero-notif{position:absolute;top:88px;left:51%;z-index:5;display:flex;align-items:center;gap:11px;
+  background:#fff;border-radius:15px;padding:12px 16px 12px 13px;width:290px;max-width:40%;
+  box-shadow:0 16px 38px rgba(60,40,15,.22);border:1px solid rgba(180,140,80,.14)}
+@media(max-width:1120px){.hero-notif{left:auto;right:5%;top:78px}}
+.hn-ic{flex:none;width:34px;height:34px;border-radius:9px;background:#06c755;color:#fff;display:flex;align-items:center;justify-content:center}
+.hn-ic svg{width:22px;height:22px}
+.hn-body{display:flex;flex-direction:column;line-height:1.35}
+.hn-body b{font-size:13px;color:#3a2e1e}
+.hn-body span{font-size:13px;color:#6b5a44}
+.js .hero-notif{opacity:0;transform:translateY(-6px);animation:notifIn .6s cubic-bezier(.25,.85,.3,1.05) 1.8s forwards}
+@keyframes notifIn{to{opacity:1;transform:translateY(0)}}
+@media(max-width:820px){.hero-notif{display:none}}
+@media(prefers-reduced-motion:reduce){
+  .js .hero-notif{animation:none;opacity:1;transform:none}
+  .hero h1 .accent{animation:none;background-size:100% 100%}}
 .hero .lead{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
   font-size:clamp(15px,1.8vw,17.5px);color:#5d4f3d;line-height:1.9;margin-bottom:28px;
@@ -194,13 +235,14 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
       rgba(253,249,242,.68) 64%,
       rgba(253,249,242,.06) 100%);
   }
-  .hero .inner{min-height:auto;padding-top:44px;padding-bottom:320px}
+  .hero .inner{min-height:auto;flex-direction:column;align-items:stretch;padding-top:44px;padding-bottom:60px}
   .hero .copy{max-width:none}
+  .hero-visual{max-width:260px;margin:26px auto 0}
 }
 @media(max-width:560px){
   .hero h1{font-size:27px}
   .hero h1 .h1-top{font-size:18px}
-  .hero .inner{padding-bottom:270px}
+  .hero .inner{padding-bottom:44px}
 }
 
 /* ---------- stats bar ---------- */
@@ -234,20 +276,54 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 .alt{background:#fff;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
 @media(max-width:640px){section{padding:64px 0}}
 
+/* ---------- icon badge（共通） ---------- */
+.ico{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;background:#fbeede;flex:none}
+.ico img{width:27px;height:27px;display:block}
+.li-ic{width:20px;height:20px;flex:none}
+
+/* ---------- accordion toggle（開閉式カード：reason） ---------- */
+/* JS無効時は常に全文表示（トグルボタン自体を出さない） */
+.acc-toggle{display:none}
+.acc-body>.acc-body-inner{padding-top:14px}
+.js .acc-toggle{
+  display:inline-flex;align-items:center;gap:7px;
+  background:none;border:0;padding:5px 2px;margin-top:8px;
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:13px;
+  color:var(--brand-deep);cursor:pointer;line-height:1.4;
+  -webkit-tap-highlight-color:transparent;
+}
+.js .acc-toggle:hover{color:var(--brand)}
+.js .acc-toggle:focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:8px}
+.js .acc-toggle .chev{
+  width:8px;height:8px;flex:none;margin-top:-3px;
+  border-right:2px solid currentColor;border-bottom:2px solid currentColor;
+  transform:rotate(45deg);transition:transform .25s ease;
+}
+.js .acc-toggle[aria-expanded="true"] .chev{transform:rotate(225deg);margin-top:3px}
+.js .acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s ease}
+.js .acc-body.is-open{grid-template-rows:1fr}
+.js .acc-body>.acc-body-inner{overflow:hidden;min-height:0}
+@media(prefers-reduced-motion:reduce){
+  .js .acc-body{transition:none}
+  .js .acc-toggle .chev{transition:none}
+}
+
 /* ---------- worries ---------- */
-.worries{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:860px;margin:0 auto}
-.worry{
-  background:#fff;border:1px solid var(--border);border-radius:14px;
-  padding:18px 22px;display:flex;gap:14px;align-items:flex-start;
-  font-weight:500;box-shadow:var(--shadow);
+.worries-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:36px;align-items:center;max-width:920px;margin:0 auto}
+.worries-grid .wimg{border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border)}
+.worry-list{list-style:none;display:flex;flex-direction:column;background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:8px 26px}
+.worry-list li{
+  display:flex;gap:14px;align-items:center;
+  padding:17px 0;border-bottom:1px dashed var(--border);
+  font-weight:700;font-size:15px;
 }
-.worry .check{
-  flex:0 0 26px;height:26px;border-radius:8px;margin-top:4px;
-  background:var(--brand-pale);color:var(--brand);
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:15px;
+.worry-list li:last-child{border-bottom:0}
+.worry-list .ico{width:38px;height:38px;border-radius:11px}
+.worry-list .ico img{width:20px;height:20px}
+@media(max-width:760px){
+  .worries-grid{grid-template-columns:1fr;gap:26px}
+  .worries-grid .wimg{max-width:min(320px,80%);margin:0 auto}
 }
-@media(max-width:700px){.worries{grid-template-columns:1fr}}
 .worry-turn{margin-top:46px;text-align:center}
 .worry-turn .arrow{color:var(--brand);font-size:26px;line-height:1;margin-bottom:26px}
 .worry-turn .turn-box{
@@ -256,7 +332,7 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
   background:#fff;border:1px solid var(--border);border-radius:var(--radius);
   box-shadow:var(--shadow);padding:30px 38px;
 }
-.worry-turn .turn-box img{flex:0 0 190px;width:190px;border-radius:16px}
+.worry-turn .turn-box img{flex:0 0 220px;width:220px;height:170px;object-fit:cover;border-radius:16px}
 .worry-turn p{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:900;
   font-size:clamp(19px,2.8vw,24px);line-height:1.75;
@@ -271,7 +347,7 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 .reasons{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;max-width:940px;margin:0 auto}
 .reason{
   background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);
-  padding:30px 28px;box-shadow:var(--shadow);position:relative;
+  padding:22px 26px;box-shadow:var(--shadow);position:relative;
 }
 .reason .rn{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:15px;
@@ -285,7 +361,15 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
   display:flex;align-items:center;justify-content:center;
   font-size:18px;letter-spacing:0;
 }
-.reason h3{font-size:19px;font-weight:900;margin-bottom:10px;line-height:1.55}
+.reason .rn-badge{display:inline-flex;align-items:center;justify-content:center;width:27px;height:27px;
+  border-radius:50%;border:2.5px solid var(--maru);color:var(--maru);
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:14px;margin-bottom:12px}
+.reason .rn-badge::before{content:attr(data-n)}
+.reason .r-head{display:flex;align-items:center;gap:15px}
+.reason .r-head .ico{width:56px;height:56px;margin:0;flex:none}
+.reason .r-head .ico img{width:33px;height:33px}
+.reason .acc-toggle{margin-top:14px}
+.reason h3{font-size:19px;font-weight:900;margin-bottom:0;line-height:1.5}
 .reason p{font-size:14px;color:#5d4f3d}
 .reason .why{
   margin-top:14px;padding-top:12px;border-top:1px dashed var(--border);
@@ -368,12 +452,38 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 .msg .meta{display:block;margin-top:8px;padding-top:6px;border-top:1px dashed #e0d7c2;color:#83715c;font-size:11px}
 .talk .time{font-size:10px;color:rgba(255,255,255,.85);align-self:center}
 
+/* ---------- pv-phone（実画面スクショ用のスマホ枠。サイズ統一＋縁マスク） ---------- */
+.pv-phone{
+  position:relative;width:100%;max-width:300px;aspect-ratio:941/1672;
+  margin:0 auto;background:#12100d;border-radius:30px;padding:9px;
+  box-shadow:0 18px 44px rgba(20,16,10,.28);flex:none;
+}
+.pv-phone::before{
+  content:"";position:absolute;left:50%;top:9px;transform:translateX(-50%);
+  width:38%;height:16px;border-radius:0 0 12px 12px;background:#12100d;z-index:3;
+}
+.pv-screen{
+  position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;background:#f4ecdd;
+}
+.pv-screen img{
+  display:block;width:100%;height:100%;object-fit:cover;object-position:top;background:#fbf5ea;
+}
+.pv-screen.pv-stack img{
+  position:absolute;inset:0;opacity:0;transform:translateX(16px);
+  transition:opacity .9s ease, transform .9s ease;
+}
+.pv-screen.pv-stack img.is-active{opacity:1;transform:translateX(0);z-index:2}
+@media (prefers-reduced-motion: reduce){
+  .pv-screen.pv-stack img{transition:none}
+}
+
 /* ---------- structure section ---------- */
 .parts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:52px}
 .part{
   background:#fff;border:1px solid var(--border);border-radius:14px;
   padding:20px 20px 18px;box-shadow:var(--shadow);
 }
+.part .ico{margin-bottom:14px}
 .part .tag{
   display:inline-block;background:var(--brand);color:#fff;
   font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:12px;
@@ -386,28 +496,59 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 
 .pages{display:grid;grid-template-columns:repeat(3,1fr);gap:22px 18px}
 .page-item{text-align:center;position:relative}
-.page-item img{
-  border:1px solid var(--border);border-radius:8px;
-  box-shadow:0 10px 24px rgba(80,54,20,.14);
-  transition:transform .2s ease;background:#fff;
-}
-.page-item img:hover{transform:translateY(-4px) scale(1.02)}
+.page-item .pv-phone{transition:transform .2s ease,box-shadow .2s ease}
 .page-item figcaption{font-size:13px;font-weight:700;margin-top:12px;color:#5d4f3d}
 /* PC：マウスを当てると紙面を拡大表示（クリック不要） */
 @media (hover:hover) and (min-width:761px){
-  .page-item img{cursor:zoom-in;transition:transform .25s ease,box-shadow .25s ease}
-  .page-item:nth-child(3n+1) img{transform-origin:left center}
-  .page-item:nth-child(3n) img{transform-origin:right center}
+  .page-item .pv-phone{cursor:zoom-in}
+  .page-item:nth-child(3n+1) .pv-phone{transform-origin:left center}
+  .page-item:nth-child(3n) .pv-phone{transform-origin:right center}
   .page-item:hover{z-index:6}
-  .page-item:hover img{
-    transform:scale(2.1);
+  .page-item:hover .pv-phone{
+    transform:scale(1.4);
     box-shadow:0 26px 70px rgba(80,54,20,.38);
   }
 }
 @media(max-width:760px){
   .pages{display:flex;overflow-x:auto;gap:14px;padding-bottom:10px;-webkit-overflow-scrolling:touch}
   .page-item{flex:0 0 62%}
-  .page-item img{cursor:pointer}
+  .page-item .pv-phone{cursor:pointer}
+}
+/* 単一スマホ＋スライド式ギャラリー */
+.pv-gallery{max-width:300px;margin:0 auto}
+.pv-cap{text-align:center;font-size:14px;font-weight:800;color:#7c2d12;margin-top:15px}
+.pv-dots{display:flex;justify-content:center;gap:10px;margin-top:11px}
+.pv-dot{width:9px;height:9px;border-radius:50%;border:none;padding:0;background:#e2d3ba;
+  cursor:pointer;transition:background .2s ease,transform .2s ease}
+.pv-dot.is-active{background:var(--brand);transform:scale(1.3)}
+.pv-dot:hover{background:#c9a86f}
+.pv-stage{position:relative;max-width:300px;margin:0 auto}
+.pv-nav{position:absolute;top:50%;transform:translateY(-50%);z-index:5;
+  width:42px;height:42px;border-radius:50%;border:1px solid #eaddc6;
+  background:rgba(255,255,255,.94);color:#7c2d12;font-size:26px;line-height:1;font-weight:700;
+  cursor:pointer;box-shadow:0 3px 12px rgba(80,54,20,.28);
+  display:flex;align-items:center;justify-content:center;padding:0 0 3px}
+.pv-nav:hover{background:#fff;color:var(--brand)}
+.pv-prev{left:-6px}
+.pv-next{right:-6px}
+@media(max-width:400px){.pv-prev{left:2px}.pv-next{right:2px}}
+/* 紙面の内容：タブ＋実画面 */
+.ctabs-nav{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:30px}
+.ctab{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:14px;
+  padding:9px 17px;border-radius:999px;border:1.5px solid var(--border);
+  background:#fff;color:#7c5a2e;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.ctab:hover{border-color:var(--brand);color:var(--brand)}
+.ctab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
+.ctabs-body{display:flex;align-items:center;justify-content:center;gap:44px;max-width:780px;margin:0 auto}
+.ctabs-body .pv-phone{flex:none;max-width:264px}
+.ctabs-desc{flex:1;max-width:360px}
+.ctabs-desc .ctd{display:none}
+.ctabs-desc .ctd.is-active{display:block}
+.ctabs-desc h3{font-size:23px;font-weight:900;color:var(--brand-deep);margin-bottom:12px;line-height:1.4}
+.ctabs-desc p{font-size:15px;line-height:1.9;color:#5d4f3d}
+@media(max-width:720px){
+  .ctabs-body{flex-direction:column;gap:22px}
+  .ctabs-desc{max-width:100%;text-align:center}
 }
 
 /* ---------- lightbox（紙面サンプル拡大） ---------- */
@@ -428,8 +569,21 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 }
 
 /* ---------- LINE section ---------- */
-.line-sec{display:flex;gap:52px;align-items:flex-start}
+.line-sec{display:flex;gap:52px;align-items:center}
 .line-sec .phone{margin-top:6px}
+.pv-toggle-wrap{flex:none;width:300px;max-width:100%;display:flex;flex-direction:column;align-items:center;gap:16px}
+.pv-toggle{
+  display:inline-flex;gap:6px;background:#fff;border:1.5px solid var(--border);
+  border-radius:999px;padding:5px;box-shadow:var(--shadow);
+}
+.pv-toggle-btn{
+  border:0;background:none;cursor:pointer;
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:13.5px;
+  color:var(--muted);border-radius:999px;padding:9px 18px;
+  transition:background .18s ease,color .18s ease;
+}
+.pv-toggle-btn.is-active{background:var(--brand);color:#fff}
+.pv-toggle-note{font-size:12.5px;color:var(--muted);text-align:center;max-width:260px}
 .features{display:grid;gap:16px}
 .feature{
   background:#fff;border:1px solid var(--border);border-radius:14px;
@@ -442,6 +596,56 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 .feature h3{font-size:16.5px;font-weight:900;margin-bottom:2px}
 .feature p{font-size:13.5px;color:#5d4f3d}
 @media(max-width:860px){.line-sec{flex-direction:column;align-items:center}}
+
+/* ---------- AI relation diagram（LINE / Web教材 → AI） ---------- */
+.ai-diagram{
+  width:100%;background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:26px 22px 22px;
+}
+.diagram-row{display:flex;align-items:center;justify-content:center;gap:10px}
+.diagram-col{flex:1;min-width:0;max-width:180px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.diagram-label{
+  display:inline-block;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:13px;
+  color:var(--brand-deep);background:#fff;border:2px solid var(--brand);border-radius:999px;padding:4px 16px;
+}
+.diagram-box{
+  background:#fbf4e7;border:1px solid var(--border);border-radius:12px;
+  padding:11px 12px;width:100%;font-size:11px;line-height:1.55;
+}
+.dchat{border-radius:9px;padding:6px 9px;margin-bottom:6px;background:#fff;max-width:96%}
+.dchat.me{background:#c9f0a8;margin-left:auto;text-align:right}
+.dchat:last-child{margin-bottom:0}
+.dweb{background:#fff;border-radius:9px;padding:8px 10px}
+.dweb .dweb-q{margin-bottom:8px}
+.dweb .dweb-btn{
+  background:var(--brand);color:#fff;text-align:center;border-radius:7px;
+  padding:5px 6px;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:10.5px;
+}
+.diagram-arrow{flex:0 0 auto;font-size:26px;color:var(--brand);line-height:1;font-weight:700}
+.ai-node{
+  flex:0 0 auto;width:78px;height:78px;border-radius:50%;background:#fff;
+  border:3px solid var(--brand);display:flex;align-items:center;justify-content:center;
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:24px;color:var(--brand);
+  box-shadow:0 8px 20px rgba(180,83,9,.18);
+}
+.diagram-note{
+  text-align:center;margin-top:16px;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
+  font-size:13px;color:var(--brand-deep);background:var(--brand-pale);border-radius:999px;
+  padding:7px 18px;width:max-content;max-width:100%;margin-left:auto;margin-right:auto;
+}
+@media(max-width:700px){
+  .diagram-row{flex-direction:column}
+  .diagram-arrow{transform:rotate(90deg)}
+  .diagram-col{max-width:260px}
+}
+.ai-brief{display:flex;gap:14px;margin-top:18px}
+.ai-brief-item{
+  flex:1;background:#fbf4e7;border-radius:14px;padding:16px 14px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
+}
+.ai-brief-item .ico{margin:0}
+.ai-brief-item p{font-size:13px;font-weight:700;color:var(--ink)}
+@media(max-width:700px){.ai-brief{flex-direction:column}}
 
 /* ---------- CTA banner ---------- */
 .cta-banner{
@@ -462,6 +666,12 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
   display:flex;gap:12px;align-items:baseline;
 }
 .ref-points li::before{content:"✓";color:var(--brand);font-weight:900}
+.refbook-points{list-style:none;display:grid;gap:14px;margin-top:22px}
+.refbook-points li{
+  background:#fff;border:1px solid var(--border);border-radius:14px;
+  padding:14px 20px;font-size:15px;font-weight:700;
+  display:flex;gap:16px;align-items:center;box-shadow:var(--shadow);
+}
 @media(max-width:860px){.ref-sec{grid-template-columns:1fr}.ref-sec img{max-width:min(420px,100%);margin:0 auto}}
 
 /* ---------- parent section ---------- */
@@ -562,22 +772,26 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 .price-cta{display:flex;flex-direction:column;gap:12px;align-items:center;margin-top:26px}
 .price-cta .btn{width:100%;max-width:400px;padding:18px 20px;font-size:17px}
 @media(max-width:560px){.price-body{padding:28px 20px 32px}.price-main .yen{font-size:44px}}
+@media(max-width:420px){
+  .price-head{font-size:15.5px;padding:14px 10px;letter-spacing:.02em;white-space:normal;line-height:1.5}
+}
 
 /* ---------- ai-good ---------- */
-.ai-good{max-width:1000px;margin:52px auto 0}
+.ai-good{max-width:1000px;margin:0 auto}
 .ai-good h3{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:21px;
   text-align:center;margin-bottom:22px;
 }
 .ai-good h3 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae 68%)}
-.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch}
 .ai-item{
   background:#fbf4e7;border-radius:14px;padding:18px 22px;
   display:flex;gap:14px;align-items:flex-start;
 }
 .ai-item .em{font-size:24px;flex:none;line-height:1.4}
-.ai-item b{display:block;font-size:15px;font-weight:900;margin-bottom:3px}
-.ai-item p{font-size:13px;color:#5d4f3d}
+.ai-item-body{display:flex;flex-direction:column}
+.ai-item b{display:block;font-size:15px;font-weight:900;margin-bottom:6px;line-height:1.4}
+.ai-item p{font-size:13.5px;color:#5d4f3d;line-height:1.7;margin:0}
 .ai-note{font-size:12.5px;color:var(--muted);text-align:center;margin-top:14px}
 .ai-item .soon{
   display:inline-block;font-size:11.5px;font-weight:700;color:var(--brand-deep);
@@ -586,12 +800,46 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 }
 @media(max-width:700px){.ai-grid{grid-template-columns:1fr}}
 
+/* ---------- AI先生：2カラム（イラスト＋メリハリリスト） ---------- */
+.ai-split{display:grid;grid-template-columns:.85fr 1.15fr;gap:40px;align-items:center}
+.ai-split .owl-wrap{
+  position:relative;width:100%;max-width:320px;margin:0 auto;
+  aspect-ratio:700/909;border-radius:var(--radius);box-shadow:var(--shadow);
+  overflow:hidden;
+}
+.ai-split .owl-wrap img{display:block;width:100%;height:100%;object-fit:cover}
+.ai-split .owl-caption{
+  position:absolute;left:50%;bottom:22px;transform:translateX(-50%);
+  background:#fff;color:var(--brand-deep);font-weight:700;font-size:13px;
+  white-space:nowrap;padding:8px 18px;border-radius:999px;box-shadow:var(--shadow);
+}
+.ai-main-list{list-style:none;display:flex;flex-direction:column;gap:16px}
+.ai-main-list li{
+  display:flex;gap:16px;align-items:flex-start;
+  background:#fbf4e7;border-radius:14px;padding:16px 20px;
+}
+.ai-main-list b{display:block;font-size:16px;font-weight:900;margin-bottom:3px}
+.ai-main-list p{font-size:13.5px;color:#5d4f3d}
+.ai-sub-list{list-style:none;display:flex;flex-direction:column;gap:2px;margin-top:16px}
+.ai-sub-list li{
+  display:flex;gap:12px;align-items:center;
+  padding:10px 4px;border-bottom:1px dashed var(--border);
+  font-size:13.5px;font-weight:700;
+}
+.ai-sub-list li:last-child{border-bottom:0}
+@media(max-width:820px){
+  .ai-split{grid-template-columns:1fr;gap:24px}
+  .ai-split .owl-wrap{max-width:280px}
+  .ai-split .owl-caption{font-size:12px;padding:7px 15px;bottom:16px}
+}
+
 /* ---------- flow ---------- */
 .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:860px;margin:46px auto 0}
 .flow-item{
   background:#fff;border:1px solid var(--border);border-radius:14px;
   padding:20px;text-align:center;box-shadow:var(--shadow);position:relative;
 }
+.flow-item .ico{margin:0 auto 12px}
 .flow-item .fn{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:900;color:var(--brand);
   font-size:13px;letter-spacing:.12em;margin-bottom:6px;
@@ -600,6 +848,31 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 .flow-item p{font-size:13px;color:#5d4f3d}
 @media(max-width:700px){.flow{grid-template-columns:1fr}}
 
+/* ---------- starter steps（はじめ方は、かんたん3ステップ） ---------- */
+.starter{max-width:900px;margin:56px auto 0}
+.starter-title{
+  text-align:center;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;
+  font-size:clamp(19px,2.6vw,24px);margin-bottom:28px;
+}
+.starter-flow{display:flex;align-items:center;justify-content:center;gap:14px}
+.starter-card{
+  flex:1;min-width:0;background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:26px 18px 22px;text-align:center;
+  display:flex;flex-direction:column;align-items:center;
+}
+.starter-badge{
+  display:inline-block;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:12px;
+  color:#fff;background:var(--brand);border-radius:999px;padding:5px 16px;letter-spacing:.08em;margin-bottom:16px;
+}
+.starter-card .ico{width:56px;height:56px;border-radius:16px;margin-bottom:14px}
+.starter-card .ico img{width:30px;height:30px}
+.starter-card p{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:15px;color:var(--ink)}
+.starter-arrow{flex:0 0 auto;font-size:22px;color:var(--brand);font-weight:700;line-height:1}
+@media(max-width:760px){
+  .starter-flow{flex-direction:column;max-width:320px;margin:0 auto}
+  .starter-arrow{transform:rotate(90deg)}
+}
+
 /* ---------- author ---------- */
 .author{
   max-width:820px;margin:0 auto;background:#fff;border:1px solid var(--border);
@@ -607,14 +880,25 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
   padding:40px 44px;display:flex;gap:36px;align-items:flex-start;
 }
 .author .photo{
-  flex:0 0 160px;height:160px;border-radius:50%;overflow:hidden;
-  border:3px solid #fff;box-shadow:0 6px 18px rgba(80,54,20,.2);
+  flex:0 0 176px;height:176px;border-radius:50%;overflow:hidden;
+  border:4px solid #fff;box-shadow:0 10px 26px rgba(80,54,20,.22);
 }
 .author .photo img{width:100%;height:100%;object-fit:cover;display:block}
-.author h3{font-size:20px;font-weight:900;margin-bottom:2px}
-.author .role{font-size:13px;color:var(--muted);margin-bottom:14px}
-.author p{font-size:14.5px;color:#4c4133}
-@media(max-width:700px){.author{flex-direction:column;align-items:center;text-align:left;padding:32px 24px}}
+.author-body{flex:1;min-width:0}
+.author h3{font-size:27px;font-weight:900;margin-bottom:14px}
+.author-roles{list-style:none;display:flex;flex-direction:column;margin-bottom:18px}
+.author-roles li{
+  display:flex;align-items:center;gap:11px;
+  font-size:14.5px;font-weight:700;color:var(--brand-deep);
+  padding:9px 0;border-bottom:1px dashed var(--border);
+}
+.author-roles li:last-child{border-bottom:0}
+.author-roles .li-ic{width:19px;height:19px}
+.author p{font-size:14.5px;color:#4c4133;line-height:1.95}
+@media(max-width:700px){
+  .author{flex-direction:column;align-items:center;text-align:left;padding:32px 24px}
+  .author-roles{align-items:flex-start}
+}
 
 /* ---------- FAQ ---------- */
 .faq{max-width:820px;margin:0 auto;display:grid;gap:14px}
@@ -659,7 +943,7 @@ footer a:hover{color:#fff}
   transition:transform .15s ease;
 }
 .chat-fab:hover{transform:translateY(-2px)}
-.chat-fab .em{font-size:18px;line-height:1}
+.chat-fab .li-ic{width:19px;height:19px;filter:brightness(0) invert(1)}
 .chat-panel{
   position:fixed;right:18px;bottom:18px;z-index:95;
   width:min(370px,calc(100vw - 24px));height:min(560px,calc(100vh - 40px));
@@ -723,13 +1007,14 @@ footer a:hover{color:#fff}
   50%{box-shadow:0 6px 28px rgba(6,199,85,.55)}
 }
 
-/* ヒーロー：読み込み時に順番にふわっと */
-.js .hero .a{opacity:0;animation:fadeUp .7s ease forwards}
-.js .hero .a1{animation-delay:.05s}
-.js .hero .a2{animation-delay:.18s}
-.js .hero .a3{animation-delay:.4s}
-.js .hero .a4{animation-delay:.6s}
-.js .hero .a5{animation-delay:.8s}
+/* ヒーロー：バラバラに出さず、まとめてやさしく1回でふわっと */
+.js .hero .a{opacity:0;animation:fadeUp .85s ease forwards}
+.js .hero .a1{animation-delay:0s}
+.js .hero .a2{animation-delay:.06s}
+.js .hero .a3{animation-delay:.12s}
+.js .hero .a4{animation-delay:.18s}
+.js .hero .a5{animation-delay:.24s}
+.js .hero .a6{animation-delay:.3s}
 .js .hero .btn-line{animation:glow 3s ease-in-out 1.6s infinite}
 @keyframes cueBob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
 .js .scroll-cue{opacity:0;animation:fadeUp .7s ease 1.3s forwards, cueBob 2s ease-in-out 2.2s infinite}
@@ -770,8 +1055,6 @@ footer a:hover{color:#fff}
 }
 </style>
 
-<!-- TODO: GA4を導入する場合は、下の2行のコメントを外して G-XXXXXXXXXX を測定IDに差し替えてください。
-     導入すると、下部スクリプト内の処理により LINEボタンのクリックが「line_click」イベントとして自動計測されます。 -->
 <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script> -->
 <!-- <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script> -->
 
@@ -780,32 +1063,33 @@ footer a:hover{color:#fff}
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
-    {"@type": "Question", "name": "飽きっぽいうちの子でも、本当に続きますか？", "acceptedAnswer": {"@type": "Answer", "text": "「絶対に続く」とは申し上げません。ただ、つづもんは「すぐ丸がつく」「1単元15分」「がんばりが数字で見える」という、続けるための仕組みを教材そのものに組み込んでいます。相性は必ずあるので、まず無料体験でお子さまが楽しんで解けるかをお確かめください。"}},
-    {"@type": "Question", "name": "プリンタがなくても使えますか？", "acceptedAnswer": {"@type": "Answer", "text": "はい。PDFはスマホ・タブレット・PCでそのまま開けるので、画面で紙面を見ながらノートに答えを書く使い方なら印刷不要です。印刷したい場合も、コンビニのマルチコピー機が使えます（A4・1枚10円程度〜）。"}},
+    {"@type": "Question", "name": "飽きっぽいうちの子でも、本当に続きますか？", "acceptedAnswer": {"@type": "Answer", "text": "「絶対に続く」とは申し上げません。ただ、つづもんは「今日やることをAIが決めてLINEに届ける」「すぐ丸がつく」「がんばりが数字で見える」という、続けるための仕組みを教材そのものに組み込んでいます。相性は必ずあるので、まずは3日間、全19単元（参考書＋問題集）を無料でお試しください。期限後も「律令国家と奈良時代」の1単元はずっと無料です。体験の開始は、教材ページの「3日間ぜんぶ無料で試す」ボタンから（公式LINEでログインするだけ）です。"}},
+    {"@type": "Question", "name": "LINEでもWebページでも解けますか？記録はどうなりますか？", "acceptedAnswer": {"@type": "Answer", "text": "はい、どちらでも解けます。LINEのトークに届いた問題に答えても、Web教材のページを開いて解いても、どちらの記録もAIがまとめて把握します。その日の気分やシーンに合わせて、解きやすい方を選んでいただけます。"}},
+    {"@type": "Question", "name": "AIが「今日やること」を決めるとは、具体的にどういうことですか？", "acceptedAnswer": {"@type": "Answer", "text": "これまでの学習記録・ニガテな範囲・伝えていただいたテスト日をもとに、AIがその日にちょうどいい範囲を選び、LINEに届けます。「何をやればいいか」を毎回考える負担をなくすための仕組みです。"}},
+    {"@type": "Question", "name": "プリンタがなくても使えますか？", "acceptedAnswer": {"@type": "Answer", "text": "はい。基本はスマホ・タブレット・PCの画面でそのまま開いて解く教材なので、プリンタがなくても問題ありません。紙で解きたい場合は、Web教材の画面から印刷することもできます。"}},
     {"@type": "Question", "name": "どの教科書を使っていても大丈夫ですか？", "acceptedAnswer": {"@type": "Answer", "text": "特定の教科書に合わせた教材ではなく、中学の歴史で共通して学ぶ標準的な内容で構成しています。どの教科書をお使いでも、定期テスト・実力テスト対策としてお使いいただけます。"}},
-    {"@type": "Question", "name": "対象学年を教えてください。", "acceptedAnswer": {"@type": "Answer", "text": "中学1年〜3年生です。冊子は学年別に分かれていますが、学年をさかのぼった復習や先取りにも使えます。公式LINEの出題も学年をまたいで対応しています。"}},
-    {"@type": "Question", "name": "公式LINEの利用に月額料金はかかりますか？", "acceptedAnswer": {"@type": "Answer", "text": "ご利用期間中はかかりません。問題演習・AI採点・AI先生への質問・学習記録まで、すべてプラン料金に含まれています。期間終了後も続けたい場合のみ、月額330円（税込）で公式LINEのサービスを継続できます（任意）。"}},
-    {"@type": "Question", "name": "利用期間が終わったら、教材は使えなくなりますか？", "acceptedAnswer": {"@type": "Answer", "text": "ダウンロードいただいたPDF（問題集・参考書）は、期間が終わってもそのままずっとお使いいただけます。終了するのは公式LINEでのAI採点・質問などのサービス部分だけで、必要な場合は月額330円（税込）で継続できます。"}},
-    {"@type": "Question", "name": "きょうだいで一緒に使えますか？", "acceptedAnswer": {"@type": "Answer", "text": "ご購入いただいたご家庭内でのご利用・印刷は何度でも可能です。PDFにはご購入者のお名前が入っており、ご家庭の外への配布・共有はご遠慮いただいています。"}},
-    {"@type": "Question", "name": "購入後、教材はどうやって受け取れますか？", "acceptedAnswer": {"@type": "Answer", "text": "お支払いの確認後、お名前入りのPDF一式（ご購入プラン分の問題集・参考書＋使い方ガイド。3学年セットの場合は問題集19冊＋参考書19冊）をダウンロードリンクでお届けします。"}}
+    {"@type": "Question", "name": "対象学年を教えてください。", "acceptedAnswer": {"@type": "Answer", "text": "中学1年〜3年生です。1つのプランに中1〜中3の歴史 全19単元がすべて含まれるので、学年をさかのぼった復習や先取りにも使えます。公式LINEの出題も学年をまたいで対応しています。"}},
+    {"@type": "Question", "name": "月額料金はいくらですか？", "acceptedAnswer": {"@type": "Answer", "text": "中学歴史 全19単元が使い放題で、月額1,280円（税込）です。問題演習・AI採点・AI先生への質問・学習記録まで、すべてこの料金に含まれています。いつでも解約できます。"}},
+    {"@type": "Question", "name": "解約したら、教材は使えなくなりますか？", "acceptedAnswer": {"@type": "Answer", "text": "解約すると、Web教材の閲覧とAI採点・質問などの機能はご利用いただけなくなります（一般的なサブスクリプションと同様です）。無理な引き止めは行いませんので、必要なときだけご利用ください。解約手続きは「アカウント・お支払い管理」ページ（https://tsudumon.jp/account/）からいつでも行えます。"}},
+    {"@type": "Question", "name": "きょうだいで一緒に使えますか？", "acceptedAnswer": {"@type": "Answer", "text": "1契約で、ご家庭内でのご利用は可能です（複数の端末からのログインについては、公式LINEにてご案内します）。ご家庭の外への共有はご遠慮いただいています。"}},
+    {"@type": "Question", "name": "登録後、教材はどうやって使い始められますか？", "acceptedAnswer": {"@type": "Answer", "text": "公式LINEを友だち追加して月額登録いただくと、その場でスマホから全19単元のWeb教材（問題集＋参考書）が開けるようになります。難しい手続きは不要です。"}}
   ]
 }
 </script>
 </head>
 <body>
 
-<header class="header">
+<header class="header" id="top">
   <div class="inner">
-    <div class="logo">つづもん<small>“日本一つづけやすい”を目指す問題集｜中学 歴史</small></div>
+    <a class="logo" href="#top" aria-label="つづもん・ページの先頭へ戻る">つづもん<small>中学歴史の参考書＋問題集（Web教材）</small></a>
     <nav class="gnav">
-      <a href="#reason">つづく理由</a>
       <a href="#about">使い方</a>
-      <a href="#contents">紙面の内容</a>
       <a href="#line">LINE連動</a>
+      <a href="#daily">続く工夫</a>
       <a href="#price">価格</a>
       <a href="#faq">よくある質問</a>
     </nav>
-    <a class="btn btn-line" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>無料で体験</a>
+    <a class="btn btn-line" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>3日間無料でためす</a>
     <button class="menu-btn" type="button" aria-label="メニューを開く" aria-expanded="false"><span></span><span></span><span></span></button>
   </div>
 </header>
@@ -814,14 +1098,22 @@ footer a:hover{color:#fff}
 <div class="hero">
   <div class="inner">
     <div class="copy">
-      <span class="hero-badge a a1">📚 中学歴史の問題集・参考書（PDF教材）</span>
-      <h1 class="a a2"><span class="h1-top">東大院 × AI でつくった、</span>自然と<span class="accent">つづく</span>問題集。</h1>
-      <p class="lead a a3">毎日ひらくLINEに、問題が届く。<br>解けばその場でAIが丸つけ。だから、つづく。</p>
+      <span class="hero-badge a a1">中学生向け｜LINEとつながる歴史教材</span>
+      <h1 class="a a2"><span class="h1-top">今日やることが、LINEに届く。</span><span class="h1-punch">だから、<span class="accent">毎日つづく。</span></span></h1>
+      <p class="lead a a3">AIが学習状況に合わせて、今日の単元を選択。何を勉強するか迷わず、1日10分から始められます。</p>
       <div class="hero-cta a a4">
-        <a class="btn btn-line" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>無料でためしてみる</a>
+        <a class="btn btn-line" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>今日の問題を受け取る<span class="btn-arrow" aria-hidden="true">→</span></a>
       </div>
-      <p class="hero-brand a a5">“日本一つづけやすい”を目指す問題集 <b>つづもん</b></p>
+      <div class="hero-trust a a5">
+        <span><svg class="tk" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>登録1分</span>
+        <span><svg class="tk" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>中1〜中3対応</span>
+        <span><svg class="tk" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>3日間無料</span>
+      </div>
     </div>
+  </div>
+  <div class="hero-notif" aria-hidden="true">
+    <span class="hn-ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/></svg></span>
+    <div class="hn-body"><b>つづもん</b><span>今日の学習が届きました</span></div>
   </div>
   <a class="scroll-cue" href="#reason">つづく理由を見る</a>
 </div>
@@ -829,8 +1121,8 @@ footer a:hover{color:#fff}
 <!-- ============ STATS ============ -->
 <div class="stats">
   <div class="inner rv-group">
-    <div class="stat"><div class="n"><span class="cnt" data-count="38">38</span><em>冊</em></div><div class="l">問題集19冊＋参考書19冊</div></div>
-    <div class="stat"><div class="n"><span class="cnt" data-count="511">511</span><em>ページ</em></div><div class="l">歴史の全範囲をカバー</div></div>
+    <div class="stat"><div class="n"><span class="cnt" data-count="19">19</span><em>単元</em></div><div class="l">Web教材で問題集＋参考書</div></div>
+    <div class="stat"><div class="n"><span class="cnt" data-count="511">511</span><em>ページ相当</em></div><div class="l">歴史の全範囲をカバー</div></div>
     <div class="stat"><div class="n"><span class="cnt" data-count="15">15</span><em>分</em></div><div class="l">1単元は15分から</div></div>
     <div class="stat"><div class="n">記述<em>も</em></div><div class="l">AIが採点・解説</div></div>
   </div>
@@ -840,20 +1132,22 @@ footer a:hover{color:#fff}
 <section>
   <div class="inner">
     <h2 class="rv" style="text-align:center">買ったワーク、<br>また「最初の3ページ」で<span class="nb">止まっていませんか。</span></h2>
-    <div class="worries rv-group">
-      <div class="worry"><span class="check">✓</span>問題集を買っても、最初の3ページで止まってしまう</div>
-      <div class="worry"><span class="check">✓</span>「あとで丸つけする」と言ったまま、解きっぱなしになっている</div>
-      <div class="worry"><span class="check">✓</span>記述問題は、答えが合っているのか本人にも親にも判断できない</div>
-      <div class="worry"><span class="check">✓</span>丸つけや解き直しまで、親がつきっきりで見てあげる時間はない</div>
-      <div class="worry"><span class="check">✓</span>スマホばかり触っていて、注意するとケンカになる</div>
-      <div class="worry"><span class="check">✓</span>歴史は暗記ばかりでつまらない、と最初から投げている</div>
+    <div class="worries-grid rv-group">
+      <img class="wimg" src="img/worries-before.jpg" alt="勉強が続かず、机で手が止まっている中学生のイラスト">
+      <ul class="worry-list">
+        <li><span class="ico"><img src="img/icons/ic-check.png" alt=""></span>最初の3ページで止まる</li>
+        <li><span class="ico"><img src="img/icons/ic-check.png" alt=""></span>あとで丸つけ、が解きっぱなし</li>
+        <li><span class="ico"><img src="img/icons/ic-check.png" alt=""></span>解説を読まないまま</li>
+        <li><span class="ico"><img src="img/icons/ic-check.png" alt=""></span>親がつきっきりで大変</li>
+        <li><span class="ico"><img src="img/icons/ic-check.png" alt=""></span>スマホばかり見てしまう</li>
+      </ul>
     </div>
     <div class="worry-turn">
       <div class="arrow rv">▼</div>
       <div class="turn-box rv">
-        <img src="img/voice-student.jpg" alt="スマホの採点を見ながら楽しそうに勉強する中学生のイラスト">
+        <img src="img/worries-after.jpg" alt="同じ男の子が、同じ部屋で今度は笑顔で前向きに勉強しているイラスト">
         <p>続かないのは、<span class="nb">お子さまの意志が</span><span class="nb">弱いからではありません。</span><span class="nb"><span class="accent">「つづく仕組み」</span>が</span><span class="nb">なかっただけ。</span>
-        <span class="small">つづもんは、教材そのものに「つづく仕組み」を組み込んだ問題集です。いつも手にしているスマホを、勉強の味方に変えます。</span></p>
+        <span class="small">つづもんは、教材そのものに「つづく仕組み」を組み込んだ学習教材です。いつも手にしているスマホを、勉強の味方に変えます。</span></p>
       </div>
     </div>
   </div>
@@ -863,37 +1157,49 @@ footer a:hover{color:#fff}
 <section class="alt" id="reason">
   <div class="inner">
     <div class="sec-label rv">つづもんが「つづく」理由</div>
-    <h2 class="rv">三日坊主を前提に設計した、<span class="accent">4つの仕組み</span>。</h2>
+    <h2 class="rv">三日坊主で終わらせない、<span class="accent">4つの仕組み</span>。</h2>
     <p class="sec-lead rv">やる気に頼らない。やる気がない日でも、ちゃんと回る。つづもんは、そう作りました。</p>
     <div class="reasons rv-group">
       <div class="reason">
-        <div class="rn" data-n="1">つづく仕組み</div>
-        <h3>毎日見るLINEに届くから、<br>忘れず始められる</h3>
-        <p>問題は、いつも見ているLINEに、設定したペースで届きます。通知からワンタップで解き始められるので、「問題集を開く」という一番重いハードルがなくなります。</p>
-        <div class="why"><b>なぜ続く？</b>：挫折の一番の敵は「始めるまでの段取り」。始めるハードルが下がるほど、勉強は毎日の習慣に混ざっていきます。</div>
+        <span class="rn-badge" data-n="1"></span>
+        <div class="r-head"><span class="ico"><img src="img/icons/ic-bell.png" alt=""></span><h3>毎日見るLINEに届くから、<br>忘れず始められる</h3></div>
+        <button type="button" class="acc-toggle" aria-expanded="false" aria-controls="rsn-body-1"><span class="toggle-label">くわしく</span><span class="chev" aria-hidden="true"></span></button>
+        <div class="acc-body" id="rsn-body-1"><div class="acc-body-inner">
+          <p>今日解く範囲は、AIが記録をもとに選んで、いつも見ているLINEに届きます。通知からワンタップで解き始められるので、「何をやるか決めて教材を開く」という一番重いハードルがなくなります。</p>
+          <div class="why"><b>なぜ続く？</b>：挫折の一番の敵は「始めるまでの段取り」。始めるハードルが下がるほど、勉強は毎日の習慣に混ざっていきます。</div>
+        </div></div>
       </div>
       <div class="reason">
-        <div class="rn" data-n="2">つづく仕組み</div>
-        <h3>解いた瞬間、<br>「正解！」が返ってくる</h3>
-        <p>QRコードを読めば、LINEでAIがその場で丸つけ。答え合わせを後回しにする間もなく、⭕がすぐもらえます。</p>
-        <div class="why"><b>なぜ続く？</b>：がんばりの直後に結果が返ってくると、行動は習慣になりやすい。「あとで丸つけ」が挫折の入口です。</div>
+        <span class="rn-badge" data-n="2"></span>
+        <div class="r-head"><span class="ico"><img src="img/icons/ic-check.png" alt=""></span><h3>解いた瞬間、<br>「正解！」が返ってくる</h3></div>
+        <button type="button" class="acc-toggle" aria-expanded="false" aria-controls="rsn-body-2"><span class="toggle-label">くわしく</span><span class="chev" aria-hidden="true"></span></button>
+        <div class="acc-body" id="rsn-body-2"><div class="acc-body-inner">
+          <p>解いたらすぐ、AIがその場で丸つけ。答え合わせを後回しにする間もなく○がもらえます。<strong>記述問題もAIがその場で採点！</strong>「この答えで合ってる？」がもう起きません。</p>
+          <div class="why"><b>なぜ続く？</b>：がんばりの直後に結果が返ってくると、行動は習慣になりやすい。「あとで丸つけ」が挫折の入口です。</div>
+        </div></div>
       </div>
       <div class="reason">
-        <div class="rn" data-n="3">つづく仕組み</div>
-        <h3>1単元15分だから、<br>「今日はここだけ」で終われる</h3>
-        <p>1単元は要点まとめから記述まで見開き完結。部活で疲れた日でも、「1単元だけ」なら机に向かえます。</p>
-        <div class="why"><b>なぜ続く？</b>：習慣づくりのコツは「小さく始める」こと。ハードルが低いほど、毎日の一歩が踏み出せます。</div>
+        <span class="rn-badge" data-n="3"></span>
+        <div class="r-head"><span class="ico"><img src="img/icons/ic-clock.png" alt=""></span><h3>1単元15分だから、<br>「今日はここだけ」で終われる</h3></div>
+        <button type="button" class="acc-toggle" aria-expanded="false" aria-controls="rsn-body-3"><span class="toggle-label">くわしく</span><span class="chev" aria-hidden="true"></span></button>
+        <div class="acc-body" id="rsn-body-3"><div class="acc-body-inner">
+          <p>1単元は要点まとめから記述まで見開き完結。部活で疲れた日でも、「1単元だけ」なら机に向かえます。</p>
+          <div class="why"><b>なぜ続く？</b>：習慣づくりのコツは「小さく始める」こと。ハードルが低いほど、毎日の一歩が踏み出せます。</div>
+        </div></div>
       </div>
       <div class="reason">
-        <div class="rn" data-n="4">つづく仕組み</div>
-        <h3>レベルが上がる。<br>がんばりが数字で見える</h3>
-        <p>解くたびに正答率・レベル・連続正解が記録されます。昨日の自分より強くなっていくのが、目に見えます。</p>
-        <div class="why"><b>なぜ続く？</b>：ゲームがやめられないのは成長が見えるから。同じ仕組みを、勉強に持ち込みました。</div>
+        <span class="rn-badge" data-n="4"></span>
+        <div class="r-head"><span class="ico"><img src="img/icons/ic-chart.png" alt=""></span><h3>レベルが上がる。<br>がんばりが数字で見える</h3></div>
+        <button type="button" class="acc-toggle" aria-expanded="false" aria-controls="rsn-body-4"><span class="toggle-label">くわしく</span><span class="chev" aria-hidden="true"></span></button>
+        <div class="acc-body" id="rsn-body-4"><div class="acc-body-inner">
+          <p>解くたびに正答率・レベル・連続正解が記録されます。昨日の自分より強くなっていくのが、目に見えます。</p>
+          <div class="why"><b>なぜ続く？</b>：ゲームがやめられないのは成長が見えるから。同じ仕組みを、勉強に持ち込みました。</div>
+        </div></div>
       </div>
     </div>
     <p class="reason-close rv">「つづける」のに、才能はいりません。<br><span class="accent">仕組みがあれば、勉強はつづきます。</span></p>
     <div class="sec-cta rv">
-      <a class="btn btn-line" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>この仕組みを無料でためす</a>
+      <a class="btn btn-line" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>無料でためす</a>
       <p class="hero-note">登録30秒・購入は体験のあとで大丈夫です</p>
     </div>
   </div>
@@ -903,41 +1209,18 @@ footer a:hover{color:#fff}
 <section id="about">
   <div class="inner">
     <div class="sec-label rv">使い方はかんたん</div>
-    <h2 class="rv">使い方は2通り。<span class="nb">どちらも「できるまで」</span><span class="nb">AIがつきあいます。</span></h2>
-    <p class="sec-lead rv">いつものLINEでサクッと派も、紙でじっくり派も。同じ公式LINEにつながって、AIがその場で丸つけします。</p>
-    <div class="routes rv-group">
-      <div class="step">
-        <div class="visual">
-          <div class="phone" style="width:210px;border-radius:26px;padding:7px;margin:18px 0">
-            <div class="screen" style="border-radius:20px">
-              <div class="bar" style="font-size:11px;padding:8px 12px 7px">チャットでスタディ</div>
-              <div class="talk" style="font-size:10.5px;padding:10px 9px 12px;gap:7px">
-                <div class="msg me">②十七条の憲法</div>
-                <div class="msg bot"><span class="maru-ok">⭕ 正解！</span><br>役人の心構えを示したきまりだね。<span class="meta">正答率 82%　レベル 12</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="body">
-          <div class="num" data-n="A">やり方</div>
-          <h3>LINEに届いた問題を、その場で解く</h3>
-          <p>問題はLINEのトークに、あなたのペースで届きます。印刷いらずで、<strong>通知からその場ですぐ</strong>、スマホだけで解き始められます。</p>
-        </div>
-      </div>
-      <div class="step">
-        <div class="visual"><img src="img/page-topic.png" alt="要点まとめ・一問一答が並ぶつづもんの紙面"></div>
-        <div class="body">
-          <div class="num" data-n="B">やり方</div>
-          <h3>印刷して、紙にじっくり解く</h3>
-          <p>テスト前は紙派、という人はこちら。使う単元を印刷して解き、紙面のQRコードを読んで<strong>答案の写真を送る</strong>と、AIが丸つけ・解説します。</p>
-        </div>
-      </div>
+    <h2 class="rv">何をやるかは、<span class="nb">AIが一緒に考えてくれる。</span><br><span class="accent">届いた1単元を、すぐ始めるだけ。</span></h2>
+    <p class="sec-lead rv">これまでの学習記録・ニガテ・テスト日から、AIが今日の1単元を選んでお届け。教材を探す手間なく、開いたその瞬間から始められます。</p>
+    <div class="flow rv-group">
+      <div class="flow-item"><span class="ico"><img src="img/icons/ic-bulb.png" alt=""></span><div class="fn">STEP 1</div><h3>AIが「今日の1単元」を決める</h3><p>これまでの学習記録・ニガテ・テスト日をもとに、今日やる1単元をAIが一緒に選びます。「何をやろう？」で迷う時間がゼロに。</p></div>
+      <div class="flow-item"><span class="ico"><img src="img/icons/ic-envelope.png" alt=""></span><div class="fn">STEP 2</div><h3>その1単元が、毎日届く</h3><p>選ばれた単元が、あなたのペースで届きます（届く時間・頻度は設定OK）。あとは通知をタップするだけ。</p></div>
+      <div class="flow-item"><span class="ico"><img src="img/icons/ic-play.png" alt=""></span><div class="fn">STEP 3</div><h3>開いたら、すぐスタート</h3><p>目次を探したり開いたりの手間はなし。届いたものをそのまま、スマホで15分。丸つけ・解説もその場で返ります。</p></div>
     </div>
     <div class="common-flow rv">
-      <div class="cf-title">どちらのやり方でも</div>
+      <div class="cf-title">はじめたあとも</div>
       <div class="cf-items">
-        <div class="cf-item"><span class="em">🔁</span><div>まちがえた問題は、<b>できるまで解き直し</b><small>すぐに再出題＋忘れたころにもう一度</small></div></div>
-        <div class="cf-item"><span class="em">📮</span><div>次のおすすめ範囲が、<b>自動でLINEに届く</b><small>届くペースは設定できます</small></div></div>
+        <div class="cf-item"><span class="ico"><img src="img/icons/ic-cycle.png" alt=""></span><div>まちがえた問題は、<b>できるまで解き直し</b><small>すぐに再出題＋忘れたころにもう一度</small></div></div>
+        <div class="cf-item"><span class="ico"><img src="img/icons/ic-send.png" alt=""></span><div>次のおすすめも、<b>AIが選んで届ける</b><small>届くペースは設定できます</small></div></div>
       </div>
     </div>
   </div>
@@ -951,23 +1234,15 @@ footer a:hover{color:#fff}
     <p class="sec-lead rv">定番の紙面構成を1冊にまとめました。どの単元も同じ流れで進むので、勉強のリズムがつくりやすくなっています。</p>
 
     <div class="parts rv-group">
-      <div class="part"><span class="tag">年表でチェック</span><h3>穴埋め年表で全体をつかむ</h3><p>章の流れを年表でひとまとめ。テスト前の総復習にもそのまま使えます。</p></div>
-      <div class="part"><span class="tag">A 要点まとめ</span><h3>穴埋めで要点を整理</h3><p>教科書の要点を短い文章に凝縮。空欄を埋めながら流れごと理解します。</p></div>
-      <div class="part"><span class="tag">B 一問一答</span><h3>基礎用語を14問ずつ</h3><p>チェックボックスつきで、できるまで何周でも。基礎固めの定番です。</p></div>
-      <div class="part"><span class="tag">C 実戦問題</span><h3>テスト形式の4択問題</h3><p>定期テストと同じ選択形式。まぎらわしい選択肢で理解度を確かめます。</p></div>
-      <div class="part"><span class="tag">D 記述問題</span><h3>理由・しくみを書く練習</h3><p>「なぜ？」を自分の言葉で説明。指定語句つきで、差がつく記述対策を。</p></div>
-      <div class="part"><span class="tag">E 資料問題</span><h3>写真・図で解く資料問題</h3><p>入試や実力テストで問われる、写真や資料の読み取り問題。一部単元に収録し、順次拡充しています。</p></div>
+      <div class="part"><span class="ico"><img src="img/icons/ic-timeline.png" alt=""></span><span class="tag">年表でチェック</span><h3>穴埋め年表で全体をつかむ</h3><p>章の流れを年表でひとまとめ。テスト前の総復習にもそのまま使えます。</p></div>
+      <div class="part"><span class="ico"><img src="img/icons/ic-notebook.png" alt=""></span><span class="tag">A 要点まとめ</span><h3>穴埋めで要点を整理</h3><p>教科書の要点を短い文章に凝縮。空欄を埋めながら流れごと理解します。</p></div>
+      <div class="part"><span class="ico"><img src="img/icons/ic-checklist.png" alt=""></span><span class="tag">B 一問一答</span><h3>基礎用語を一問一答で</h3><p>チェックボックスつきで、できるまで何周でも。基礎固めの定番です。</p></div>
+      <div class="part"><span class="ico"><img src="img/icons/ic-fourchoice.png" alt=""></span><span class="tag">C 実戦問題</span><h3>テスト形式の4択問題</h3><p>定期テストと同じ選択形式。まぎらわしい選択肢で理解度を確かめます。</p></div>
+      <div class="part"><span class="ico"><img src="img/icons/ic-pen.png" alt=""></span><span class="tag">D 記述問題</span><h3>理由・しくみを書く練習</h3><p>「なぜ？」を自分の言葉で説明。AIがその場で採点します。</p></div>
+      <div class="part"><span class="ico"><img src="img/icons/ic-photomap.png" alt=""></span><span class="tag">E 資料問題</span><h3>写真・図で解く資料問題</h3><p>入試や実力テストで問われる、写真や資料の読み取り問題。順次拡充しています。</p></div>
     </div>
 
-    <div class="pages rv-group">
-      <figure class="page-item"><img src="img/page-cover.png" alt="つづもんの1ページ目（年表でチェック）" loading="lazy"><figcaption>年表でチェック</figcaption></figure>
-      <figure class="page-item"><img src="img/page-topic.png" alt="要点まとめと一問一答のページ" loading="lazy"><figcaption>要点まとめ・一問一答</figcaption></figure>
-      <figure class="page-item"><img src="img/page-quiz.png" alt="実戦問題と記述問題のページ" loading="lazy"><figcaption>実戦問題・記述問題</figcaption></figure>
-      <figure class="page-item"><img src="img/page-shiryo-horyuji.png" alt="法隆寺と釈迦三尊像の写真を使った資料問題のページ" loading="lazy"><figcaption>資料問題（飛鳥文化）</figcaption></figure>
-      <figure class="page-item"><img src="img/page-shiryo-daibutsu.png" alt="奈良の大仏と正倉院の写真を使った記述問題・資料問題のページ" loading="lazy"><figcaption>資料問題（奈良時代）</figcaption></figure>
-      <figure class="page-item"><img src="img/page-answer.png" alt="巻末解答のページ" loading="lazy"><figcaption>巻末解答（読みがなつき）</figcaption></figure>
-    </div>
-    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:20px" class="rv">※ 実際の紙面です。A4サイズで、ご家庭やコンビニのプリンタで印刷できます。印刷しなくても、タブレット等に表示してノートに解く使い方もできます。</p>
+    <p style="text-align:center;font-size:13px;color:var(--muted);margin-top:30px" class="rv">※ Web教材の画面イメージです。スマホ・タブレット・PCでそのまま開いて使えます。紙で解きたい人は、画面から印刷することもできます。</p>
   </div>
 </section>
 
@@ -978,49 +1253,103 @@ footer a:hover{color:#fff}
     <h2 class="rv"><span class="nb">丸つけ・解説・ニガテ管理は、</span><span class="nb">AIにおまかせ。</span></h2>
     <p class="sec-lead rv">「丸つけしない」「解説を読まない」——紙の問題集の弱点を、公式LINEが引き受けます。追加料金はかかりません。</p>
     <div class="line-sec">
-      <div class="phone">
-        <div class="screen">
-          <div class="bar">チャットでスタディ</div>
-          <div class="talk">
-            <div class="time">QRコードを読み取ると…</div>
-            <div class="msg me">ワーク 聖徳太子と飛鳥文化</div>
-            <div class="msg bot"><span class="big">聖徳太子と飛鳥文化</span>の問題だね！<br>Q1. 604年に定められた、役人の心構えを示したきまりは？
-              <span class="quiz-choice">① 冠位十二階</span>
-              <span class="quiz-choice">② 十七条の憲法</span>
-              <span class="quiz-choice">③ 大宝律令</span>
-            </div>
-            <div class="msg me">②</div>
-            <div class="msg bot"><span class="maru-ok">⭕ 正解！</span><br>十七条の憲法は役人の心構えを示したもの。家柄でなく才能で位を決めたのが冠位十二階だよ。<span class="meta">正答率 82%　レベル 12　連続正解 3</span></div>
-            <div class="msg bot">✍️ つづけて、記述問題いくよ！</div>
+      <div class="pv-toggle-wrap rv">
+        <div class="pv-toggle" role="group" aria-label="解答するスマホ画面を切り替え">
+          <button type="button" class="pv-toggle-btn is-active" data-pv-target="web" aria-pressed="true">Webで解く</button>
+          <button type="button" class="pv-toggle-btn" data-pv-target="line" aria-pressed="false">LINEで解く</button>
+        </div>
+        <div class="pv-phone">
+          <div class="pv-screen pv-stack" id="pvAiScreens">
+            <img src="img/real-quiz.webp" alt="Web教材のページで実際に4択問題を解いている画面（実アプリのスクリーンショット）" class="is-active" data-pv-key="web">
+            <img src="img/screen-app-line.webp" alt="LINEのトークで今日の問題を解いている画面" data-pv-key="line">
           </div>
         </div>
+        <p class="pv-toggle-note">どちらで解いても、記録はAIがまとめて把握します。</p>
       </div>
       <div class="features rv-group">
-        <div class="feature"><div class="ic">⚡</div><div><h3>その場で採点、その場で解説</h3><p>解いた直後に丸つけと解説が届くから、記憶が新しいうちに解き直せます。「あとでまとめて丸つけ」がなくなります。</p></div></div>
-        <div class="feature"><div class="ic">✍️</div><div><h3>記述問題もAIが採点</h3><p>親でも判断しづらい記述の答案を、AIが読んで採点。良い点と直すべき点をコメントで返します。</p></div></div>
-        <div class="feature"><div class="ic">🔁</div><div><h3>わからない問題を、そのままにしない</h3><p>まちがえた問題はニガテとして記録され、すぐに再出題。さらに忘れたころにもう一度出るので、「できたつもり」で終わりません。</p></div></div>
+        <div class="ai-diagram">
+          <div class="diagram-row">
+            <div class="diagram-col">
+              <span class="diagram-label">LINE</span>
+              <div class="diagram-box">
+                <div class="dchat">今日は「鎌倉幕府の成立」を解いてみよう。</div>
+                <div class="dchat me">征夷大将軍は誰？→源頼朝</div>
+              </div>
+            </div>
+            <div class="diagram-arrow" aria-hidden="true">→</div>
+            <div class="ai-node">AI</div>
+            <div class="diagram-arrow" aria-hidden="true">←</div>
+            <div class="diagram-col">
+              <span class="diagram-label">Web教材</span>
+              <div class="diagram-box dweb">
+                <div class="dweb-q">問. 守護と地頭の違いは？</div>
+                <div class="dweb-btn">解答を送信する</div>
+              </div>
+            </div>
+          </div>
+          <p class="diagram-note">記録をひとつにまとめる</p>
+        </div>
+        <div class="ai-brief">
+          <div class="ai-brief-item"><span class="ico"><img src="img/icons/ic-bolt.png" alt=""></span><p>その場で採点・その場で解説</p></div>
+          <div class="ai-brief-item"><span class="ico"><img src="img/icons/ic-pen.png" alt=""></span><p>記述問題もAIが採点</p></div>
+          <div class="ai-brief-item"><span class="ico"><img src="img/icons/ic-cycle.png" alt=""></span><p>まちがいはニガテとして再出題</p></div>
+        </div>
       </div>
     </div>
+  </div>
+</section>
 
+<section class="alt">
+  <div class="inner">
     <div class="ai-good rv">
       <h3>採点だけじゃない。<span class="nb"><span class="accent">質問し放題のAI先生</span>が</span><span class="nb">ついてきます。</span></h3>
-      <div class="ai-grid rv-group">
-        <div class="ai-item"><span class="em">🌙</span><div><b>24時間、いつでも質問できる</b><p>「これも正解かなぁ…？」と迷ったら、トークで聞くだけ。夜の勉強中でもすぐ答えが返ります。</p></div></div>
-        <div class="ai-item"><span class="em">🙋</span><div><b>何度聞いても、嫌な顔をしない</b><p>先生や親には聞きづらい「いまさらの質問」も、AIになら気をつかわずに聞けます。</p></div></div>
-        <div class="ai-item"><span class="em">➕</span><div><b>「もっと解きたい」に、その場で応える</b><p>もっと難しい問題に挑戦したいときは、範囲に合わせた問題をAIがその場で作成します。</p></div></div>
-        <div class="ai-item"><span class="em">🔍</span><div><b>AIからの「深掘り質問」で理解が固まる</b><p>解けたあとに「では、なぜ？」と一歩深い問いかけ。テストの記述問題に効きます。</p></div></div>
-        <div class="ai-item"><span class="em">🩺</span><div><b>ニガテをAIが自動で診断</b><p>解いた記録から、どの単元のどこでつまずいているかをAIが分析。ニガテに合わせて出題されます。</p></div></div>
-        <div class="ai-item"><span class="em">👪</span><div><b>保護者向けAI診断レポート<span class="soon">今後実装予定</span></b><p>お子さまの進み具合・得意・ニガテのAI診断を、保護者の方も見られるようになります。</p></div></div>
+      <div class="ai-split rv-group">
+        <div class="owl-wrap"><img src="img/ai-teacher-card.jpg" alt="頼もしいAIロボットの先生キャラクター"><span class="owl-caption">いつでも頼れる、あなたのAI先生</span></div>
+        <div>
+          <ul class="ai-main-list">
+            <li><span class="ico"><img src="img/icons/ic-clock.png" alt=""></span><div><b>24時間、いつでも質問できる</b><p>「これも正解かなぁ…？」と迷ったら、トークで聞くだけ。夜の勉強中でもすぐ答えが返ります。</p></div></li>
+            <li><span class="ico"><img src="img/icons/ic-chat.png" alt=""></span><div><b>何度聞いても、嫌な顔をしない</b><p>先生や親には聞きづらい「いまさらの質問」も、AIになら気をつかわずに聞けます。</p></div></li>
+            <li><span class="ico"><img src="img/icons/ic-search.png" alt=""></span><div><b>深掘り質問で理解が固まる</b><p>解けたあとに「では、なぜ？」と一歩深い問いかけ。テストの記述問題に効きます。</p></div></li>
+          </ul>
+          <ul class="ai-sub-list">
+            <li><img class="li-ic" src="img/icons/ic-check.png" alt="">「もっと解きたい」に応える</li>
+            <li><img class="li-ic" src="img/icons/ic-check.png" alt="">ニガテをAIが自動で診断</li>
+            <li><img class="li-ic" src="img/icons/ic-check.png" alt="">保護者向けAI診断レポート<span class="soon">今後実装予定</span></li>
+          </ul>
+        </div>
       </div>
       <p class="ai-note">※ AIとのやり取りは担当者も定期的に確認しています。安心してお使いください。</p>
     </div>
 
     <div class="cta-banner rv">
-      <h3>ここまでの流れ、<span class="nb">ぜんぶ<span style="color:var(--maru)">無料</span>で</span><span class="nb">体験できます</span></h3>
-      <p>友だち追加すると、その場でサンプル問題が解けます。お子さまのスマホでどうぞ。</p>
-      <a class="btn btn-line" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>無料で1単元ためしてみる</a>
+      <h3>ここまでの流れ、<span class="nb">3日間<span style="color:var(--maru)">ぜんぶ無料</span>で</span><span class="nb">体験できます</span></h3>
+      <p>友だち追加すると、その場でサンプル問題が解けます。3日間は全19単元が使い放題、期限後も1単元はずっと無料です。</p>
+      <a class="btn btn-line" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>3日間ぜんぶ無料でためす</a>
       <div class="cta-micro"><span>登録30秒</span><span>購入は体験のあとで</span><span>いつでもブロックできます</span></div>
     </div>
+  </div>
+</section>
+
+<!-- ============ DAILY RECORD & AI COACHING ============ -->
+<section id="daily">
+  <div class="inner">
+    <div class="ref-sec">
+      <img src="img/screen-progress.png" alt="毎日の学習量・学習時間・連続日数の記録イメージ画面" loading="lazy" class="rv">
+      <div>
+        <div class="sec-label rv">毎日の記録とAIサポート</div>
+        <h2 class="rv">毎日の“量”と“時間”を記録。<span class="nb">AIが、続け方まで</span><span class="nb"><span class="accent">いっしょに考えます。</span></span></h2>
+        <p class="sec-lead rv" style="margin-bottom:0">何問解いたか、何分使ったか。AIはそれを見て、今日の一手を決めたり、がんばりを言葉にしたり、間隔があいたらそっと声をかけたりします。</p>
+      </div>
+    </div>
+    <div class="ai-grid rv-group" style="margin-top:34px">
+      <div class="ai-item"><span class="ico"><img src="img/icons/ic-target.png" alt=""></span><div class="ai-item-body"><b>今日の1手をAIが決める</b><p>「今日は何をやればいいか」を考える負担はゼロ。これまでの記録から、AIがちょうどいい範囲を選んでLINEに届けます。</p></div></div>
+      <div class="ai-item"><span class="ico"><img src="img/icons/ic-flame.png" alt=""></span><div class="ai-item-body"><b>続けた日数も、やさしい復帰も</b><p>続けた日数もAIは見ています。少し間があいても責めるような通知はせず、また今日から始めやすいように声をかけます。</p></div></div>
+      <div class="ai-item"><span class="ico"><img src="img/icons/ic-timer.png" alt=""></span><div class="ai-item-body"><b>時間×量の見える化と負荷調整<span class="soon">今後実装予定</span></b><p>解いた問題数と使った時間を記録。まとまった時間が取れない日は「今日は5分だけ」に負荷を下げてご提案します。</p></div></div>
+      <div class="ai-item"><span class="ico"><img src="img/icons/ic-chat.png" alt=""></span><div class="ai-item-body"><b>状況で変わるAIの声かけ<span class="soon">今後実装予定</span></b><p>がんばった日は具体的にほめて、間隔があいた日はやさしく声をかける。記録の状況に合わせてメッセージが変わります。</p></div></div>
+      <div class="ai-item"><span class="ico"><img src="img/icons/ic-calendar.png" alt=""></span><div class="ai-item-body"><b>テスト日から逆算プラン<span class="soon">今後実装予定</span></b><p>テスト日を伝えておくと、そこから逆算して今日ちょうどいい範囲に調整します。</p></div></div>
+      <div class="ai-item"><span class="ico"><img src="img/icons/ic-report.png" alt=""></span><div class="ai-item-body"><b>保護者へ週1のがんばり通知<span class="soon">今後実装予定</span></b><p>お子さまのがんばりを、週1回まとめてお知らせ。「ほめる材料」をお届けします。</p></div></div>
+    </div>
+    <p class="ai-note">※ 記録して、AIが声をかける／今日の一手を決める——という仕組みです。誇張な成果を約束するものではありません。</p>
   </div>
 </section>
 
@@ -1028,16 +1357,15 @@ footer a:hover{color:#fff}
 <section class="alt">
   <div class="inner">
     <div class="ref-sec">
-      <img src="img/page-ref.png" alt="読んで楽しい参考書の紙面。先生キャラクターが語りかける構成" loading="lazy" class="rv">
+      <img src="img/refbook-illust.jpg" alt="開いた参考書の挿絵。会話するように語りかける参考書のイメージ" loading="lazy" class="rv">
       <div>
         <div class="sec-label rv">セットの参考書</div>
         <h2 class="rv">「読める」参考書つき。<br>歴史ぎらいでも、<span class="nb">まず読み物として</span><span class="nb">楽しめる。</span></h2>
-        <p class="sec-lead rv" style="margin-bottom:0">問題を解く前に読む、全19冊分の参考書もセット。教科書が苦手な子のために、文字を詰め込まず「語りかける」紙面にしました。</p>
-        <ul class="ref-points rv-group">
-          <li>先生キャラクターが吹き出しで語りかける、会話調の解説</li>
-          <li>重要語は蛍光マーカー＋「ここが大事！」の付箋で一目瞭然</li>
-          <li>用語は読みがなつきの絵カードで整理。暗記にもそのまま使える</li>
-          <li>問題集と同じ単元構成。「読む→解く→LINEで確認」がつながる</li>
+        <p class="sec-lead rv" style="margin-bottom:0">問題を解く前に読む、全19単元分の参考書もWeb教材でセット。教科書が苦手な子のために、文字を詰め込まず「語りかける」読みものにしました。</p>
+        <ul class="refbook-points rv-group">
+          <li><span class="ico"><img src="img/icons/ic-chat.png" alt=""></span>会話するように語りかける本文</li>
+          <li><span class="ico"><img src="img/icons/ic-pen.png" alt=""></span>大事な言葉はオレンジで強調</li>
+          <li><span class="ico"><img src="img/icons/ic-clock.png" alt=""></span>30秒でふりかえるまとめ</li>
         </ul>
       </div>
     </div>
@@ -1053,9 +1381,9 @@ footer a:hover{color:#fff}
         <h2 class="rv"><span class="nb">「ちゃんとやってる？」と</span><span class="nb">聞かなくても、</span><span class="nb">がんばりが見える。</span></h2>
         <p class="sec-lead rv" style="margin-bottom:18px">丸つけ・解説・記録をAIが引き受けるので、保護者の方が横について教える必要はありません。それでも、お子さまの学習のようすはきちんと残ります。</p>
         <div class="parent-points rv-group">
-          <div class="feature"><div class="ic">👀</div><div><h3>学習記録が残る</h3><p>いつ・どの単元を・どれだけ正解したかが公式LINEに記録され、「がんばってるね」と声をかけるきっかけになります。</p></div></div>
-          <div class="feature"><div class="ic">🖨️</div><div><h3>何度でも印刷OK</h3><p>PDFなので、解き直し用に同じページを何枚でも。ご家庭のプリンタでもコンビニ印刷でも使えます。</p></div></div>
-          <div class="feature"><div class="ic">🔒</div><div><h3>購入者専用のPDF</h3><p>購入者専用PDFをお届けします。問題はすべて、本教材のために書き下ろしたオリジナルです。</p></div></div>
+          <div class="feature"><span class="ico"><img src="img/icons/ic-eye.png" alt=""></span><div><h3>学習記録が残る</h3><p>いつ・どの単元を・どれだけ正解したかが記録され、「がんばってるね」と声をかけるきっかけになります。</p></div></div>
+          <div class="feature"><span class="ico"><img src="img/icons/ic-shuffle.png" alt=""></span><div><h3>LINEでもWebでも、記録は1つに</h3><p>お子さまがLINEで解いても、Web教材のページで解いても、AIが記録をひとつにまとめます。使う場所を選びません。</p></div></div>
+          <div class="feature"><span class="ico"><img src="img/icons/ic-lock.png" alt=""></span><div><h3>会員限定のオリジナル問題</h3><p>問題はすべて、本教材のために書き下ろしたオリジナル。会員だけが使えるWeb教材としてお届けします。</p></div></div>
         </div>
       </div>
       <img class="illust rv" src="img/voice-parent.jpg" alt="スマホで学習記録を確認する保護者のイラスト" loading="lazy">
@@ -1070,7 +1398,6 @@ footer a:hover{color:#fff}
   <div class="inner">
     <div class="sec-label rv" style="justify-content:center">利用者の声</div>
     <h2 class="rv" style="text-align:center;margin-bottom:44px">つづもんで勉強が「つづいた」ご家庭から</h2>
-    （TODO: 実際にいただいたお声に差し替え。掲載許可を得た実在の声のみ載せること）
     <div class="voices rv-group">
       <div class="voice">
         <span class="ph">【ここに実際のお声を掲載（例：丸つけを全部LINEがやってくれるので、私が横につかなくても勉強が回るようになりました。「レベル上がった！」と報告してくれるのが嬉しいです）】</span>
@@ -1094,62 +1421,66 @@ footer a:hover{color:#fff}
   <div class="inner">
     <div class="sec-label rv" style="justify-content:center">セット内容と価格</div>
     <h2 class="rv" style="text-align:center">つづくから、<br>教材代がむだになりません。</h2>
-    <p class="sec-lead rv" style="text-align:center;margin-left:auto;margin-right:auto">どんな教材も、続いてこそ力になります。つづもんは「つづく仕組み」ごとお届けします。必要な学年だけでも、3学年まとめてでも。</p>
+    <p class="sec-lead rv" style="text-align:center;margin-left:auto;margin-right:auto">どんな教材も、続いてこそ力になります。つづもんは月額ひとつのプランで、「つづく仕組み」ごとお届けします。</p>
 
     <div class="compare rv-group">
       <div class="comp"><div class="cn">個別指導塾</div><div class="cv">月 2〜3万円</div><div class="cs">週1〜2回・移動あり</div></div>
       <div class="comp"><div class="cn">通信教育</div><div class="cv">月 5,000円〜</div><div class="cs">続けるほど費用が増える</div></div>
-      <div class="comp hit"><div class="cn">つづもん</div><div class="cv">年 2,980円〜</div><div class="cs">3学年セット・AI採点/質問し放題込み</div></div>
+      <div class="comp hit"><div class="cn">つづもん</div><div class="cv">月 1,280円</div><div class="cs">中学歴史ぜんぶ・AI採点/質問し放題込み</div></div>
     </div>
     <p class="compare-note rv">※ 塾・通信教育の金額は一般的な相場の目安です。</p>
 
     <div class="price-box rv">
-      <div class="price-head">つづもん　中学歴史　<span class="nb">料金プラン</span></div>
+      <div class="price-head">つづもん　中学歴史　<span class="nb">月額プラン</span></div>
       <div class="price-body">
         <ul class="price-items">
-          <li><span>歴史 問題集＋読んで楽しい参考書（お名前入りPDF）</span><span class="vol">3学年セット＝全38冊511ページ</span></li>
-          <li><span>公式LINEでの問題演習・AI採点・学習記録</span><span class="vol">期間中 使い放題</span></li>
-          <li><span>質問し放題のAI先生</span><span class="vol">期間中 使い放題</span></li>
+          <li><span>中学歴史 全19単元（中1〜中3の全範囲）をスマホで（問題集＋参考書）</span><span class="vol">Web教材</span></li>
+          <li><span>公式LINEでの問題演習・AI採点・学習記録</span><span class="vol">使い放題</span></li>
+          <li><span>質問し放題のAI先生</span><span class="vol">使い放題</span></li>
         </ul>
-        <!-- TODO: 価格はすべて仮です。確定したら この表・特商法・チャットFAQ・api/chat.js を書き換えてください -->
-        <div class="plan-scroll">
-          <table class="plan-table">
-            <thead>
-              <tr><th class="pt-name">プラン</th><th>1年</th><th>2年</th><th>3年</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td class="pt-name">学年別<small>中1・中2・中3 いずれか1学年分</small></td>
-                <td><span class="price">1,480<small>円</small></span></td>
-                <td><span class="price">1,980<small>円</small></span></td>
-                <td><span class="price">2,480<small>円</small></span></td>
-              </tr>
-              <tr class="hit">
-                <td class="pt-name">3学年セット<small>中1〜中3の全範囲・いちばん人気</small></td>
-                <td><span class="price">2,980<small>円</small></span></td>
-                <td><span class="price">3,980<small>円</small></span></td>
-                <td><span class="price">4,980<small>円</small></span></td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- 価格確定済み・月額1,280円（税込）。改定時はこの price-main・特商法・チャットFAQ・api/chat.js をあわせて書き換えてください -->
+        <div class="price-main">
+          <div class="tax">月額</div>
+          <div class="yen">1,280<small>円</small></div>
+          <div class="tax">（税込）</div>
         </div>
-        <p class="plan-note">価格はすべて税込。期間は「公式LINEのAI採点・質問などが使い放題の期間」です。<br><b>ダウンロードしたPDFは、期間が終わってもずっとお使いいただけます。</b>LINEのサービスだけ、月額330円（税込）で継続できます（任意・いつでも解約OK）。</p>
+        <p class="plan-note">価格は税込。<b>いつでも解約OK</b>、違約金などはありません。スマホだけで完結、紙で解きたいときはWeb教材の画面から印刷できます。</p>
+        <div class="cf-item" style="justify-content:center;text-align:left;margin:0 auto 22px;max-width:480px">
+          <span class="ico"><img src="img/icons/ic-arrowup.png" alt=""></span>
+          <div><b>今後、社会（地理・公民）・英語・理科・数学も順次追加予定</b></div>
+        </div>
         <div class="price-cta">
-          <!-- TODO: 購入ページのURLが決まったら href を差し替えてください -->
-          <a class="btn btn-line" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener">
+          <a class="btn btn-line" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener">
             <svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>
-            <span class="btn-col"><span>公式LINEから購入する</span><span class="sub">友だち追加 → メニューの「問題集」から</span></span>
+            <span class="btn-col"><span>公式LINEから始める</span><span class="sub">友だち追加 → メニューの「問題集」から</span></span>
           </a>
-          <a class="btn btn-ghost" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener">まずは無料で1単元ためす</a>
+          <a class="btn btn-ghost" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener">まずは3日間ぜんぶ無料でためす</a>
         </div>
-        <p class="price-note">迷ったら、先に無料体験をどうぞ。お子さまに合うと分かってからのご購入で大丈夫です。<br>お支払い後、お名前入りのPDF一式をダウンロードいただけます。ご家庭内での利用・印刷は何度でも可能です。</p>
+        <p class="price-note">迷ったら、先に3日間の無料体験をどうぞ。お子さまに合うと分かってからの登録で大丈夫です。<br>登録後はスマホですぐに全単元が使い始められます。紙で解きたいときは画面から印刷OK。</p>
       </div>
     </div>
 
-    <div class="flow rv-group">
-      <div class="flow-item"><div class="fn">STEP 1</div><h3>友だち追加</h3><p>公式LINE「チャットでスタディ」（つづもんの採点アカウント）を友だち追加します。</p></div>
-      <div class="flow-item"><div class="fn">STEP 2</div><h3>購入・ダウンロード</h3><p>メニューから購入すると、お名前入りPDFが届きます。</p></div>
-      <div class="flow-item"><div class="fn">STEP 3</div><h3>印刷して勉強開始</h3><p>使う単元だけ印刷してスタート。印刷せず、タブレット等で表示してノートに解いてもOK。QRでLINE演習へ。</p></div>
+    <div class="starter rv">
+      <h3 class="starter-title">はじめ方は、<span class="nb">かんたん3ステップ。</span></h3>
+      <div class="starter-flow">
+        <div class="starter-card">
+          <span class="starter-badge">STEP 1</span>
+          <span class="ico"><img src="img/icons/ic-lineadd.png" alt=""></span>
+          <p>公式LINEを友だち追加</p>
+        </div>
+        <div class="starter-arrow" aria-hidden="true">→</div>
+        <div class="starter-card">
+          <span class="starter-badge">STEP 2</span>
+          <span class="ico"><img src="img/icons/ic-regcheck.png" alt=""></span>
+          <p>登録して始める</p>
+        </div>
+        <div class="starter-arrow" aria-hidden="true">→</div>
+        <div class="starter-card">
+          <span class="starter-badge">STEP 3</span>
+          <span class="ico"><img src="img/icons/ic-phonepen.png" alt=""></span>
+          <p>スマホで解く</p>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -1161,14 +1492,14 @@ footer a:hover{color:#fff}
     <h2 class="rv" style="text-align:center;margin-bottom:44px">つづもんを作った人</h2>
     <div class="author rv">
       <div class="photo"><img src="img/author.jpg" alt="黒板の前で笑顔の石本大貴"></div>
-      <div>
+      <div class="author-body">
         <h3>石本 大貴</h3>
-        <div class="role">つづもん開発者（ぐっとスクール）｜家庭教師・塾講師歴10年（現役）｜名古屋大学 機械・航空工学科 卒業 → 東京大学大学院 機械工学専攻 進学（中退）</div>
+        <ul class="author-roles">
+          <li><img class="li-ic" src="img/icons/ic-report.png" alt="">家庭教師・塾講師歴10年</li>
+          <li><img class="li-ic" src="img/icons/ic-check.png" alt="">名古屋大学 機械・航空工学科 卒業</li>
+        </ul>
         <p>
-          家庭教師・塾講師として10年間、中学生の勉強を見てきました。学習塾の教室を一人で運営した経験もあり、いまも家庭教師として現役で教えています。プライベートでは一児の父です。<br><br>
-          経歴は回り道だらけです。美容専門学校を中退し、学び直して名古屋大学工学部で機械・航空工学を専攻。卒業後は東京大学大学院 機械工学専攻に進学しました（のち中退）。だからこそ、「勉強が続かない」つまずきは人ごとではありません。<br><br>
-          AIの時代に、中学生の「あったらいいな」を形にしたい——その思いで教材開発に力を入れています。続かないのは意志が弱いからではなく、つづく仕組みがないから。10年の指導経験と、工学の「仕組みで解決する」考え方、そしてAIを組み合わせてつくったのが、つづもんです。
-          <!-- TODO: ①顔写真をもらったら .photo を差し替え ②指導実績の数字・元生徒/保護者の推薦・開発こだわり話をもらったら本文に追記 -->
+          家庭教師・塾講師として10年、中学生の勉強を見てきました。経歴は回り道だらけで、美容専門学校を中退したのち名古屋大学で機械・航空工学を学び直し、東京大学大学院 機械工学専攻に進学（のち中退）。だからこそ「勉強が続かない」つまずきは人ごとではありません。10年の指導経験と工学の「仕組みで解決する」考え方、そしてAIを組み合わせてつくったのが、つづもんです。
         </p>
       </div>
     </div>
@@ -1183,11 +1514,19 @@ footer a:hover{color:#fff}
     <div class="faq rv-group">
       <details>
         <summary>飽きっぽいうちの子でも、本当に続きますか？</summary>
-        <div class="a">「絶対に続く」とは申し上げません。ただ、つづもんは「すぐ⭕がつく」「1単元15分」「がんばりが数字で見える」という、続けるための仕組みを教材そのものに組み込んでいます。相性は必ずあるので、まず無料体験でお子さまが楽しんで解けるかをお確かめください。買ってから合わないと分かるのが、いちばんもったいないからです。</div>
+        <div class="a">「絶対に続く」とは申し上げません。ただ、つづもんは「今日やることをAIが決めてLINEに届ける」「すぐ○がつく」「がんばりが数字で見える」という、続けるための仕組みを教材そのものに組み込んでいます。相性は必ずあるので、まずは3日間、全19単元（参考書＋問題集）を無料でお試しください。期限後も「律令国家と奈良時代」の1単元はずっと無料で読めます。体験の開始は、教材ページの「3日間ぜんぶ無料で試す」ボタンから（公式LINEでログインするだけです）。買ってから合わないと分かるのが、いちばんもったいないからです。</div>
+      </details>
+      <details>
+        <summary>LINEでもWebページでも解けますか？記録はどうなりますか？</summary>
+        <div class="a">はい、どちらでも解けます。LINEのトークに届いた問題に答えても、Web教材のページを開いて解いても、どちらの記録もAIがまとめて把握します。忙しい日はLINEでサクッと、時間があるときはWeb教材のページでじっくり、と使い分けていただけます。</div>
+      </details>
+      <details>
+        <summary>AIが「今日やること」を決めるとは、具体的にどういうことですか？</summary>
+        <div class="a">これまでの学習記録・ニガテな範囲・登録いただいたテスト日をもとに、AIがその日にちょうどいい範囲を選んでLINEに届けます。「何をやればいいか」を毎回考える負担をなくすための仕組みです。</div>
       </details>
       <details>
         <summary>プリンタがなくても使えますか？</summary>
-        <div class="a">はい。PDFはスマホ・タブレット・PCでそのまま開けるので、画面で紙面を見ながらノートに答えを書く使い方なら印刷不要です（QRコードの代わりに画面上のリンクから問題を開けます）。印刷したい場合も、コンビニのマルチコピー機が使えます（A4・1枚10円程度〜）。</div>
+        <div class="a">はい、問題ありません。基本はスマホ・タブレット・PCの画面でそのまま開いて解く教材です。紙で解きたい場合は、Web教材の画面から印刷することもできます。</div>
       </details>
       <details>
         <summary>どの教科書を使っていても大丈夫ですか？</summary>
@@ -1195,23 +1534,23 @@ footer a:hover{color:#fff}
       </details>
       <details>
         <summary>対象学年を教えてください。</summary>
-        <div class="a">中学1年〜3年生です。冊子は学年別に分かれていますが、学年をさかのぼった復習や先取りにも使えます。公式LINEの出題も学年をまたいで対応しています。</div>
+        <div class="a">中学1年〜3年生です。1つのプランに中1〜中3の歴史 全19単元がすべて含まれているので、学年をさかのぼった復習や先取りにも使えます。公式LINEの出題も学年をまたいで対応しています。</div>
       </details>
       <details>
-        <summary>公式LINEの利用に月額料金はかかりますか？</summary>
-        <div class="a">ご利用期間中はかかりません。問題演習・AI採点・AI先生への質問・学習記録まで、すべてプラン料金に含まれています。期間終了後も続けたい場合のみ、月額330円（税込）で公式LINEのサービスを継続できます（任意・いつでもやめられます）。</div>
+        <summary>月額料金はいくらですか？</summary>
+        <div class="a">中学歴史 全19単元が使い放題で、月額1,280円（税込）です。問題演習・AI採点・AI先生への質問・学習記録まで、すべてこの月額料金に含まれています。いつでも解約でき、違約金などはありません。</div>
       </details>
       <details>
-        <summary>利用期間が終わったら、教材は使えなくなりますか？</summary>
-        <div class="a">ダウンロードいただいたPDF（問題集・参考書）は、期間が終わってもそのままずっとお使いいただけます。終了するのは公式LINEでのAI採点・質問などのサービス部分だけで、必要な場合は月額330円（税込）で継続できます。</div>
+        <summary>解約したら、教材は使えなくなりますか？</summary>
+        <div class="a">解約すると、Web教材の閲覧やAI採点・質問などの機能はご利用いただけなくなります。一般的なサブスクリプションと同じ仕組みで、無理な引き止めは行いませんので、必要なときだけ気軽にご利用ください。解約手続きは「<a href="/account/">アカウント・お支払い管理</a>」ページからいつでも行えます。</div>
       </details>
       <details>
         <summary>きょうだいで一緒に使えますか？</summary>
-        <div class="a">ご購入いただいたご家庭内でのご利用・印刷は何度でも可能です。PDFにはご購入者のお名前が入っており、ご家庭の外への配布・共有はご遠慮いただいています。</div>
+        <div class="a">1契約で、ご家庭内でのご利用は可能です。複数のスマホ・タブレットから使いたい場合は、公式LINEにてご案内しますのでお気軽にご相談ください（ご家庭の外への共有はご遠慮いただいています）。</div>
       </details>
       <details>
-        <summary>購入後、教材はどうやって受け取れますか？</summary>
-        <div class="a">お支払いの確認後24時間以内に、お名前入りのPDF一式（ご購入プラン分の問題集・参考書＋使い方ガイド。3学年セットの場合は問題集19冊＋参考書19冊）のダウンロードリンクと、LINEのAI採点を有効にするライセンスコードをお届けします。コードを公式LINEに送るだけで、すぐに使い始められます（ごきょうだいのスマホでも同じコードで登録OK）。</div>
+        <summary>登録後、教材はどうやって使い始められますか？</summary>
+        <div class="a">公式LINEを友だち追加して月額登録いただくと、その場でスマホから全19単元のWeb教材（問題集＋参考書）が開けるようになります。難しい設定やコードの入力は不要です。</div>
       </details>
     </div>
   </div>
@@ -1222,9 +1561,9 @@ footer a:hover{color:#fff}
   <div class="inner">
     <h2 class="rv">「つづくかどうか」は、<br>無料でたしかめられます。</h2>
     <p class="rv">公式LINEを友だち追加すると、その場でサンプル問題を解けます。解き終わったお子さまが「もう1問」と言うかどうか——まずはそれだけ、見てみてください。</p>
-    <a class="btn btn-line rv" href="https://lin.ee/wxDOngU" target="_blank" rel="noopener">
+    <a class="btn btn-line rv" href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener">
       <svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>
-      無料で1単元ためしてみる
+      3日間ぜんぶ無料でためす
     </a>
     <p class="hero-note">登録30秒・購入は納得してからで大丈夫です</p>
     <p class="hero-note" style="margin-top:6px">LINE ID：@824cebif</p>
@@ -1237,13 +1576,13 @@ footer a:hover{color:#fff}
     <nav>
       <a href="tokushoho.html">特定商取引法に基づく表記</a>
       <a href="privacy.html">プライバシーポリシー</a>
-      <a href="https://lin.ee/wxDOngU" target="_blank" rel="noopener">公式LINE</a>
+      <a href="https://lin.ee/XGIhuYi" target="_blank" rel="noopener">公式LINE</a>
     </nav>
   </div>
 </footer>
 
 <!-- ============ CHAT WIDGET ============ -->
-<button class="chat-fab" type="button" aria-label="チャットで質問する"><span class="em">💬</span>質問する</button>
+<button class="chat-fab" type="button" aria-label="チャットで質問する"><img class="li-ic" src="img/icons/ic-chat.png" alt="">質問する</button>
 <div class="chat-panel" role="dialog" aria-label="つづもん相談チャット">
   <div class="chat-head">
     <div class="t">つづもん相談チャット<small>AIがお答えします。無理なおすすめはしません</small></div>
@@ -1264,7 +1603,7 @@ footer a:hover{color:#fff}
   // file://で直接開いたときはローカルdevサーバーに向ける
   var API_URL = location.protocol === 'file:' ? 'http://localhost:3300/api/chat' : '/api/chat/';
   var MAX_AI_TURNS_PER_DAY = 10;        // 1人（このブラウザ）あたりの1日のAI回答上限。サーバー側でも別途 15回/日・全体300回/日 を強制
-  var LINE_URL = 'https://lin.ee/wxDOngU';
+  var LINE_URL = 'https://lin.ee/XGIhuYi';
 
   // 1日あたりの利用回数（localStorageで日をまたいで保持）と、本人識別用のブラウザID
   function todayStr(){ var d = new Date(); return d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate(); }
@@ -1281,16 +1620,19 @@ footer a:hover{color:#fff}
   } catch(e){}
 
   var faq = [
-    {k:['価格','料金','いくら','値段','高い'], a:'料金は利用期間つきのプラン制です（すべて税込）。\n・学年別（中1〜中3のいずれか1学年）：1年 1,480円／2年 1,980円／3年 2,480円\n・3学年セット（全38冊511ページ）：1年 2,980円／2年 3,980円／3年 4,980円\n期間中はLINEでのAI採点・解説・質問し放題込み。ダウンロードしたPDFは期間後もずっと使えます。'},
-    {k:['無料','体験','お試し','ためす','試せ'], a:'はい、公式LINEを友だち追加すると、その場で1単元まるごと無料で体験できます。お子さまに合うかどうか、購入前にゆっくり確かめてくださいね。\n' + LINE_URL},
-    {k:['学年','何年生','対象','中学','小学','高校'], a:'対象は中学1〜3年生です。冊子は学年別に分かれていますが、さかのぼり復習や先取りにも使えます。小学生の歴史好きのお子さまや、高校受験前の総復習にもお使いいただけます。'},
-    {k:['印刷','プリンタ','プリンター','コンビニ'], a:'プリンタがなくても大丈夫です。スマホやタブレットで紙面を表示して、ノートに解く使い方ができます。印刷したい場合はコンビニのマルチコピー機も使えます（A4・1枚10円程度〜）。'},
-    {k:['月額','追加料金','サブスク','毎月'], a:'ご利用期間中の追加料金はありません（AI採点・質問・学習記録まで全部プラン料金に込み）。期間が終わったあとも続けたい場合だけ、月額330円（税込）で公式LINEのサービスを継続できます（任意・いつでも解約OK）。PDFは期間後もそのまま使えます。'},
+    {k:['価格','料金','いくら','値段','高い'], a:'中学歴史 全19単元が使い放題で、月額1,280円（税込）です。\n公式LINEでの問題演習・AI採点・質問し放題・学習記録まで、すべてこの月額料金に含まれています。いつでも解約OKで、違約金などはありません。\n今後は社会・英語・理科・数学も順次追加予定です。'},
+    {k:['無料','体験','お試し','ためす','試せ'], a:'はい、3日間は全19単元（参考書＋問題集）をまるごと無料でお試しいただけます。教材ページの「3日間ぜんぶ無料で試す」ボタンから、公式LINEでログインするだけで始められます。期限後も「律令国家と奈良時代」の1単元はずっと無料で読めます。\n' + LINE_URL},
+    {k:['学年','何年生','対象','中学','小学','高校'], a:'対象は中学1〜3年生です。1つのプランに全19単元（中1〜中3の全範囲）が含まれているので、さかのぼり復習や先取りにも使えます。小学生の歴史好きのお子さまや、高校受験前の総復習にもお使いいただけます。'},
+    {k:['今日','デイリー','ミッション','何をやれば','AIが決め'], a:'これまでの学習記録・ニガテな範囲・登録いただいたテスト日をもとに、AIがその日にちょうどいい範囲を選んでLINEに届けます。「何をやればいいか」を毎回考えなくていいのが、つづもんの一番の特徴です。'},
+    {k:['web教材','ウェブ','パソコン','タブレットで','両方で'], a:'はい、LINEのトークに届いた問題に答えても、Web教材のページを開いて解いても、どちらでも大丈夫です。どちらの記録もAIがまとめて把握するので、使う場所は自由に選べます。'},
+    {k:['印刷','プリンタ','プリンター','コンビニ'], a:'プリンタがなくても大丈夫です。基本はスマホやタブレットの画面でそのまま解ける教材です。紙で解きたい場合は、Web教材の画面から印刷することもできます。'},
+    {k:['月額','追加料金','サブスク','毎月'], a:'月額1,280円（税込）のサブスクリプションです。問題演習・AI採点・質問し放題・学習記録まで、追加料金なしですべて使い放題。いつでも解約でき、違約金などはありません。'},
     {k:['教科書','学校','テスト対策'], a:'特定の教科書に合わせた教材ではなく、中学歴史で共通して学ぶ標準的な内容で構成しています。どの教科書でも定期テスト・実力テスト対策に使えます。'},
-    {k:['兄弟','姉妹','きょうだい','家族','共有'], a:'ご家庭内でのご利用・印刷は何度でもOKです。きょうだいで一緒にお使いいただけます（ご家庭の外への配布・共有はご遠慮いただいています）。'},
-    {k:['受け取','ダウンロード','届','購入方法','買い方'], a:'公式LINEのメニューから購入すると、お支払い確認後に、お名前入りのPDF一式（ご購入プラン分の問題集・参考書＋使い方ガイド）をダウンロードリンクでお届けします。'},
-    {k:['数学','英語','理科','国語','他の教科'], a:'現在は中学歴史のみの販売です。他教科も準備を進めていますので、公式LINEに登録いただけると、出た際にお知らせできます。'},
-    {k:['続','飽き','三日坊主','やる気','サボ'], a:'続かないのはお子さまの意志の問題ではなく、仕組みの問題だと考えています。つづもんは「すぐ丸がつく」「1単元15分」「がんばりが数字で見える」仕組みで続きやすくしていますが、相性もあるので、まずは無料体験で様子を見ていただくのが安心です。'}
+    {k:['兄弟','姉妹','きょうだい','家族','共有'], a:'1契約で、ご家庭内でのご利用は可能です。複数のスマホ・タブレットから使いたい場合は公式LINEにてご案内しますので、お気軽にご相談ください（ご家庭の外への共有はご遠慮いただいています）。'},
+    {k:['受け取','ダウンロード','届','購入方法','買い方','登録方法'], a:'公式LINEを友だち追加して、メニューから月額登録するだけです。お支払い確認後、その場でスマホから全19単元のWeb教材（問題集＋参考書）が開けるようになります。'},
+    {k:['数学','英語','理科','国語','他の教科'], a:'現在は中学歴史のみの提供です。今後、社会・英語・理科・数学も順次追加予定です。公式LINEに登録いただけると、出た際にお知らせできます。'},
+    {k:['続','飽き','三日坊主','やる気','サボ'], a:'続かないのはお子さまの意志の問題ではなく、仕組みの問題だと考えています。つづもんは「すぐ丸がつく」「1単元15分」「がんばりが数字で見える」仕組みで続きやすくしていますが、相性もあるので、まずは無料体験で様子を見ていただくのが安心です。'},
+    {k:['解約','やめ方','退会'], a:'「アカウント・お支払い管理」ページ（https://tsudumon.jp/account/）からいつでも解約できます。解約すると、Web教材の閲覧やAI採点・質問などの機能はご利用いただけなくなりますが、無理な引き止めは行いません。'}
   ];
 
   var fab = document.querySelector('.chat-fab');
@@ -1494,6 +1836,107 @@ footer a:hover{color:#fff}
       });
     });
   }
+
+  // ロゴ：クリックでページ最上部へ一気に（即時）移動
+  var logoLink = document.querySelector('a.logo');
+  if (logoLink) {
+    logoLink.addEventListener('click', function(e){
+      e.preventDefault();
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+    });
+  }
+
+  // ヒーロー：スマホ画面の表紙を自動でめくり替える
+  var heroPhone = document.getElementById('heroPhone');
+  if (heroPhone) {
+    var heroImgs = heroPhone.querySelectorAll('.pv-screen img');
+    if (heroImgs.length > 1 && !reduced) {
+      var heroIdx = 0, heroTimer = null;
+      function heroNext(){
+        heroImgs[heroIdx].classList.remove('is-active');
+        heroIdx = (heroIdx + 1) % heroImgs.length;
+        heroImgs[heroIdx].classList.add('is-active');
+      }
+      function heroStart(){ if (!heroTimer) heroTimer = setInterval(heroNext, 2800); }
+      function heroStop(){ clearInterval(heroTimer); heroTimer = null; }
+      heroStart();
+      heroPhone.addEventListener('mouseenter', heroStop);
+      heroPhone.addEventListener('mouseleave', heroStart);
+    }
+  }
+
+  // ギャラリー：スマホ1台をスライドで切替（表紙→4択→記録）＋ドット操作
+  var galScreen = document.getElementById('galScreen');
+  if (galScreen) {
+    var galImgs = [].slice.call(galScreen.querySelectorAll('img'));
+    var galDots = [].slice.call(document.querySelectorAll('#galDots .pv-dot'));
+    var galCap = document.getElementById('galCap');
+    var galI = 0, galTimer = null;
+    function galShow(n){
+      galI = (n + galImgs.length) % galImgs.length;
+      galImgs.forEach(function(im, k){ im.classList.toggle('is-active', k === galI); });
+      galDots.forEach(function(d, k){ d.classList.toggle('is-active', k === galI); });
+      if (galCap) galCap.textContent = galImgs[galI].getAttribute('data-cap') || '';
+    }
+    function galStart(){ if (!galTimer && !reduced) galTimer = setInterval(function(){ galShow(galI + 1); }, 3200); }
+    function galStop(){ clearInterval(galTimer); galTimer = null; }
+    galDots.forEach(function(d, k){ d.addEventListener('click', function(){ galShow(k); galStop(); galStart(); }); });
+    var galPrev = document.querySelector('.pv-prev'), galNext = document.querySelector('.pv-next');
+    if (galPrev) galPrev.addEventListener('click', function(){ galShow(galI - 1); galStop(); galStart(); });
+    if (galNext) galNext.addEventListener('click', function(){ galShow(galI + 1); galStop(); galStart(); });
+    var galWrap = galScreen.closest('.pv-gallery');
+    if (galWrap){ galWrap.addEventListener('mouseenter', galStop); galWrap.addEventListener('mouseleave', galStart); }
+    galStart();
+  }
+
+  // 紙面の内容：タブで教材画面を切り替え
+  var ctabsNav = document.querySelector('.ctabs-nav');
+  if (ctabsNav) {
+    var ctabs = [].slice.call(ctabsNav.querySelectorAll('.ctab'));
+    var ctabImgs = [].slice.call(document.querySelectorAll('#ctabScreen img'));
+    var ctabDescs = [].slice.call(document.querySelectorAll('.ctabs-desc .ctd'));
+    function pickCtab(t){
+      ctabs.forEach(function(b){ b.classList.toggle('is-active', b.getAttribute('data-t') === t); });
+      ctabImgs.forEach(function(im){ im.classList.toggle('is-active', im.getAttribute('data-t') === t); });
+      ctabDescs.forEach(function(d){ d.classList.toggle('is-active', d.getAttribute('data-t') === t); });
+    }
+    ctabs.forEach(function(b){ b.addEventListener('click', function(){ pickCtab(b.getAttribute('data-t')); }); });
+  }
+
+  // 「AIにおまかせ」：Webで解く／LINEで解く トグル
+  var pvToggleBtns = document.querySelectorAll('.pv-toggle-btn');
+  var pvScreens = document.querySelectorAll('#pvAiScreens img');
+  if (pvToggleBtns.length && pvScreens.length) {
+    pvToggleBtns.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var target = btn.getAttribute('data-pv-target');
+        pvToggleBtns.forEach(function(b){
+          var on = b === btn;
+          b.classList.toggle('is-active', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        pvScreens.forEach(function(img){
+          img.classList.toggle('is-active', img.getAttribute('data-pv-key') === target);
+        });
+      });
+    });
+  }
+
+  // 開閉式カード（#reason / #daily）：くわしく／とじる トグル
+  document.querySelectorAll('.acc-toggle').forEach(function(btn){
+    var body = document.getElementById(btn.getAttribute('aria-controls'));
+    if (!body) return;
+    body.setAttribute('aria-hidden', 'true'); // JS実行時のみ初期状態を「畳んだ」に
+    var label = btn.querySelector('.toggle-label');
+    btn.addEventListener('click', function(){
+      var open = btn.getAttribute('aria-expanded') === 'true';
+      btn.setAttribute('aria-expanded', String(!open));
+      body.classList.toggle('is-open', !open);
+      if (open) { body.setAttribute('aria-hidden', 'true'); } else { body.removeAttribute('aria-hidden'); }
+      if (label) label.textContent = open ? 'くわしく' : 'とじる';
+    });
+  });
 
   // LINEボタンのクリック計測（GA4導入時のみ動作）
   document.querySelectorAll('a[href^="https://lin.ee/"]').forEach(function(a){

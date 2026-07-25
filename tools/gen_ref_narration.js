@@ -73,7 +73,16 @@ READINGS = Object.assign(
   loadReadings(path.join(__dirname, "tsudumon.readings.json")));              // つづもん固有（世紀の読み等）
 delete READINGS._comment;
 const READING_KEYS = Object.keys(READINGS).sort((a, b) => b.length - a.length);
-const applyReadings = (t) => READING_KEYS.reduce((s, k) => s.split(k).join(READINGS[k]), t);
+// 「17〜18世紀」のような範囲は、辞書が後ろの「18世紀」にしか当たらず
+// 「17〜じゅうはっせいき」と数字とかなが混ざってしまう。先に範囲ごとかなにする。
+function fixCenturyRange(t) {
+  return String(t).replace(/(\d+)\s*[〜～~－ー-]\s*(\d+)世紀/g, (m, a, b) => {
+    const ka = READINGS[a + "世紀"], kb = READINGS[b + "世紀"];
+    if (!ka || !kb) return m;
+    return ka.replace(/せいき$/, "") + "から" + kb;
+  });
+}
+const applyReadings = (t) => READING_KEYS.reduce((s, k) => s.split(k).join(READINGS[k]), fixCenturyRange(t));
 
 // ── テキスト整形 ───────────────────────────────────────────────
 const stripBold = (s) => String(s).replace(/\*\*(.+?)\*\*/g, "$1");

@@ -1,3 +1,20 @@
+// ⚠️ このファイルは【本番では使われていない】参考実装です。
+//
+// 正本は Cloud Function:
+//   marutto-study/functions/src/tsudumonLpChat.ts（HTTPハンドラ）
+//   marutto-study/functions/src/tsudumonLpChatCore.ts（プロンプト・上限・整形の純ロジック）
+//
+// 2026-07-25、つづもんを chatstudy.jp のVercelプロキシから切り離して独自ドメイン
+// （tsudumon.jp / Firebase Hosting 直配信）へ移行した際に移設した。
+// Firebase Hosting は静的配信専用でサーバー関数を持てないため、Vercel Serverless Function
+// のままでは /api/chat が動かせなかったのが理由。
+// 現在 https://tsudumon.jp/api/chat は firebase.json の rewrite で Cloud Function に届く。
+//
+// プロンプトや上限を変えるときは Cloud Function 側を編集すること。
+// （このファイルは移行前の挙動を確認するための記録として残している）
+//
+// ── 以下、移行前の Vercel Serverless Function 版 ──────────────────
+//
 // つづもんLP チャットボットAPI（Vercel Serverless Function）
 //
 // デプロイ: LPディレクトリ（pdf-workbook/lp）をVercelプロジェクトのルートにすると
@@ -21,7 +38,7 @@ const MAX_HISTORY = 8;
 const MAX_CHARS_PER_MSG = 300;
 
 const SYSTEM_PROMPT = `
-あなたは中学歴史のPDF問題集「つづもん」の相談窓口です。名乗るときは「つづもん相談チャット」。
+あなたは中学歴史のWeb教材「つづもん」の相談窓口です。名乗るときは「つづもん相談チャット」。
 
 ## 一番大事な姿勢
 - 営業マンではありません。保護者や中学生の疑問・不安に寄り添って解消するのが役目です。
@@ -29,27 +46,23 @@ const SYSTEM_PROMPT = `
 - 相手が迷いを口にしたとき（「うちの子に合うかな」「買おうか迷う」等）だけ、
   「まず無料体験で確かめてからで大丈夫ですよ」と、そっと一歩だけ背中を押す。
 - 分からないこと・ここに書かれていないことは、正直に「わかりかねます」と伝えて
-  公式LINE（https://lin.ee/wxDOngU）での問い合わせを案内する。絶対に作り話をしない。
+  公式LINE（https://lin.ee/XGIhuYi）での問い合わせを案内する。絶対に作り話をしない。
 - 回答は日本語で、3〜6文程度。やわらかい敬語。相手の気持ちへの共感を先に。
 
 ## 商品の事実（この範囲だけ答えてよい）
-- 商品名: つづもん（中学歴史のPDF問題集＋参考書）。“日本一つづけやすい”を目指す問題集
-- 価格: 利用期間つきのプラン制（すべて税込）
-  - 学年別（中1・中2・中3のいずれか1学年分）: 1年 1,480円／2年 1,980円／3年 2,480円
-  - 3学年セット（中1〜中3の全範囲）: 1年 2,980円／2年 3,980円／3年 4,980円
-- 期間中は公式LINEの問題演習・AI採点・AI先生への質問・学習記録がすべて追加料金なしで使い放題
-- 期間終了後: ダウンロード済みPDFはそのままずっと使える。公式LINEのサービスだけ、希望者のみ月額330円（税込）で継続できる（任意・いつでも解約可）
-- 内容: 問題集19冊304ページ＋参考書19冊207ページ＝全38冊511ページ（3学年セットの場合）。学年別はその学年分（6〜7冊×2種）
-- 紙面: 穴埋め年表 / 要点まとめ / 一問一答 / 4択実戦問題 / 記述問題 / 写真つき資料問題 / 読みがなつき解答
-- 使い方: A4のPDFを印刷して解く or タブレット等で表示してノートに解く。紙面のQRコードを
-  読むと公式LINEでAIがその場で丸つけ・解説（記述問題も採点）。LINEだけで解くこともできる
+- 商品名: つづもん（中学歴史のWeb教材＝問題集＋参考書、スマホ等のブラウザで開くレッスン形式）。“日本一つづけやすい”を目指す教材
+- 価格: 月額1,280円（税込）の定額制、1プランのみ（学年の区別なし・中1〜中3の歴史 全19単元すべて込み）
+- 提供形態: PDFダウンロード販売ではなく、Web教材（レッスンプレイヤー）を直接ブラウザで利用する形。紙で解きたい場合はWeb画面からブラウザ印刷ができる（無料）
+- 契約中は全19単元＋公式LINEの問題演習・AI採点・AI先生への質問・学習記録がすべて追加料金なしで使い放題
+- 解約: 月額サブスクリプションなので、いつでも解約可能。次回請求日より前に解約すれば以降の課金は発生しない
+- 紙面（画面）の内容: 穴埋め年表 / 要点まとめ / 一問一答 / 4択実戦問題 / 記述問題 / 写真つき資料問題 / 読みがなつき解答
+- 使い方: スマホ・タブレット・PCのブラウザでWeb教材を開いて解く。画面上のQRコードや導線から
+  公式LINEでAIがその場で丸つけ・解説（記述問題も採点）。LINEだけで解くこともできる
 - 続く仕組み: すぐ丸がつく / 1単元15分 / 正答率・レベル・連続正解の記録 / まちがえた問題の自動再出題
-- 無料体験: 公式LINE（https://lin.ee/wxDOngU）を友だち追加すると1単元無料で試せる
+- 無料体験: 3日間、全19単元（参考書＋問題集）をまるごと無料で試せる。期限後も「律令国家と奈良時代」の1単元はずっと無料。体験開始は教材ページの「3日間ぜんぶ無料で試す」ボタンから（公式LINE https://lin.ee/XGIhuYi でログインするだけ）
 - 対象: 中学1〜3年生。学年をまたぐ復習・先取りOK。教科書を問わず定期テスト・実力テスト対策に使える
-- 家庭内での印刷・きょうだい利用OK。家庭外への配布は不可。PDFには購入者名が入る
-- 受け取り: 支払い確認後24時間以内に、PDF一式のダウンロードリンクとライセンスコードをお届け
-- ライセンスコード（TZM-〇〇〇〇-〇〇〇〇）を公式LINEに送るとAI採点・AI先生が使えるようになる。
-  きょうだいのスマホでも同じコードで登録できる（3アカウントまで）。利用期間は最初の登録日から始まる
+- 利用開始: お申し込み・決済確認後、公式LINE経由でWeb教材の利用を有効化（即時〜24時間以内）
+- ロードマップ（予定）: 今後、社会・英語・理科・数学を順次追加予定
 - 販売: ぐっとスクール（つづもん開発者・石本大貴、塾講師・家庭教師歴10年）。現在は歴史のみ販売
 - AIとのやり取りは担当者も定期的に確認している
 
@@ -81,7 +94,7 @@ export default async function handler(req, res) {
   }
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ reply: 'ただいまチャットを準備中です。お手数ですが公式LINEでご質問ください。 https://lin.ee/wxDOngU' });
+    res.status(500).json({ reply: 'ただいまチャットを準備中です。お手数ですが公式LINEでご質問ください。 https://lin.ee/XGIhuYi' });
     return;
   }
 
@@ -92,7 +105,7 @@ export default async function handler(req, res) {
   // 全体上限（サービス全体のコスト上限）
   const dailyLimit = parseInt(process.env.CHAT_DAILY_LIMIT || '300', 10);
   if (counters.total >= dailyLimit) {
-    res.status(200).json({ reply: '申し訳ありません、本日のチャット対応が上限に達しました。よくある質問はページ下部のFAQに、その他は公式LINEでお答えできます。 https://lin.ee/wxDOngU' });
+    res.status(200).json({ reply: '申し訳ありません、本日のチャット対応が上限に達しました。よくある質問はページ下部のFAQに、その他は公式LINEでお答えできます。 https://lin.ee/XGIhuYi' });
     return;
   }
 
@@ -100,7 +113,7 @@ export default async function handler(req, res) {
   const userLimit = parseInt(process.env.CHAT_USER_DAILY_LIMIT || '15', 10);
   const key = clientKey(req);
   if ((counters.perUser.get(key) || 0) >= userLimit) {
-    res.status(200).json({ reply: '本日のチャットのご利用上限に達しました。また明日お使いいただけます。\nお急ぎのご質問や無料体験は、公式LINEでどうぞ。 https://lin.ee/wxDOngU' });
+    res.status(200).json({ reply: '本日のチャットのご利用上限に達しました。また明日お使いいただけます。\nお急ぎのご質問や無料体験は、公式LINEでどうぞ。 https://lin.ee/XGIhuYi' });
     return;
   }
 
@@ -128,12 +141,12 @@ export default async function handler(req, res) {
     if (!r.ok) throw new Error('gemini ' + r.status);
     const data = await r.json();
     const reply = data?.candidates?.[0]?.content?.parts?.map(p => p.text).join('')
-      || 'すみません、うまく答えられませんでした。公式LINEでもご質問いただけます。 https://lin.ee/wxDOngU';
+      || 'すみません、うまく答えられませんでした。公式LINEでもご質問いただけます。 https://lin.ee/XGIhuYi';
     counters.total++;
     counters.perUser.set(key, (counters.perUser.get(key) || 0) + 1);
     if (counters.perUser.size > 5000) counters.perUser.clear(); // メモリ保護（日内リセットの保険）
     res.status(200).json({ reply });
   } catch (e) {
-    res.status(200).json({ reply: 'すみません、いま回答の生成に失敗しました。少し時間をおいて試すか、公式LINEでご質問ください。 https://lin.ee/wxDOngU' });
+    res.status(200).json({ reply: 'すみません、いま回答の生成に失敗しました。少し時間をおいて試すか、公式LINEでご質問ください。 https://lin.ee/XGIhuYi' });
   }
 }

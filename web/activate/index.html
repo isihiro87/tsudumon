@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>ライセンスを受け取る｜つづもん</title>
+<style>
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --cream:#fffdf8; --line:#fde68a;
+          --ok:#16a34a; --ng:#dc2626; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
+         display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+  .card { width:100%; max-width:420px; background:#fff; border:2px solid var(--line);
+          border-radius:20px; padding:28px 22px 26px; box-shadow:0 8px 24px rgba(120,80,20,.14);
+          text-align:center; }
+  .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
+           padding:4px 16px; border-radius:20px; font-size:13px; }
+  h1 { font-size:22px; color:var(--deep); margin:14px 0 4px; }
+  .lead { font-size:14px; color:#78716c; line-height:1.8; margin-bottom:18px; }
+  .spinner { width:38px; height:38px; margin:10px auto; border:4px solid #f1e6cf;
+             border-top-color:var(--amber); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .big-btn { display:block; width:100%; margin-top:12px; border:none; border-radius:14px;
+             padding:14px; font-size:16px; font-weight:bold; text-decoration:none; cursor:pointer;
+             font-family:inherit; }
+  .btn-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
+  .btn-sub  { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .result-ic { font-size:46px; line-height:1; margin-bottom:6px; }
+  .r-ok { color:var(--ok); } .r-ng { color:var(--ng); }
+  .r-title { font-size:19px; font-weight:bold; color:var(--deep); margin-bottom:6px; }
+  .r-detail { font-size:14px; color:#57534e; line-height:1.9; margin-bottom:16px; }
+  .r-plan { display:inline-block; background:#fffbeb; border:1.5px solid var(--line);
+            border-radius:12px; padding:8px 16px; font-weight:bold; color:var(--brand);
+            margin-bottom:16px; font-size:14px; }
+  .note { font-size:12px; color:#a8a29e; margin-top:16px; line-height:1.7; }
+  .hidden { display:none; }
+  .mascot { width:76px; height:auto; margin:0 auto 6px; display:block; }
+</style></head><body>
+<div class="card">
+  <span class="badge">つづもん</span>
+
+  <!-- 状態1: 読み込み中／受け取り処理中 -->
+  <section id="stLoading">
+    <h1>ライセンスを受け取り中…</h1>
+    <div class="spinner"></div>
+    <div class="lead" id="loadingMsg">少しお待ちください</div>
+  </section>
+
+  <!-- 状態2: 未ログイン（LINEで受け取る） -->
+  <section id="stLogin" class="hidden">
+    <h1>LINEで受け取る</h1>
+    <div class="lead">下のボタンから公式LINEにログインすると、この端末でライセンスが有効になります。<br>
+      コードの入力は不要です。</div>
+    <button class="big-btn btn-line" id="loginBtn" type="button">LINEでログインして受け取る</button>
+    <div class="note">はじめての方は、ログインと同時に公式LINEの友だち追加になります。</div>
+  </section>
+
+  <!-- 状態3: 成功 -->
+  <section id="stOk" class="hidden">
+    <div class="result-ic r-ok">✅</div>
+    <div class="r-title" id="okTitle">ライセンス登録が完了しました！</div>
+    <div class="r-plan" id="okPlan"></div>
+    <div class="r-detail">教材はこのままスマホで読めます。<br>次からは公式LINEのメニュー「📖 教材をひらく」から開くだけ（ログイン不要）。<br>公式LINEでは、解いた問題のAI採点や質問もできます。</div>
+    <a class="big-btn btn-main" href="/">📖 教材をひらく</a>
+    <a class="big-btn btn-sub" id="okLine" href="https://line.me/R/ti/p/@215uijik">公式LINEを開く</a>
+    <a class="big-btn btn-sub" href="/account/">お支払い・解約の管理</a>
+  </section>
+
+  <!-- 状態4: 失敗 -->
+  <section id="stErr" class="hidden">
+    <div class="result-ic r-ng">⚠️</div>
+    <div class="r-title">受け取れませんでした</div>
+    <div class="r-detail" id="errMsg"></div>
+    <a class="big-btn btn-sub" id="errRetry" href="#">もう一度ためす</a>
+    <a class="big-btn btn-line" href="https://line.me/R/ti/p/@215uijik">公式LINEで問い合わせる</a>
+  </section>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  initializeAuth, browserLocalPersistence, browserSessionPersistence,
+  inMemoryPersistence, onAuthStateChanged, signInWithCustomToken,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+// 受け取りページ内で LINE Login を完結させる。
+// これで「もう一度ログイン」の二度手間・戻り先404・つづもん外の画面露出が起きない。
+var CHANNEL_ID = '2009587166';
+var ACTIVATE_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonActivate';
+var TOKEN_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/createLineCustomToken';
+var REDIRECT_URI = location.origin + '/activate/';   // LINE Console の Callback URL に登録する値
+
+var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
+var auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+});
+
+function show(id) {
+  ['stLoading', 'stLogin', 'stOk', 'stErr'].forEach(function (s) {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+function showErr(msg) { show('stErr'); document.getElementById('errMsg').textContent = msg; }
+// in-app ブラウザ（LINE/Instagram 等の webview）は sessionStorage が往復で消えることが
+// あるので localStorage と両方に保存し、読み出しは両方見る。
+function put(k, v) { try { localStorage.setItem(k, v); } catch (e) {} try { sessionStorage.setItem(k, v); } catch (e) {} }
+function get(k) { var v = null; try { v = localStorage.getItem(k); } catch (e) {} return v || (function () { try { return sessionStorage.getItem(k); } catch (e) { return null; } })(); }
+function del(k) { try { localStorage.removeItem(k); } catch (e) {} try { sessionStorage.removeItem(k); } catch (e) {} }
+
+// コードは URL の ?c= を最優先。OAuth 往復では ?c= が落ちるので保存値から復元。
+function getCode() {
+  var m = /[?&]c=([^&]+)/.exec(location.search);
+  if (m) { var c = decodeURIComponent(m[1]); put('tzm-activate-code', c); return c; }
+  return get('tzm-activate-code') || '';
+}
+
+var CODE = getCode();
+var qs = new URLSearchParams(location.search);
+var authCode = qs.get('code');
+var authState = qs.get('state');
+
+// 常に監視: サインイン完了（OAuth戻り含む）で有効化を実行
+onAuthStateChanged(auth, function (user) {
+  if (user && CODE) activate(user);
+});
+
+if (authCode && authState) {
+  // LINE から戻ってきた → トークン交換してサインイン
+  handleLineReturn(authCode, authState);
+} else if (!CODE) {
+  showErr('コードが読み取れませんでした。ご案内メールの「LINEで受け取る」ボタンからもう一度お試しください。');
+} else {
+  // ?c= だけで来た → ログイン済みなら onAuthStateChanged が有効化、未ログインならボタン表示
+  setTimeout(function () {
+    if (!auth.currentUser) showLogin();
+  }, 400);
+}
+
+function loginUrl() {
+  var state = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+  put('tzm-line-state', state);
+  put('tzm-activate-code', CODE);
+  var p = new URLSearchParams({
+    response_type: 'code',
+    client_id: CHANNEL_ID,
+    redirect_uri: REDIRECT_URI,
+    state: state,
+    scope: 'profile openid',
+    bot_prompt: 'aggressive',   // ログインと同時に友だち追加を促す
+  });
+  return 'https://access.line.me/oauth2/v2.1/authorize?' + p.toString();
+}
+function showLogin() {
+  show('stLogin');
+  document.getElementById('loginBtn').onclick = function () { location.href = loginUrl(); };
+}
+document.getElementById('errRetry').onclick = function (e) {
+  e.preventDefault(); location.href = REDIRECT_URI + (CODE ? '?c=' + encodeURIComponent(CODE) : '');
+};
+
+async function handleLineReturn(code, state) {
+  show('stLoading');
+  document.getElementById('loadingMsg').textContent = 'ログインを確認しています…';
+  if (state !== get('tzm-line-state')) {
+    showErr('ログインの確認に失敗しました。お手数ですがもう一度お試しください。');
+    return;
+  }
+  del('tzm-line-state');
+  try {
+    var res = await fetch(TOKEN_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: code, redirectUri: REDIRECT_URI }),
+    });
+    if (!res.ok) { showErr('ログインに失敗しました。もう一度お試しください。'); return; }
+    var data = await res.json();
+    await signInWithCustomToken(auth, data.customToken);
+    // URL から code/state を消す（?c= は保存済みなので消えてよい）
+    history.replaceState(null, '', location.pathname);
+    // onAuthStateChanged が発火して activate() が走る
+  } catch (e) {
+    showErr('通信エラーが起きました。電波の良いところでもう一度お試しください。');
+  }
+}
+
+var activating = false;
+async function activate(user) {
+  if (activating) return;
+  activating = true;
+  show('stLoading');
+  document.getElementById('loadingMsg').textContent = 'ライセンスを登録しています…';
+  try {
+    var idToken = await user.getIdToken();
+    var res = await fetch(ACTIVATE_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken, code: CODE }),
+    });
+    var data = null;
+    try { data = await res.json(); } catch (e) { /* no body */ }
+    data = data || {};
+
+    if (res.status === 403 || res.status === 401) { activating = false; showLogin(); return; }
+    if (res.status === 200 && data.ok) {
+      del('tzm-activate-code');
+      show('stOk');
+      document.getElementById('okTitle').textContent = data.already
+        ? 'このアカウントは登録済みです！' : 'ライセンス登録が完了しました！';
+      document.getElementById('okPlan').textContent =
+        (data.planLabel || '') + '／有効期限 ' + (data.expiresLabel || '') + ' まで';
+      return;
+    }
+    showErr(data.message || 'ライセンスを受け取れませんでした。しばらくおいてもう一度お試しください。');
+  } catch (e) {
+    showErr('通信エラーが起きました。電波の良いところでもう一度お試しください。');
+  }
+}
+</script>
+</body></html>
