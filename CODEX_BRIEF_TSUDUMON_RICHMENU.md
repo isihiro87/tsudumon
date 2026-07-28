@@ -110,12 +110,13 @@ pdf-workbook/richmenu/ に生成してください。
 ## ✅ 決着（2026-07-26）
 
 - スクリプトは**6ボタン化済み**（このブリーフの4ボタン記述は古い。§4-2 の表が正）
-- 採用は **`richmenu/pro-f.png`（ノート×手書き・文字も画像生成に含める方式）**。
-  `tsudumon-menu.png` にコピー済み
-- ここに書いた案A/B/C（`tsudumon-menu-{a,b,c}-*.png`）と pro-a〜e/g は**不採用**。
-  差し替えたくなったときの見比べ用に残置している
-- 左下「📊 学習の記録」版（`tsudumon-menu-record.png`）は**未作成**。
-  入れ替える時期が来たら pro-f と同じ絵柄で左下セルだけ作り直す
+- 採用は**ノート×手書き・文字も画像生成に含める方式**（旧 `pro-f.png`）。
+  実体は **`richmenu/tsudumon-menu.png`** だけを残している
+- 左下「📊 学習の記録」版も作成済み: **`richmenu/tsudumon-menu-record.png`**
+  （`--variant record` で使う。指示は `RECORD_VARIANT_BRIEF.md`）
+- ⚠️ **不採用の候補（pro-a〜g / 案A・B・C / record-b / 中間生成物）は 2026-07-28 に削除した。**
+  容量が 84MB あり、採用画像から作り直せるため。見比べたくなったら
+  コミット `592524d` から取り出せる（`git show 592524d:richmenu/pro-b.png > /tmp/pro-b.png`）
 
 ---
 
