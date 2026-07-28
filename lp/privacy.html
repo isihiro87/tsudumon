@@ -4,37 +4,23 @@
 <meta charset="UTF-8">
 <script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fdf9f2">
+<link rel="canonical" href="https://tsudumon.jp/privacy.html">
+<meta name="robots" content="noindex,follow">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="img/favicon-180.png">
 <title>プライバシーポリシー｜つづもん</title>
-<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
-<style>
-:root{
-  --cream:#fdf9f2; --ink:#33291f; --brand:#b45309; --brand-deep:#8a3d05;
-  --border:#ecdfc9; --muted:#8a7a63;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"Noto Sans JP",sans-serif;background:var(--cream);color:var(--ink);line-height:1.95;font-size:15px}
-a{color:var(--brand-deep)}
-.header{background:#fffdf9;border-bottom:1px solid var(--border)}
-.header .inner{max-width:860px;margin:0 auto;padding:16px 22px}
-.logo{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:20px;color:var(--brand-deep);text-decoration:none}
-main{max-width:860px;margin:0 auto;padding:48px 22px 72px}
-h1{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:26px;margin-bottom:14px}
-.lead{font-size:14.5px;color:#5d4f3d;margin-bottom:34px}
-h2{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:18px;color:var(--brand-deep);margin:36px 0 10px;padding-left:12px;border-left:4px solid var(--brand)}
-p,ul{font-size:14.5px;margin-bottom:10px}
-ul{padding-left:22px}
-li{margin-bottom:4px}
-.note{font-size:13px;color:var(--muted);margin-top:30px}
-footer{border-top:1px solid var(--border);padding:28px 22px;text-align:center;font-size:13px;color:var(--muted)}
-footer a{margin:0 10px}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap"></noscript>
+<link rel="stylesheet" href="css/doc.css">
 </head>
 <body>
+<a class="skip-link" href="#main">本文へスキップ</a>
 <header class="header"><div class="inner"><a class="logo" href="index.html">つづもん</a></div></header>
-<main>
+<main id="main">
 <h1>プライバシーポリシー</h1>
 <p class="lead">ぐっとスクール（以下「当方」）は、問題集「つづもん」および公式LINEアカウントを通じて提供する学習サービス（以下「本サービス」）における、利用者の情報の取り扱いについて、次のとおり定めます。</p>
 
@@ -45,7 +31,8 @@ footer a{margin:0 10px}
 <h2>2. 取得する情報</h2>
 <ul>
   <li>LINEアカウント情報：ユーザーID、表示名、プロフィール画像</li>
-  <li>学習に関する情報：トークで送信された回答内容、正答率・レベル・連続正解・ニガテ単元などの学習記録</li>
+  <li>学習に関する情報：トークやWeb教材で送信された回答内容、正答率・学習時間・到達した単元・間違えたままの問題などの学習記録</li>
+  <li>AIとのやり取り：トークやWeb教材のチャットで送信されたメッセージ（テキスト・画像・音声）と、AIの応答</li>
   <li>購入に関する情報：購入者のお名前、メールアドレス、購入履歴（クレジットカード番号は決済代行会社Stripeが取り扱い、当方は保持しません）</li>
   <li>お問い合わせの内容</li>
 </ul>
@@ -60,14 +47,22 @@ footer a{margin:0 10px}
 </ul>
 
 <h2>4. AIサービスの利用について</h2>
-<p>本サービスは、採点・解説の生成のために、トークで送信された回答内容をGoogle社の生成AIサービス（Gemini API）に送信します。送信された内容は採点・解説の生成にのみ利用されます。回答の入力にあたっては、氏名・住所などの個人情報を含めないようご注意ください。</p>
+<p>本サービスは、採点・解説・質問への回答・学習アドバイスの生成のために、トークやWeb教材のチャットで送信された内容（テキスト・画像・音声）と、応答に必要な学習記録の要約を、次の生成AIサービスに送信します。</p>
+<ul>
+  <li>OpenAI（OpenAI, L.L.C.／米国）：質問への回答、学習アドバイス、記述の採点</li>
+  <li>Gemini API（Google LLC／米国）：採点・解説の生成、音声の聞き取り、最新情報の検索</li>
+</ul>
+<p>送信した内容は、応答の生成にのみ利用されます。当方は、これらの事業者が送信内容を<strong>AIモデルの学習（訓練）に利用しない設定</strong>で利用しており、あわせて<strong>送信内容を事業者側に保存させない設定</strong>を用いています。</p>
+<p>いずれの事業者も米国に所在するため、送信によって情報が外国に移転されます。上記はいずれも本サービスの提供のための委託であり、委託先における取り扱いは各社のプライバシーポリシーおよび当方との契約条件に従います。</p>
+<p>AIの回答には誤りが含まれることがあります。また、チャットの入力にあたっては、氏名・住所・学校名・電話番号などの個人情報を含めないようご注意ください（本名などが送信された場合、当方のシステムはこれを学習記録として保存しません）。</p>
 
 <h2>5. 外部サービスへの委託・第三者提供</h2>
 <p>本サービスの提供にあたり、次の外部サービスを利用します。それぞれの事業者における情報の取り扱いは、各社のプライバシーポリシーに従います。</p>
 <ul>
   <li>LINE（LINEヤフー株式会社）：メッセージの送受信基盤</li>
   <li>Firebase / Google Cloud Platform（Google LLC）：学習記録の保存、ログイン認証、サーバー機能の稼働基盤</li>
-  <li>Gemini API（Google）：AIによる採点・解説の生成</li>
+  <li>OpenAI（OpenAI, L.L.C.）：AIによる質問への回答・学習アドバイスの生成</li>
+  <li>Gemini API（Google）：AIによる採点・解説の生成、音声の聞き取り、最新情報の検索</li>
   <li>Stripe（Stripe, Inc.）：クレジットカード決済</li>
   <li>Vercel（Vercel Inc.）：本サービスサイトのホスティング・配信基盤</li>
 </ul>
@@ -85,14 +80,28 @@ footer a{margin:0 10px}
 <h2>9. 未成年の方のご利用について</h2>
 <p>本サービスは中学生のご利用を想定しています。未成年の方は、保護者の方の同意のうえでご利用ください。ご購入のお手続きは保護者の方にお願いしています。</p>
 
-<h2>10. 本ポリシーの改定</h2>
+<h2>10. 保護者の方への開示範囲</h2>
+<p>お子さまご本人の操作（ご案内ページの発行）によって保護者の方のアカウントと連携された場合、保護者の方には次の情報のみを開示します。</p>
+<ul>
+  <li>学習した日・学習時間・進んだ単元数・解いた問題数・正答率</li>
+  <li>ご契約の状態（無料体験中／ご利用期限／お支払い方法の管理）</li>
+</ul>
+<p>次の情報は、<strong>保護者の方にも開示しません</strong>。お子さまが安心して質問・相談できることを、学習を続けるための前提と考えているためです。</p>
+<ul>
+  <li>AI（つづ先生）とのトークの内容、お子さまが入力した質問文・ご相談の内容</li>
+  <li>記述問題の解答本文、AIによる採点の講評</li>
+  <li>まちがえた問題（問題文および、まちがいが残っている件数）</li>
+</ul>
+<p>この開示範囲は、保護者向け機能が該当データを参照しない実装によって担保しています。連携の成立・解除はお子さまにも通知され、お子さまはいつでも連携を解除できます。</p>
+
+<h2>11. 本ポリシーの改定</h2>
 <p>本ポリシーの内容は、必要に応じて改定することがあります。重要な変更がある場合は、本サービス上でお知らせします。</p>
 
 <p class="note">制定日：2026年7月16日</p>
 </main>
 <footer>
   <div>© 2026 ぐっとスクール</div>
-  <div><a href="index.html">つづもんトップ</a><a href="tokushoho.html">特定商取引法に基づく表記</a></div>
+  <div><a href="index.html">つづもんトップ</a><a href="terms.html">利用規約</a><a href="tokushoho.html">特定商取引法に基づく表記</a><a href="/parents/">保護者の方へ</a></div>
 </footer>
 </body>
 </html>

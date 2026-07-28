@@ -269,6 +269,19 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* ───── 学年タブ（2学年以上のときだけ出る） ───── */
   .gtabs { display:none; gap:8px; justify-content:center; margin:6px 0 0; }
   .gtabs.show { display:flex; }
+  /* 「つづきから」バー。リッチメニューの「教材をひらく」は uri でこのページを即開くので、
+     サーバ待ちゼロで「つづき」を出せる（進捗は localStorage から計算）。
+     ここで1タップ、下のマップから選ぶこともできる＝即時性と選択の両立。 */
+  .resume { margin:12px 0 0; background:#fffdf6; border:2px solid var(--line,#fde68a);
+            border-radius:16px; padding:12px 14px; box-shadow:0 3px 10px rgba(120,80,20,.10); }
+  .rs-lead { font-size:12px; color:#a16207; font-weight:bold; letter-spacing:.04em; }
+  .rs-name { font-size:15.5px; font-weight:bold; color:#7c2d12; margin:2px 0 9px; line-height:1.5; }
+  .rs-btns { display:flex; gap:8px; }
+  .rs-btns a { flex:1; text-align:center; text-decoration:none; font-weight:bold; font-size:14.5px;
+               padding:11px 8px; border-radius:12px; }
+  .rs-wb { background:#b45309; color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.28); }
+  .rs-ref { background:#fff; color:#b45309; border:1.5px solid var(--line,#fde68a); }
+  .rs-note { font-size:11.5px; color:#a8a29e; margin-top:8px; text-align:center; }
   .gtab { border:2px solid #c9a978; background:#fffaf0; color:var(--brand); font-weight:bold;
           transition:transform .12s, filter .12s, background-color .12s;
           border-radius:22px; padding:7px 22px; font-size:14px; cursor:pointer; font-family:inherit;
@@ -471,6 +484,17 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 
   footer { text-align:center; margin-top:26px; color:#9c8a6a; font-size:12px; }
 
+  /* 登録・体験開始の完了バナー（?sub=thanks / ?trial=started で表示） */
+  .thanks { position:relative; margin:0 0 16px; padding:16px 40px 15px 18px; border-radius:14px;
+            background:linear-gradient(135deg,#fffdf6,#fef3c7); border:2px solid #f0c66a;
+            box-shadow:0 4px 0 #e6d3ae; text-align:left; }
+  .thanks[hidden] { display:none; }
+  .th-t { font-size:16px; font-weight:bold; color:var(--deep); margin-bottom:5px; }
+  .th-d { font-size:12.5px; color:#6b5c45; line-height:1.8; }
+  .th-link { display:inline-block; margin-top:9px; font-size:12.5px; color:#a2601a; text-decoration:underline; }
+  .th-close { position:absolute; top:8px; right:10px; background:none; border:none; cursor:pointer;
+              font-size:20px; line-height:1; color:#b09873; padding:4px; font-family:inherit; }
+
   /* 画面が広いときはマスを大きめに（1行4個のまま） */
   @media (min-width:640px) {
     .tok { width:min(100%,60px); }
@@ -484,6 +508,16 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
 </style></head><body>
 
 <div class="wrap">
+  <!-- 決済・体験開始の直後に戻ってくる場所（Stripe の success_url は /map/?sub=thanks）。
+       「払えたのか分からない」不安をここで受け止める。表示後に history.replaceState で
+       ?sub= を消すので、リロードでは出ない。 -->
+  <div class="thanks" id="thanks" hidden>
+    <div class="th-t" id="thanksTitle">ご登録ありがとうございます！</div>
+    <div class="th-d" id="thanksBody">中学歴史ぜんぶ（全19単元）が使えるようになりました。<br>下のマップから、気になる単元をタップして始めましょう。</div>
+    <a class="th-link" href="../account/">ご利用状況・お支払いの確認はこちら →</a>
+    <button class="th-close" id="thanksClose" type="button" aria-label="閉じる">×</button>
+  </div>
+
   <header class="head" id="head">
     __EXPLORER__
     __TITLE__
@@ -493,6 +527,17 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   </header>
 
   <div class="gtabs" id="gtabs"></div>
+
+  <!-- つづきから（進捗から即時に算出。中身は paint() → renderResume() が入れる） -->
+  <div class="resume" id="resumeBar" hidden>
+    <div class="rs-lead" id="rsLead">つづきから</div>
+    <div class="rs-name" id="rsName"></div>
+    <div class="rs-btns">
+      <a class="rs-wb" id="rsWb" href="#">問題を解く</a>
+      <a class="rs-ref" id="rsRef" href="#">参考書で読む</a>
+    </div>
+    <div class="rs-note">ほかの単元は、下のマップから選べます</div>
+  </div>
 
   <div class="panel">
     <div class="p-top">
@@ -566,6 +611,32 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   function ls(key) { try { return JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) { return {}; } }
   function lsRaw(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function save(key, v) { try { localStorage.setItem(key, v); } catch (e) {} }
+
+  /* ───── 登録・体験開始の完了バナー ─────
+     Stripe Checkout の success_url は /map/?sub=thanks、体験開始からの遷移は
+     /map/?trial=started。決済直後にただのマップが出るだけだと「払えたのか」が
+     分からないので、ここで必ず受け止める。表示したら ?sub= / ?trial= を
+     history.replaceState で消し、リロードで再表示しない。 */
+  (function showThanks() {
+    var q = new URLSearchParams(location.search);
+    var kind = q.get('sub') === 'thanks' ? 'sub' : (q.get('trial') === 'started' ? 'trial' : null);
+    if (!kind) return;
+    var box = document.getElementById('thanks');
+    if (!box) return;
+    if (kind === 'trial') {
+      document.getElementById('thanksTitle').textContent = '3日間の無料体験がはじまりました！';
+      document.getElementById('thanksBody').innerHTML =
+        '中学歴史ぜんぶ（全19単元）が、3日間まるごと使えます。<br>下のマップから、気になる単元をタップして始めましょう。';
+    }
+    box.hidden = false;
+    var btn = document.getElementById('thanksClose');
+    if (btn) btn.addEventListener('click', function () { box.hidden = true; });
+    try {
+      q.delete('sub'); q.delete('trial');
+      var s = q.toString();
+      history.replaceState(null, '', location.pathname + (s ? '?' + s : '') + location.hash);
+    } catch (e) {}
+  })();
 
   /* ───── 登録学年 ─────
      配布URLの ?g= で受け取り、localStorage['tzmgrades'] に保存する。
@@ -729,6 +800,39 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     });
   })();
 
+  /**
+   * 「つづきから」バーを埋める。
+   *
+   * paint() が付けた `.current`（次にやるとよいマス）をそのまま使う——マップ上の
+   * ハイライトと必ず一致させるため。まだ何も始めていない人は最初のマスになる。
+   * サーバに問い合わせないので、ページが出た瞬間に押せる。
+   */
+  function renderResume(cells) {
+    var bar = document.getElementById('resumeBar');
+    if (!bar) return;
+    var cell = document.querySelector('.era-page .cell.current')
+            || document.querySelector('.era-page .cell.here');
+    if (!cell) { bar.hidden = true; return; }
+    var started = false;
+    for (var i = 0; i < cells.length; i++) {
+      if (cellState(cells[i]) !== 'none') { started = true; break; }
+    }
+    var ch = cell.dataset.ch, wb = cell.dataset.wb, ref = cell.dataset.ref;
+    document.getElementById('rsLead').textContent = started ? 'つづきから' : 'はじめの1単元';
+    document.getElementById('rsName').textContent =
+      (cell.dataset.vol ? cell.dataset.vol + '　' : '') +
+      (cell.querySelector('.tok-name') ? cell.querySelector('.tok-name').textContent : '');
+    document.getElementById('rsWb').href = '../wb/' + ch + '/index.html#t' + wb;
+    var refBtn = document.getElementById('rsRef');
+    if (ref) {
+      refBtn.href = '../ref/' + ch + '/index.html#t' + ref;
+      refBtn.hidden = false;
+    } else {
+      refBtn.hidden = true;
+    }
+    bar.hidden = false;
+  }
+
   function paint() {
     // 進捗はいまの学年の中で数える（マップに並んでいるマス＝いまの学年）
     var cells = [].slice.call(document.querySelectorAll('.era-page .cell[data-tid]'));
@@ -758,6 +862,7 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     while (nextIdx < cells.length && cells[nextIdx].classList.contains('s-perfect')) nextIdx++;
     if (nextIdx < cells.length) cells[nextIdx].classList.add('current');
     else if (lastCleared < 0 && cells[0]) cells[0].classList.add('current');
+    renderResume(cells);
 
     // 進捗％は「どこまで解いたか」の深さで数える。全マスで全問解き終えて初めて100%。
     //   まだ=0 / 参考書を読んだ=0.15 / 一部を解いた=0.5 / 全部解いた・全問正解=1.0

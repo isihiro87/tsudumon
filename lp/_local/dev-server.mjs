@@ -1,12 +1,16 @@
 // つづもんLP ローカル開発サーバー
 //
 // 使い方:
-//   1. lp/.env を作成して GEMINI_API_KEY を書く（.env.example をコピー）
-//   2. cd pdf-workbook/lp
+//   1. lp/_local/.env を作成して GEMINI_API_KEY を書く（.env.example をコピー）
+//   2. cd pdf-workbook/lp/_local
 //   3. node --env-file=.env dev-server.mjs
 //   4. http://localhost:3300 を開く（チャットの /api/chat も同じポートで動く）
 //
-// 本番（Vercel）と同じ api/chat.js をそのまま読み込むので、ローカルで動けば本番も同じ挙動。
+// ⚠ ここにある api/chat.js は【本番では使われていない】参考実装です。
+//   本番の正本は Cloud Function "tsudumonLpChat"
+//   （marutto-study/functions/src/tsudumonLpChat.ts / tsudumonLpChatCore.ts）。
+//   このサーバーはLPの見た目とチャットUIをローカルで確認するためだけのものです。
+//   _local/ 配下は build-lp.mjs のコピー対象外なので、配信されることはありません。
 
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -14,7 +18,7 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import chatHandler from './api/chat.js';
 
-const root = fileURLToPath(new URL('.', import.meta.url));
+const root = fileURLToPath(new URL('..', import.meta.url));  // 配信ルートは lp/（_local の1つ上）
 const PORT = process.env.PORT || 3300;
 
 const MIME = {

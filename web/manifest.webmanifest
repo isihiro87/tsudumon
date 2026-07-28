@@ -1,0 +1,21 @@
+{
+  "name": "つづもん｜中学歴史の参考書と問題集",
+  "short_name": "つづもん",
+  "description": "中学歴史を「読む→解く→AIに聞く」で進める教材。ホーム画面に置くと、電波が悪いところでも読めます。",
+  "lang": "ja",
+  "start_url": "/map/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fffdf8",
+  "theme_color": "#fffdf8",
+  "icons": [
+    { "src": "/img/tzm-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/img/tzm-icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/img/tzm-icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/img/tzm-icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "単元一覧", "url": "/map/" }
+  ]
+}

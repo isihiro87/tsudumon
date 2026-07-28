@@ -1,0 +1,74 @@
+/* つづもん：下層ページ（規約・プライバシー・特商法・保護者の方へ）の共通スタイル
+   これまで4ファイルにコピペされていたCSSを1本にまとめたもの。
+   ※ LP本体（index.html）は独自のインラインCSSを持つため、このファイルは読み込みません。 */
+
+:root{
+  --cream:#fdf9f2; --ink:#33291f; --brand:#b45309; --brand-deep:#8a3d05;
+  --border:#ecdfc9; --muted:#8a7a63;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:"Noto Sans JP",sans-serif;background:var(--cream);color:var(--ink);
+  line-height:1.95;font-size:15px;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--brand-deep)}
+a:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:2px;border-radius:6px}
+
+/* 本文へスキップ */
+.skip-link{
+  position:absolute;left:0;top:-120px;z-index:50;background:#fff;color:var(--brand-deep);
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:700;padding:13px 22px;
+  border:2px solid var(--brand);border-radius:0 0 12px 0;text-decoration:none;
+}
+.skip-link:focus{top:0}
+
+.header{background:#fffdf9;border-bottom:1px solid var(--border)}
+.header .inner{max-width:860px;margin:0 auto;padding:16px 22px}
+.logo{
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:20px;
+  color:var(--brand-deep);text-decoration:none;
+}
+
+main{max-width:860px;margin:0 auto;padding:48px 22px 72px}
+
+h1{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:26px;margin-bottom:14px}
+h1.wide{margin-bottom:28px}
+h2{
+  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:18px;color:var(--brand-deep);
+  margin:36px 0 10px;padding-left:12px;border-left:4px solid var(--brand);
+}
+h3{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:15.5px;margin:20px 0 6px}
+.lead{font-size:14.5px;color:#5d4f3d;margin-bottom:34px}
+p,ul,ol{font-size:14.5px;margin-bottom:10px}
+ul,ol{padding-left:22px}
+li{margin-bottom:4px}
+
+table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0 16px}
+th,td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:#fffdf9;width:34%;font-weight:700}
+
+.card{background:#fffdf9;border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:16px 0}
+.cta{
+  display:inline-block;background:var(--brand);color:#fff;font-weight:700;text-decoration:none;
+  padding:13px 26px;border-radius:999px;margin:8px 0;
+}
+
+/* 特商法ページの定義リスト */
+.doc{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.doc dl{display:grid;grid-template-columns:220px 1fr}
+.doc dt,.doc dd{padding:16px 20px;border-bottom:1px solid var(--border)}
+.doc dt{background:#faf5eb;font-weight:700;font-size:14px}
+.doc dd{font-size:14.5px}
+.doc dl:last-child dt:last-of-type,.doc dl:last-child dd:last-of-type{border-bottom:none}
+
+.note{font-size:13px;color:var(--muted);margin-top:30px}
+.note-tight{margin-top:18px}
+
+footer{border-top:1px solid var(--border);padding:28px 22px;text-align:center;font-size:13px;color:var(--muted)}
+footer a{margin:0 10px}
+
+@media(max-width:640px){
+  .doc dl{grid-template-columns:1fr}
+  .doc dt{border-bottom:none;padding-bottom:4px}
+  .doc dd{padding-top:0}
+}

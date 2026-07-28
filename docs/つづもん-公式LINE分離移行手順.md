@@ -86,24 +86,41 @@ flowchart LR
 
 ---
 
-## 1. 新公式アカウント作成とMessaging APIチャネル作成
+## 1. 新公式アカウント作成とMessaging APIチャネル作成（完了済み・2026-07-25）
 
 ### 1-1. LINE Official Account Manager で新アカウントを作る
 
-- [ ] https://manager.line.biz/ にログイン（一問一答アカウントと同じLINEビジネスIDで可）
-- [ ] 「アカウントリスト」→「新規アカウント作成」で「つづもん」用の公式アカウントを新規作成
-- [ ] アカウント名・アイコン・あいさつメッセージを「つづもん」ブランドで設定
-- [ ] **プロバイダーは一問一答アカウントと同一プロバイダーを選択する**（章2のLIFF連携先付け替えの前提条件になるため必須）
+- [x] https://manager.line.biz/ にログイン（一問一答アカウントと同じLINEビジネスIDで可）
+- [x] 「アカウントリスト」→「新規アカウント作成」で「つづもん」用の公式アカウントを新規作成
+- [x] アカウント名・アイコン・あいさつメッセージを「つづもん」ブランドで設定
+- [x] **プロバイダーは一問一答アカウントと同一プロバイダーを選択する**（章2のLIFF連携先付け替えの前提条件になるため必須）→ 確認済み。同一プロバイダー配下であることが前提で、LIFF `2009587166-LjyCza2c` を無改修のまま流用できている（章2）
 
 ### 1-2. LINE Developers でMessaging APIチャネルを有効化
 
-- [ ] https://developers.line.biz/console/ を開く
-- [ ] 1-1で作った公式アカウントに対応するプロバイダーを選択（同一プロバイダーであることを確認）
-- [ ] 「Messaging API」チャネルが自動生成されていることを確認、なければチャネル作成
-- [ ] チャネルシークレット・チャネルアクセストークン（長期）を発行し、安全な場所に控える
-  （既存の一問一答用トークンとは別に管理し、コード側の環境変数キー名を変えて衝突を防ぐ）
+- [x] https://developers.line.biz/console/ を開く
+- [x] 1-1で作った公式アカウントに対応するプロバイダーを選択（同一プロバイダーであることを確認）
+- [x] 「Messaging API」チャネルが自動生成されていることを確認、なければチャネル作成
+- [x] チャネルシークレット・チャネルアクセストークン（長期）を発行し、安全な場所に控える
+  （既存の一問一答用トークンとは別に管理し、コード側の環境変数キー名を変えて衝突を防ぐ。
+  実際の値は `functions/.env` の `LINE_TSUDUMON_MESSAGING_CHANNEL_SECRET` /
+  `LINE_TSUDUMON_MESSAGING_CHANNEL_ACCESS_TOKEN` に格納済み。詳細は章3）
+
+#### 確定値（2026-07-25）
+
+| 項目 | 値 |
+|---|---|
+| アカウント名 | つづもん |
+| Basic ID | `@215uijik` |
+| channelId | `2010838149` |
+| 友だち追加URL（短縮） | `https://lin.ee/XGIhuYi` |
+| 独自ドメイン | `https://tsudumon.jp/`（2026-07-25 有効化。apex のみ有効。`www.tsudumon.jp` は不可） |
+
+> LINE Developers のプロジェクト・チャネル一覧上の表記や、LINE Official Account Manager の内部管理番号はここでは記録しない（本書が管理するのは章3のコード連携に必要な値のみ）。
 
 ### 1-3. 通数プランと日次プッシュのコスト試算
+
+**現在のプラン: コミュニケーションプラン（0円・月200通まで無料）のまま。** 2026-07-25 時点でつづもんBotは follow / 個別 push（QR起動・トライアルリマインド）のみで、全課金者への日次プッシュ（「今日の問題」配信）はまだ実装していない（スコープ外・design.md「将来の拡張性」参照）。
+**日次プッシュの実装・稼働を開始する直前に、想定課金者数に応じて「ライト」以上へ切り替える。** 切り替えを忘れると月200通を超えた瞬間に配信が止まる（超過分は送信エラーになる、または上位プランへの自動移行はされない）ため、日次プッシュのタスクの一部として必ずプラン変更を行うこと。
 
 つづもんの日次プッシュは「全フォロワーへの一斉配信」ではなく、**課金者（アクティブなサブスク契約者）への個別push**で行う。
 LINE公式アカウントの無料/ライト/スタンダードプランは月間の**無料メッセージ通数**に上限があり、
@@ -172,15 +189,63 @@ LINEのユーザーIDは**プロバイダー単位**で発行される（LINE De
 
 ---
 
-## 3. Webhook・チャネルトークン・応答設定を新アカへ
+## 3. Webhook・チャネルトークン・応答設定（実装済み・2026-07-25）
 
-- [ ] 新Messaging APIチャネルのWebhook URLに、現行のつづもん用エンドポイント
-      （AI採点・質問応答・今日の問題配信を処理しているサーバー/関数の向き先）を設定
-- [ ] チャネルアクセストークンを新アカウントのものに切り替え（環境変数・シークレット管理箇所を確認し、
-      新旧を区別できるキー名にする。実際の書き換えは章6の対象外＝別途コード修正作業として扱う）
-- [ ] Webhookの応答設定で「あいさつメッセージ」「自動応答メッセージ」を無効化し、Messaging APIからの応答のみにする
-      （一問一答アカウントの設定を踏襲）
-- [ ] **旧アカウント（一問一答用）のWebhook・応答設定はそのまま温存**し、一問一答の配信に影響が出ないことを確認
+> この章は当初「作業手順」として書かれていたが、`.steering/20260725-tsudumon-dedicated-line-bot/`
+> でのコード実装が完了したため、**実装内容に合わせて全面的に書き直した**。デプロイ・LINE Developers 側の
+> 設定登録自体はまだ実施していない（別途 `つづもん-公式LINE分離-デプロイ手順.md` で行う）。
+
+### 3-1. 新設した専用Webhook（Cloud Function）
+
+一問一答の既存 `lineWebhook`（Function）は**無改修**（設計時の目標どおり、リプレイトークンの
+チャネル固有性への対応＝client引数化を除き変更なし。詳細は design.md 冒頭「前提の修正」）。
+かわりに、つづもんアカウント専用の**新しい Cloud Function `tsudumonWebhook`** を新設した。
+
+| 項目 | 値 |
+|---|---|
+| Function 名 | `tsudumonWebhook` |
+| ソース | `marutto-study/functions/src/tsudumon/webhook.ts`（+ `tsudumon/client.ts` / `tsudumon/followHandlers.ts`） |
+| リージョン | `asia-northeast1`（既存 `lineWebhook` と同じ） |
+| Webhook URL（デプロイ後に確定） | `https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonWebhook` |
+| 署名検証 | `LINE_TSUDUMON_MESSAGING_CHANNEL_SECRET` で `validateSignature`（既存 `lineWebhook.ts` と同じ手順を独立実装。既存関数は共有化していない） |
+| 送信クライアント | `getTsudumonLineClient()`（`tsudumon/client.ts`）。`LINE_TSUDUMON_MESSAGING_CHANNEL_ACCESS_TOKEN` を読む独立シングルトン。env未設定時は例外を投げ、**旧Botのトークンへフォールバックしない** |
+| 応答方針 | 検証失敗時は401、それ以外は常に200（LINEの再送ループを避ける。既存 `lineWebhook` と同方針） |
+
+つづもん系のロジック本体（ワーク演習・参考書AI対話・ライセンス登録など）は、既存
+`lineWebhook.ts` 内のハンドラを再利用している。設計変更（design.md「前提の修正」参照）により、
+これらのハンドラは `client: messagingApi.MessagingApiClient` を引数で受け取るように改修され、
+旧webhookからは `getLineClient()`、`tsudumonWebhook` からは `getTsudumonLineClient()` を渡す。
+振る舞いは Bot ごとに完全に同一で、reply の送信先チャネルだけが変わる。
+
+### 3-2. 環境変数（`functions/.env`。値は本書に書かない・キー名のみ）
+
+| キー | 役割 |
+|---|---|
+| `LINE_TSUDUMON_MESSAGING_CHANNEL_SECRET` | `tsudumonWebhook` の署名検証 |
+| `LINE_TSUDUMON_MESSAGING_CHANNEL_ACCESS_TOKEN` | `getTsudumonLineClient()` の reply / push 認証 |
+| `LINE_TSUDUMON_CHANNEL_ID` | 登録済みだが、2026-07-25 時点で**コードから未参照**（将来 LIFF/リッチメニュー等で使う可能性を見込んだ予約） |
+| `LINE_TSUDUMON_BOT_BASIC_ID` | 同上（未参照） |
+| `LINE_TSUDUMON_FRIEND_URL` | 同上（未参照。友だち追加リンクは現状フロント側にハードコードのフォールバック値として直書き。章6参照） |
+
+> 既存の `LINE_MESSAGING_CHANNEL_SECRET` / `LINE_MESSAGING_CHANNEL_ACCESS_TOKEN`（一問一答用）は無変更・共存。
+
+### 3-3. Webhook URL の登録手順（デプロイ後・ユーザー作業）
+
+デプロイして Function URL が確定したら、次を LINE Developers Console で行う
+（つづもん専用アカウントの **Messaging API チャネル**側。一問一答チャネルとは別画面なので混同注意）:
+
+1. https://developers.line.biz/console/ → つづもんのプロバイダー → つづもんの Messaging API チャネルを開く
+2. 「Messaging API」タブ → Webhook settings → Webhook URL に
+   `https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonWebhook` を貼り付け → Update
+3. 「Use webhook」トグルを ON
+4. 「Verify」ボタンを押し、Success を確認
+5. 同タブ下部で応答設定を確認・変更:
+   - **Auto-reply messages（応答メッセージ）**: Disabled
+   - **Greeting messages（あいさつメッセージ）**: Disabled（`tsudumonWebhook` の `handleTsudumonFollow` がコード側であいさつを送るため、LINE側の既定あいさつと二重に届くのを防ぐ）
+   - **Webhook**: Enabled（手順2-3で設定済み）
+6. **旧アカウント（一問一答）側の Webhook URL・応答設定は一切変更しない**（`lineWebhook` のまま）
+
+具体的なデプロイコマンド・実機確認チェックリストは `つづもん-公式LINE分離-デプロイ手順.md` を参照。
 
 ---
 
@@ -208,29 +273,91 @@ LINEのユーザーIDは**プロバイダー単位**で発行される（LINE De
 
 ---
 
-## 6. コード差し替え（友だち追加リンクのみ）
+## 6. コード差し替え（実績・2026-07-25）
 
-章2でLIFF連携先の付け替えが成功する前提であれば、コードで直すのは**①友だち追加リンクのみ**。
-②のLIFF ID定数4箇所（章0の表）は**無変更**でよい。
+> この章は当初「①友だち追加リンク4ファイルだけ」としていたが、実際に着手すると
+> **QRを読んだあとの出題が「チャットでスタディのトーク」へpushされる設計だった**ため、
+> 出題導線・reply送信の仕組みそのものに手を入れる必要が生じ、想定より大きく変わった
+> （経緯は requirements.md「方針決定の根拠」・design.md「前提の修正」を参照）。
+> 以下は `.steering/20260725-tsudumon-dedicated-line-bot/tasklist.md` の実装記録と
+> `git status` を突き合わせて洗い出した、**実際に変更したファイルの一覧**。
+>
+> リポジトリは2つ（`marutto-study` / `pdf-workbook`）にまたがる。パスの先頭で区別する。
+
+### 6-1. marutto-study — 新規ファイル
+
+| ファイル | 内容 |
+|---|---|
+| `functions/src/tsudumon/client.ts` | `getTsudumonLineClient()`。つづもん専用トークンのシングルトンクライアント |
+| `functions/src/tsudumon/webhook.ts` | `tsudumonWebhook`（新設Cloud Function）本体・署名検証・イベントディスパッチ |
+| `functions/src/tsudumon/followHandlers.ts` | `handleTsudumonFollow` / `handleTsudumonUnfollow`（Bot別フィールドのみ書く） |
+| `functions/src/onAnswerCreatedCore.ts` | `onAnswerCreated` の純粋ロジック（Bot振り分け判定・累計10問マイルストーン判定・案内文生成） |
+| `functions/src/__tests__/tsudumonClient.test.ts` / `tsudumonWebhook.test.ts` / `onAnswerCreatedCore.test.ts` | 対応するユニットテスト |
+
+### 6-2. marutto-study — 変更ファイル（つづもん専用Bot分離が理由）
 
 | ファイル | 変更内容 |
 |---|---|
-| `lp/index.html` | `https://lin.ee/wxDOngU` → 新アカウントの友だち追加リンクに置換（2箇所） |
-| `lp/api/chat.js` | 文中の `https://lin.ee/wxDOngU` を新リンクに置換（7箇所） |
-| `make_intro_pdf.py` | `FRIEND_URL = "https://lin.ee/wxDOngU"`（33行目）を新リンクに変更 |
-| `make_ref_intro_pdf.py` | `FRIEND_URL = "https://lin.ee/wxDOngU"`（25行目）を新リンクに変更 |
+| `functions/src/lineWebhook.ts` | つづもん系ハンドラ（`handleWorkbook*` / `handleReference*` / `handleTsudumonActivation` / `handleTsudumonContinueRequest` など）に `client` 引数を追加し、内部の `getLineClient()` を `client` に置換。`replyText` を `replyTextWith(client, ...)` へラッパー化。`selectAndSendQuestion` / `handleAnswerPostback` / `handleMediaMessage` / `handleStickerMessage` にも client 引数化が波及。オンボーディング初回メッセージへ一時的に足されたつづもんLP誘導文を削除（フェーズ4bで撤回）。一問一答固有のロジック・分岐・文言は変更なし |
+| `functions/src/index.ts` | `export { tsudumonWebhook }` を追加。`workbookLaunch` / `referenceLaunch` が `pushWorkbookStart` / `pushReferenceStart` に `getTsudumonLineClient()` を渡すよう変更（QR起動→つづもんのトークへpush） |
+| `functions/src/onAnswerCreated.ts` | `answers.source === 'workbook'` のとき一問一答固有のナッジ（プレミアム・範囲設定・追加で解くフォロー）を止める。一問一答の累計回答数が10問到達時につづもん案内を1回だけ旧Bot（一問一答）から送る |
+| `functions/src/tsudumonTrialReminder.ts` | 送信クライアントを `getLineClient()` から `getTsudumonLineClient()` へ切替。配信除外判定に `tsudumonBlockedAt` を追加。URLを `tsudumon.jp` ドメインへ統一 |
+| `functions/src/dailyQuiz.ts` | `selectAndSendQuestion` のシグネチャ変更（client引数追加）に伴い、呼び出し側で `getLineClient()` を明示的に渡すよう更新（挙動不変） |
+| `functions/src/onTestScopeFirstSet.ts` | 同上 |
+| `functions/src/_manualSend.ts` | 同上（デプロイ対象外の手動送信スクリプト） |
+| `functions/src/aiChat.ts` | `handleAiChat` を `handleAiChatWith(client, ..., botKind)` へ拡張。既存呼び出し元向けに旧シグネチャの薄いラッパー `handleAiChat` を残置（挙動不変） |
+| `functions/src/aiChatPrompt.ts` | `buildSystemPrompt(userData, botKind)` に `botKind: 'ichimon' \| 'tsudumon'`（既定 `'ichimon'`）を追加。つづもん用の知識ブロック（月額1,280円・つづもんの機能のみ・一問一答の機能は案内しない）を新設 |
+| `functions/src/deliveryStatsTypes.ts` | `PushType` に `'tsudumonIntroNudge'` を追加（送信枠モニタリング用） |
+| `src/pages/LiffWorkbookLaunchPage.tsx` / `LiffReferenceLaunchPage.tsx` | 友だち追加URL・トークディープリンクを `VITE_TSUDUMON_FRIEND_URL` / `VITE_TSUDUMON_OA_TALK_URL`（未設定時は新アカウントの実値にフォールバック）へ。案内文言の「チャットでスタディ」を「つづもん」に修正 |
+| `.env.example` | `VITE_TSUDUMON_FRIEND_URL` / `VITE_TSUDUMON_OA_TALK_URL` をキーのみ追記 |
 
-- [ ] 新アカウントの友だち追加リンク（LINE Official Account Managerの「あいさつ・友だち追加」設定から
-      短縮URL `lin.ee/xxxx` を発行）を取得
-- [ ] 上記4ファイルを新リンクに置換
-- [ ] 置換漏れがないか、リポジトリ全体で `lin.ee/wxDOngU` を再検索して確認
+### 6-3. marutto-study — 変更ファイル（tsudumon.jp ドメイン統一が理由。フェーズ4c）
+
+`tsudumon.jp` 独自ドメイン有効化（2026-07-25）に伴い、`www.chatstudy.jp/tsudumon/...` 形式のURLを
+新ドメインへ統一した。**コメント・docstring内の記述のみで、実行コードの分岐は変わっていないファイルが多い**
+（挙動に影響しないため、再デプロイの緊急性は低い）。
+
+| ファイル | 変更内容 |
+|---|---|
+| `functions/src/gradeWritten.ts` | docstring内URLのみ |
+| `functions/src/referenceChat.ts` | docstring内URLのみ |
+| `functions/src/tsudumonActivate.ts` | docstring内URLのみ |
+| `functions/src/tsudumonDownload.ts` | docstring更新＋実測（curl）で新ドメイン到達を確認した記録を追記。実際のrewrite先切り替えは `pdf-workbook/firebase.json` 側（別リポジトリ） |
+| `functions/src/tsudumonTrialReminder.ts` | `MAP_URL` / `LP_URL` 定数（実行時に使う文字列。6-2の表と同一ファイル） |
+
+### 6-4. friend addリンクの置換（当初想定どおりの4ファイル＋実際は9箇所）
+
+| ファイル | 判定 |
+|---|---|
+| `marutto-study/api/chat.js`（7箇所） | 変更した（つづもんLP用） |
+| `pdf-workbook/lp/api/chat.js`（7箇所） | 変更した（同内容が2リポジトリに重複） |
+| `pdf-workbook/lp/index.html`（実調査では同URLが計9箇所） | 変更した（当初の見積り「CTA 2箇所」は過小。実際は9箇所） |
+| `pdf-workbook/make_intro_pdf.py:33` | 変更した |
+| `pdf-workbook/make_ref_intro_pdf.py:25` | 変更した |
+| `marutto-study/scripts/manage-tsudumon.ts:40` | 変更した（`@215uijik` へ） |
+| `pdf-workbook/generate_history_workbook.py:35` | 未使用の死んだ定数と判明。削除した |
+| `src/pages/TestRangePage.tsx:25` / `WelcomePage.tsx:5`（marutto-study） | **変更していない**（一問一答用のため対象外） |
+
+### 6-5. LIFF ID定数4箇所（②）
+
+当初どおり**無変更**。`generate_reference_web.py:77` / `generate_reference_book.py:35` /
+`generate_history_workbook.py:38` / `generate_workbook_web.py:90` の `LIFF_ID_UNITS` は
+一切触っていない（章2の決定事項どおり）。
+
+### 6-6. 実施していないこと（スコープ外）
+
+- リッチメニュー新設（章4）
+- 3,000人への告知配信（章8）
+- 決済後の有効化フロー自体の変更（章5。現状のまま動くことの確認のみ）
+- 日次プッシュ（「今日の問題」配信）本体の実装。今回作ったのは送信口（`getTsudumonLineClient`）と
+  ブロック判定（`tsudumonBlockedAt`）のみ
 
 ### 任意ステップ: リンクの1箇所集約（将来の再切替を楽にする提案）
 
 将来また公式アカウントを切り替える事態に備え、余力があれば次の整理を検討する（今回の移行の必須要件ではない）。
 
 - [ ] 友だち追加リンクを環境変数・設定ファイル1箇所（例: `lp`のビルド設定や共通定数モジュール）に集約し、
-      4ファイルがそこを参照する形にリファクタリングする
+      各ファイルがそこを参照する形にリファクタリングする
 - [ ] 同様に、LIFF IDについても4ジェネレータが共通の設定ファイル/環境変数を参照する形にできないか検討する
       （今回は据え置きのため不要だが、次回の分離作業を軽くする）
 

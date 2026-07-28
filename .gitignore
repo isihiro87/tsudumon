@@ -53,3 +53,7 @@ mascot-preview/
 assets/_backup_answers/
 scratch_*.log
 dist/tts/
+
+# --- 画像の中間生成物（Codex の作業ファイル。採用した1枚だけを追跡する） ---
+# 52MB あり、採用画像（richmenu/*.png）が残っていれば作り直せる。
+richmenu/.pro-work/

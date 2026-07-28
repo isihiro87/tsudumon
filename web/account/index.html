@@ -40,8 +40,24 @@
          margin-top:10px; }
   .msg.warn { background:#fffbeb; color:var(--warn); border:1px solid var(--line); }
   .msg.err { background:#fef2f2; color:var(--ng); border:1px solid #fecaca; }
+  .msg.ok { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
   .links { display:flex; flex-direction:column; gap:8px; margin-top:18px; }
   .links a { font-size:14px; color:var(--brand); text-decoration:underline; }
+  .sched { text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:14px;
+           padding:16px 18px 14px; margin:14px 0 6px; }
+  .sched h2 { margin-bottom:2px; }
+  .sched-lead { font-size:12.5px; color:#78716c; line-height:1.7; margin-bottom:12px; }
+  .sched-row { display:flex; align-items:center; justify-content:space-between; gap:10px;
+               margin-bottom:9px; }
+  .sched-row label { font-size:14px; color:#44403c; }
+  .sched-row select { font-family:inherit; font-size:15px; padding:8px 10px; border-radius:10px;
+                      border:1.5px solid var(--line); background:#fffdf8; color:#1c1917; min-width:52%; }
+  .sched .big-btn { margin-top:6px; }
+  .sched-days { align-items:flex-start; }
+  .days { display:flex; gap:4px; flex-wrap:wrap; }
+  .days label { display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+                font-size:12px; color:#78716c; cursor:pointer; }
+  .days input { accent-color:var(--brand); }
   .note-box { text-align:left; margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
   .note-box p { font-size:12.5px; color:#78716c; line-height:1.9; margin-top:6px; }
   .note-box p + p { margin-top:10px; }
@@ -52,7 +68,7 @@
 
   <!-- 状態1: 読み込み中 -->
   <section id="stLoading">
-    <div class="lead">ログイン状況を確認しています…</div>
+    <div class="lead" id="loadingLead">ログイン状況を確認しています…</div>
     <div class="spinner"></div>
   </section>
 
@@ -65,20 +81,29 @@
 
   <!-- 状態3: ログイン後 -->
   <section id="stMain" class="hidden">
+    <!-- LP からの ?do=trial / ?do=subscribe の結果表示（通常アクセス時は非表示） -->
+    <div class="msg hidden" id="actMsg"></div>
+    <a class="big-btn btn-main hidden" id="actGoMap" href="../map/">教材をひらく →</a>
+    <button class="big-btn btn-main hidden" id="actSub" type="button">月額プランに登録（1,280円／月）</button>
+
     <div class="ent-box" id="entBox">読み込み中…</div>
+
+    <!-- 通知の設定・テストの予定は /settings/ に分けた。
+         「届く曜日・時間」を押してお支払い画面が出ると驚かせるため（ユーザー指摘 2026-07-26）。 -->
+    <a class="big-btn btn-sub" href="/settings/">お知らせとテストの設定 →</a>
 
     <button class="big-btn btn-main" id="portalBtn" type="button">お支払い・解約の管理</button>
     <div class="msg hidden" id="portalMsg"></div>
 
     <div class="links">
-      <a href="/activate/">ライセンスコードを入力する</a>
+      <a href="/activate/">紙の問題集を買った方（コード入力）</a>
       <a href="/map/">教材をひらく</a>
     </div>
 
     <div class="note-box">
       <h2>解約について</h2>
       <p>クレジットカードでご登録の月額プランは、上の「お支払い・解約の管理」ボタンから、いつでも解約手続きができます（Stripeの管理ページが開きます）。次回請求日より前に手続きいただければ、以降の課金は発生しません（日割りでの返金はありません）。解約後も、その時点でお支払い済みの期間の終了日（数日の猶予を含みます）までは引き続きご利用いただけます。</p>
-      <p>ライセンスコードでご利用中の方・3日間無料体験中の方は、上のボタンでの手続きは対象外です。特別な操作は不要で、有効期限が来ると自動的に終了します（追加の請求は発生しません）。</p>
+      <p>紙の問題集についてきたコード（ライセンスコード）でご利用中の方・3日間無料体験中の方は、上のボタンでの手続きは対象外です。特別な操作は不要で、有効期限が来ると自動的に終了します（追加の請求は発生しません）。</p>
       <p>ご不明な点は<a href="https://line.me/R/ti/p/@215uijik">公式LINE</a>でお問い合わせください。</p>
     </div>
   </section>
@@ -168,7 +193,7 @@ function portalBtnState(disabled, label) {
 }
 
 var PORTAL_MESSAGES = {
-  no_subscription: 'このアカウントはクレジットカードでのお支払い登録がないため、こちらからの解約・変更はできません。ライセンスコードでご利用中の方・3日間無料体験中の方は、有効期限が来ると自動的に終了しますので、特別な手続きは不要です（追加の請求も発生しません）。ご不明な点は公式LINEでお問い合わせください。',
+  no_subscription: 'このアカウントはクレジットカードでのお支払い登録がないため、こちらからの解約・変更はできません。紙の問題集についてきたコードでご利用中の方・3日間無料体験中の方は、有効期限が来ると自動的に終了しますので、特別な手続きは不要です（追加の請求も発生しません）。ご不明な点は公式LINEでお問い合わせください。',
   not_configured: '現在、お支払い管理ページのご案内を準備中です。時間をおいてもう一度お試しいただくか、公式LINEでお問い合わせください。',
   stripe_error: 'お支払い管理ページの準備に失敗しました。時間をおいてもう一度お試しください。',
   invalid_token: 'ログインの確認ができませんでした。お手数ですが、もう一度LINEでログインしてください。',
@@ -203,10 +228,153 @@ async function doPortal() {
 }
 document.getElementById('portalBtn').onclick = doPortal;
 
+// ── LP からの直接アクション（?do=trial / ?do=subscribe）────────────────────
+//   LP のボタンは account/?do=trial のように来る。未ログインなら ?do= を保ったまま
+//   login へ往復させ（LINE内ブラウザは auto=1 で無操作ログイン）、戻ってきたら自動で
+//   実行する。実行に入った時点で history.replaceState で ?do= を消し、リロードでの
+//   再実行を防ぐ。未知の do= は無視して通常のアカウントページとして表示する。
+var TRIAL_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonTrialStart';
+var CHECKOUT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonCreateCheckout';
+var SUB_LABEL = '月額プランに登録（1,280円／月）';
+var MAP_URL = '../map/?trial=started';   // マップ側が「体験がはじまりました」バナーを出す
+var RELOGIN_MSG = 'ログインの確認ができませんでした。お手数ですが、もう一度LINEでログインしてください。';
+var NET_MSG = '通信エラーが発生しました。電波の良いところでもう一度お試しください。';
+var CHECKOUT_MESSAGES = {
+  not_configured: 'ただいまお支払いのご案内を準備中です。時間をおいてもう一度お試しいただくか、公式LINEでお問い合わせください。',
+  stripe_error: 'お支払いページの準備に失敗しました。時間をおいてもう一度お試しください。',
+  invalid_token: RELOGIN_MSG,
+  line_login_required: RELOGIN_MSG,
+};
+
+var pendingAction = (function () {
+  var v = new URLSearchParams(location.search).get('do');
+  return (v === 'trial' || v === 'subscribe') ? v : null;
+})();
+var actionStarted = false;
+var loginRedirecting = false;
+
+function clearDoParam() {
+  try {
+    var p = new URLSearchParams(location.search);
+    p.delete('do');
+    var q = p.toString();
+    history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+  } catch (e) {}
+}
+function gotoLogin(action) {
+  location.href = '../login/?auto=1&next=' +
+    encodeURIComponent(location.pathname + '?do=' + action);
+}
+function actMsg(text, kind) {
+  var el = document.getElementById('actMsg');
+  el.textContent = text;
+  el.className = 'msg' + (kind ? ' ' + kind : '');
+  el.classList.remove('hidden');
+}
+function actToggle(id, on) {
+  document.getElementById(id).classList.toggle('hidden', !on);
+}
+function subBtnState(disabled, label) {
+  var b = document.getElementById('actSub');
+  b.disabled = disabled;
+  if (label != null) b.textContent = label;
+}
+async function postWithToken(api, u) {
+  var idToken = await u.getIdToken();
+  var res = await fetch(api, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken: idToken }),
+  });
+  var data = null;
+  try { data = await res.json(); } catch (e) {}
+  return { res: res, data: data || {} };
+}
+
+/** 3日間無料体験を開始する。戻り値 true = 利用状況を再取得する（false = 画面遷移する）。 */
+async function doTrial(u) {
+  actMsg('体験を開始しています…', 'warn');
+  try {
+    var r = await postWithToken(TRIAL_API, u);
+    if (r.res.ok && r.data.ok) {
+      actMsg('体験がはじまりました！' + (r.data.expiresLabel || '3日後') + 'まで全単元つかえます 🎉', 'ok');
+      setTimeout(function () { location.href = MAP_URL; }, 1500);
+      return false;
+    }
+    if (r.data.reason === 'already_licensed') {
+      actMsg('すでにご利用中です。そのまま全単元をお使いいただけます。', 'ok');
+      actToggle('actGoMap', true);
+      return true;
+    }
+    if (r.data.reason === 'trial_used') {
+      actMsg('体験はご利用済みです。つづきは月額プランでご利用いただけます。', 'warn');
+      actToggle('actSub', true);
+      return true;
+    }
+    if (r.res.status === 401 || r.res.status === 403) { actMsg(RELOGIN_MSG, 'warn'); return true; }
+    actMsg(r.data.message || '体験を開始できませんでした。時間をおいてもう一度お試しください。', 'warn');
+    return true;
+  } catch (e) {
+    actMsg(NET_MSG, 'warn');
+    return true;
+  }
+}
+
+/** 月額プランの Stripe Checkout を開く。戻り値 true = 利用状況を再取得する。 */
+async function doCheckout(u) {
+  actToggle('actSub', true);
+  subBtnState(true, '準備しています…');   // 連打防止（成功時はそのまま遷移）
+  actMsg('お支払いページを準備しています…', 'warn');
+  try {
+    var r = await postWithToken(CHECKOUT_API, u);
+    if (r.res.ok && r.data.ok && r.data.url) {
+      location.href = r.data.url;   // Stripe Checkout へ
+      return false;
+    }
+    if (r.data.reason === 'already_subscribed') {
+      actMsg(r.data.message || 'すでに月額プランにご登録いただいています。', 'ok');
+      actToggle('actSub', false);
+      actToggle('actGoMap', true);
+      return true;
+    }
+    var msg = CHECKOUT_MESSAGES[r.data.reason];
+    if (!msg && (r.res.status === 401 || r.res.status === 403)) msg = RELOGIN_MSG;
+    actMsg(msg || NET_MSG, 'warn');
+    subBtnState(false, SUB_LABEL);
+    return true;
+  } catch (e) {
+    actMsg(NET_MSG, 'warn');
+    subBtnState(false, SUB_LABEL);
+    return true;
+  }
+}
+
+document.getElementById('actSub').onclick = function () {
+  var u = auth.currentUser;
+  if (!u) { gotoLogin('subscribe'); return; }
+  doCheckout(u).then(function (refresh) { if (refresh) refreshEntitlement(u); });
+};
+
+async function runAction(u, action) {
+  var refresh = action === 'trial' ? await doTrial(u) : await doCheckout(u);
+  if (refresh) refreshEntitlement(u);
+}
+
 onAuthStateChanged(auth, function (u) {
   if (u) {
     show('stMain');
-    refreshEntitlement(u);
+    if (pendingAction && !actionStarted) {
+      actionStarted = true;
+      clearDoParam();   // リロードで再実行させない
+      runAction(u, pendingAction);
+    } else if (!actionStarted) {
+      refreshEntitlement(u);
+    }
+  } else if (pendingAction && !loginRedirecting) {
+    // 体験開始・登録にはログインが要る。?do= を保ったままログインへ送り、戻って自動実行。
+    loginRedirecting = true;
+    show('stLoading');
+    document.getElementById('loadingLead').textContent = 'LINEログインへ移動しています…';
+    gotoLogin(pendingAction);
   } else {
     show('stLogin');
   }

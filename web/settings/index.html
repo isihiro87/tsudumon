@@ -1,0 +1,532 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>お知らせとテストの設定｜つづもん</title>
+<style>
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --cream:#fffdf8; --line:#fde68a;
+          --ok:#16a34a; --ng:#dc2626; --warn:#b45309; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
+         display:flex; align-items:flex-start; justify-content:center; padding:24px 16px; }
+  .card { width:100%; max-width:440px; background:#fff; border:2px solid var(--line);
+          border-radius:20px; padding:28px 22px 26px; box-shadow:0 8px 24px rgba(120,80,20,.14);
+          text-align:center; margin-top:16px; }
+  .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
+           padding:4px 16px; border-radius:20px; font-size:13px; }
+  h1 { font-size:21px; color:var(--deep); margin:14px 0 4px; }
+  h2 { font-size:14px; color:var(--deep); margin-bottom:6px; }
+  .lead { font-size:14px; color:#78716c; line-height:1.8; margin-bottom:18px; }
+  .spinner { width:38px; height:38px; margin:16px auto; border:4px solid #f1e6cf;
+             border-top-color:var(--amber); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .big-btn { display:block; width:100%; margin-top:12px; border:none; border-radius:14px;
+             padding:14px; font-size:16px; font-weight:bold; text-decoration:none; cursor:pointer;
+             font-family:inherit; }
+  .big-btn:disabled { opacity:.6; cursor:default; }
+  .btn-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
+  .btn-sub  { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .btn-ghost { background:#fff; color:#78716c; border:1.5px solid #e7e5e4; font-size:14px; }
+  .hidden { display:none; }
+  .msg { text-align:left; font-size:13px; line-height:1.8; border-radius:12px; padding:10px 14px;
+         margin-top:10px; }
+  .msg.warn { background:#fffbeb; color:var(--warn); border:1px solid var(--line); }
+  .msg.err { background:#fef2f2; color:var(--ng); border:1px solid #fecaca; }
+  .msg.ok { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .links { display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+  .links a { font-size:14px; color:var(--brand); text-decoration:underline; }
+  .sched { text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:14px;
+           padding:16px 18px 14px; margin:14px 0 6px; }
+  .sched h2 { margin-bottom:2px; }
+  .sched-lead { font-size:12.5px; color:#78716c; line-height:1.7; margin-bottom:12px; }
+  .sched-row { display:flex; align-items:center; justify-content:space-between; gap:10px;
+               margin-bottom:9px; }
+  .sched-row label { font-size:14px; color:#44403c; }
+  .sched-row select, .sched-row input[type=date] { font-family:inherit; font-size:15px;
+               padding:8px 10px; border-radius:10px; border:1.5px solid var(--line);
+               background:#fffdf8; color:#1c1917; min-width:52%; }
+  .sched .big-btn { margin-top:6px; }
+  .sched-days { align-items:flex-start; }
+  .days { display:flex; gap:4px; flex-wrap:wrap; }
+  .days label { display:inline-flex; flex-direction:column; align-items:center; gap:2px;
+                font-size:12px; color:#78716c; cursor:pointer; }
+  .days input { accent-color:var(--brand); }
+  /* テスト範囲の単元チェック */
+  .grade-h { font-size:12.5px; font-weight:bold; color:var(--brand); margin:10px 0 4px; }
+  .units { display:flex; flex-direction:column; gap:2px; }
+  .units label { display:flex; align-items:flex-start; gap:8px; font-size:13.5px; color:#44403c;
+                 line-height:1.6; padding:5px 6px; border-radius:8px; cursor:pointer; }
+  .units label:active { background:#fffbeb; }
+  .units input { accent-color:var(--brand); margin-top:3px; flex:none; }
+  .units .u-sub { display:block; font-size:11.5px; color:#a8a29e; }
+  .grade-pick { display:flex; gap:6px; margin:4px 0 2px; flex-wrap:wrap; }
+  .grade-pick button { font-family:inherit; font-size:12px; padding:5px 10px; border-radius:999px;
+                 border:1.5px solid var(--line); background:#fffdf8; color:var(--brand); cursor:pointer; }
+  .note-box { text-align:left; margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+  .note-box p { font-size:12.5px; color:#78716c; line-height:1.9; margin-top:6px; }
+  .note-box p + p { margin-top:10px; }
+</style></head><body>
+<div class="card">
+  <span class="badge">つづもん</span>
+  <h1>お知らせとテストの設定</h1>
+
+  <!-- 状態1: 読み込み中 -->
+  <section id="stLoading">
+    <div class="lead" id="loadingLead">ログイン状況を確認しています…</div>
+    <div class="spinner"></div>
+  </section>
+
+  <!-- 状態2: 未ログイン -->
+  <section id="stLogin" class="hidden">
+    <div class="lead">設定の確認・変更には、公式LINEでのログインが必要です。</div>
+    <button class="big-btn btn-line" id="loginBtn" type="button">LINEでログイン</button>
+    <div class="note-box"><p>はじめての方は、ログインと同時に公式LINEの友だち追加になります。</p></div>
+  </section>
+
+  <!-- 状態3: ログイン後 -->
+  <section id="stMain" class="hidden">
+
+    <!-- ① お知らせが届く曜日・時間 -->
+    <section class="sched" id="schedBox">
+      <h2>「今日の1単元」が届く時刻</h2>
+      <p class="sched-lead">選んだ曜日・時刻で、公式LINEへ1単元お届けします。<br>
+        つづもんからのお知らせは<b>1日2通まで</b>です（下の「おつかれさま」を含めて）。</p>
+      <div class="sched-row sched-days">
+        <label>届く曜日</label>
+        <div class="days" id="schedDays"></div>
+      </div>
+      <div class="sched-row">
+        <label for="schedWeekday">平日（月〜金）</label>
+        <select id="schedWeekday"></select>
+      </div>
+      <div class="sched-row">
+        <label for="schedWeekend">土日</label>
+        <select id="schedWeekend"></select>
+      </div>
+      <h2 style="margin-top:16px">学習後の「おつかれさま」</h2>
+      <p class="sched-lead">勉強が一段落したころに、ふり返りのお誘いを1通お送りします。<br>
+        まちがえた問題の復習も、このメッセージから始められます。</p>
+      <div class="sched-row sched-days">
+        <label>届く曜日</label>
+        <div class="days" id="recapDays"></div>
+      </div>
+      <div class="sched-row">
+        <label for="recapHour">届く時刻</label>
+        <select id="recapHour"></select>
+      </div>
+      <button class="big-btn btn-sub" id="schedSave" type="button">この設定で保存する</button>
+      <div class="msg hidden" id="schedMsg"></div>
+    </section>
+
+    <!-- ② いま力を入れたいこと（学習モード） -->
+    <section class="sched" id="modeBox">
+      <h2>いま力を入れたいこと</h2>
+      <p class="sched-lead">「今日の1単元」の選び方が変わります。<br>
+        <b>ふつうは「おまかせ」のままで大丈夫</b>です（学年に合わせて自動で決まります）。<br>学年を入れておくと、中3は入試対策とテスト対策を自動で切り替えます。</p>
+      <div class="sched-row">
+        <label for="gradeSel">学年</label>
+        <select id="gradeSel">
+          <option value="">えらんでください</option>
+          <option value="中1">中1</option>
+          <option value="中2">中2</option>
+          <option value="中3">中3</option>
+        </select>
+      </div>
+      <div class="sched-row">
+        <label for="modeSel">目的</label>
+        <select id="modeSel"></select>
+      </div>
+      <p class="sched-lead" id="modeDesc" style="margin:2px 0 0"></p>
+      <div class="msg hidden" id="modeMsg"></div>
+    </section>
+
+    <!-- ③ テストの予定（日付＋範囲） -->
+    <section class="sched" id="examBox">
+      <h2>テストの予定</h2>
+      <p class="sched-lead">テストの日と範囲を登録すると、<b>「今日の1単元」がその範囲から選ばれます</b>。<br>
+        まちがえたままの問題が残っている単元から先に出します。</p>
+      <div class="sched-row">
+        <label for="examDate">テストの日</label>
+        <input type="date" id="examDate">
+      </div>
+      <h2 style="margin-top:14px">出る範囲（あてはまる単元にチェック）</h2>
+      <p class="sched-lead">はっきり分からなくても大丈夫です。「たぶんこのへん」で登録しておけば、
+        あとから公式LINEのトークで直せます。</p>
+      <div class="grade-pick" id="examGradePick"></div>
+      <div id="examUnits"></div>
+      <div class="sched-row" style="margin-top:12px">
+        <label for="examConfidence">範囲の確かさ</label>
+        <select id="examConfidence">
+          <option value="estimated">たぶんこのへん</option>
+          <option value="confirmed">学校で確認した</option>
+        </select>
+      </div>
+      <button class="big-btn btn-main" id="examSave" type="button">この予定で保存する</button>
+      <button class="big-btn btn-ghost hidden" id="examClear" type="button">テストの予定を消す</button>
+      <div class="msg hidden" id="examMsg"></div>
+    </section>
+
+    <div class="links">
+      <a href="/account/">ご利用状況・お支払い・解約 →</a>
+      <a href="/map/">教材をひらく</a>
+    </div>
+
+    <div class="note-box">
+      <h2>チャットでも変えられます</h2>
+      <p>公式LINEのトークで話しかけるだけでも変更できます。<br>
+        例：「平日だけにして」「朝7時に変えて」「テストは9月10日、範囲は江戸時代から明治まで」</p>
+      <p>範囲がよく分からないときは、トークで「範囲がわからない」と送ってください。学校の進み方を
+        聞きながら、いっしょに目星をつけます。</p>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  initializeAuth, browserLocalPersistence, browserSessionPersistence,
+  inMemoryPersistence, onAuthStateChanged,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+var SCHEDULE_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonSchedule';
+var EXAM_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonExamSetting';
+var SCHED_LABEL = 'この設定で保存する';
+var EXAM_LABEL = 'この予定で保存する';
+var DEFAULT_CHOICES = [6, 7, 8, 9, 10, 15, 16, 17, 18, 19, 20, 21];
+var RELOGIN_MSG = 'ログインの確認ができませんでした。お手数ですが、もう一度LINEでログインしてください。';
+var NET_MSG = '通信エラーが発生しました。電波の良いところでもう一度お試しください。';
+
+var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
+var auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+});
+
+function show(id) {
+  ['stLoading', 'stLogin', 'stMain'].forEach(function (s) {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+document.getElementById('loginBtn').onclick = function () {
+  location.href = '../login/?next=' + encodeURIComponent(location.pathname);
+};
+function gotoLogin() {
+  location.href = '../login/?next=' + encodeURIComponent(location.pathname);
+}
+async function postWithToken(api, u, body) {
+  var idToken = await u.getIdToken();
+  var payload = Object.assign({ idToken: idToken }, body || {});
+  var res = await fetch(api, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  var data = null;
+  try { data = await res.json(); } catch (e) {}
+  return { res: res, data: data || {} };
+}
+function setMsg(id, text, kind) {
+  var el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'msg' + (kind ? ' ' + kind : '');
+  el.classList.remove('hidden');
+}
+
+// ── ① 配信の曜日・時刻 ────────────────────────────────
+var DAY_LABEL = ['日','月','火','水','木','金','土'];
+function fillDays(id, selected) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '';
+  DAY_LABEL.forEach(function (label, d) {
+    var wrap = document.createElement('label');
+    var cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.value = String(d);
+    cb.checked = !selected || selected.indexOf(d) >= 0;
+    var span = document.createElement('span'); span.textContent = label;
+    wrap.appendChild(span); wrap.appendChild(cb); el.appendChild(wrap);
+  });
+}
+function readDays(id) {
+  var out = [];
+  var boxes = document.querySelectorAll('#' + id + ' input:checked');
+  for (var i = 0; i < boxes.length; i++) out.push(Number(boxes[i].value));
+  return out;
+}
+function hourLabel(h) {
+  if (h < 12) return '朝' + h + '時ごろ';
+  if (h < 18) return '夕方' + h + '時ごろ';
+  return '夜' + h + '時ごろ';
+}
+function fillHourSelect(id, choices, selected) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = '';
+  choices.forEach(function (h) {
+    var o = document.createElement('option');
+    o.value = String(h);
+    o.textContent = hourLabel(h);
+    if (h === selected) o.selected = true;
+    el.appendChild(o);
+  });
+}
+async function loadSchedule(u) {
+  try {
+    var r = await postWithToken(SCHEDULE_API, u);
+    if (!r.res.ok || !r.data.ok) return;
+    var choices = r.data.choices && r.data.choices.length ? r.data.choices : DEFAULT_CHOICES;
+    fillHourSelect('schedWeekday', choices, r.data.weekdayHour);
+    fillHourSelect('schedWeekend', choices, r.data.weekendHour);
+    fillDays('schedDays', r.data.days);
+    fillDays('recapDays', r.data.recap && r.data.recap.days);
+    fillHourSelect('recapHour', choices, (r.data.recap && r.data.recap.hour) || 21);
+  } catch (e) { /* 取得できないときは既定の選択肢のままにする */ }
+}
+async function saveSchedule(u) {
+  var btn = document.getElementById('schedSave');
+  btn.disabled = true; btn.textContent = '保存しています…';
+  try {
+    var r = await postWithToken(SCHEDULE_API, u, {
+      weekdayHour: Number(document.getElementById('schedWeekday').value),
+      weekendHour: Number(document.getElementById('schedWeekend').value),
+      days: readDays('schedDays'),
+      recapDays: readDays('recapDays'),
+      recapHour: Number(document.getElementById('recapHour').value),
+    });
+    if (r.res.ok && r.data.ok) {
+      setMsg('schedMsg', '保存しました。公式LINEのトークからも変えられます（例:「平日だけにして」）。', 'ok');
+    } else if (r.res.status === 401 || r.res.status === 403) {
+      setMsg('schedMsg', RELOGIN_MSG, 'warn');
+    } else {
+      setMsg('schedMsg', NET_MSG, 'warn');
+    }
+  } catch (e) { setMsg('schedMsg', NET_MSG, 'warn'); }
+  btn.disabled = false; btn.textContent = SCHED_LABEL;
+}
+
+// ── ② テストの予定 ────────────────────────────────
+var GRADES = ['中1', '中2', '中3'];
+function renderUnits(units, selected) {
+  var host = document.getElementById('examUnits');
+  host.innerHTML = '';
+  GRADES.forEach(function (g) {
+    var inGrade = units.filter(function (u) { return u.grade === g; });
+    if (!inGrade.length) return;
+    var h = document.createElement('div');
+    h.className = 'grade-h'; h.textContent = g;
+    host.appendChild(h);
+    var box = document.createElement('div');
+    box.className = 'units';
+    inGrade.forEach(function (u) {
+      var wrap = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.value = u.no; cb.dataset.grade = u.grade;
+      cb.checked = !!selected && selected.indexOf(u.no) >= 0;
+      var txt = document.createElement('span');
+      txt.innerHTML = '';
+      txt.appendChild(document.createTextNode(u.no + '. ' + u.title));
+      var sub = document.createElement('span');
+      sub.className = 'u-sub'; sub.textContent = u.subtitle;
+      txt.appendChild(sub);
+      wrap.appendChild(cb); wrap.appendChild(txt);
+      box.appendChild(wrap);
+    });
+    host.appendChild(box);
+  });
+}
+function renderGradePick() {
+  var host = document.getElementById('examGradePick');
+  host.innerHTML = '';
+  GRADES.forEach(function (g) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.textContent = g + 'をぜんぶ選ぶ';
+    b.onclick = function () { toggleGrade(g); };
+    host.appendChild(b);
+  });
+  var clear = document.createElement('button');
+  clear.type = 'button'; clear.textContent = 'ぜんぶ外す';
+  clear.onclick = function () {
+    var boxes = document.querySelectorAll('#examUnits input');
+    for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+  };
+  host.appendChild(clear);
+}
+function toggleGrade(g) {
+  var boxes = document.querySelectorAll('#examUnits input[data-grade="' + g + '"]');
+  // 1つでも未チェックがあれば全部つける。全部ついていれば全部外す。
+  var allOn = true;
+  for (var i = 0; i < boxes.length; i++) if (!boxes[i].checked) allOn = false;
+  for (var j = 0; j < boxes.length; j++) boxes[j].checked = !allOn;
+}
+function readUnits() {
+  var out = [];
+  var boxes = document.querySelectorAll('#examUnits input:checked');
+  for (var i = 0; i < boxes.length; i++) out.push(boxes[i].value);
+  return out;
+}
+function applyExam(data) {
+  var units = (data && data.units) || [];
+  var exam = data && data.exam;
+  renderUnits(units, exam && exam.unitNos);
+  renderGradePick();
+  document.getElementById('examClear').classList.toggle('hidden', !exam);
+  if (exam) {
+    document.getElementById('examDate').value = exam.date;
+    document.getElementById('examConfidence').value = exam.confidence || 'estimated';
+  }
+  applyMode(data);
+}
+
+// ── いま力を入れたいこと（学習モード）────────────────────────
+var MODE_CHOICES = [];
+function applyMode(data) {
+  if (!data || !data.modeChoices) return;
+  MODE_CHOICES = data.modeChoices;
+  var sel = document.getElementById('modeSel');
+  sel.innerHTML = '';
+  MODE_CHOICES.forEach(function (c) {
+    var o = document.createElement('option');
+    o.value = c.value; o.textContent = c.label;
+    if (c.value === data.mode) o.selected = true;
+    sel.appendChild(o);
+  });
+  var g = document.getElementById('gradeSel');
+  if (g && data.grade) g.value = data.grade;
+  describeMode(data.mode, data.modeEffective);
+}
+
+async function saveGrade(u) {
+  var value = document.getElementById('gradeSel').value;
+  if (!value) return;
+  try {
+    var r = await postWithToken(EXAM_API, u, { grade: value });
+    if (r.res.ok && r.data.ok) {
+      applyMode(r.data);
+      setMsg('modeMsg', '学年を保存しました。「おまかせ」のときは学年に合わせて出し方が決まります。', 'ok');
+    } else {
+      setMsg('modeMsg', r.data.reason || NET_MSG, 'warn');
+    }
+  } catch (e) { setMsg('modeMsg', NET_MSG, 'warn'); }
+}
+function describeMode(value, effective) {
+  var c = MODE_CHOICES.filter(function (x) { return x.value === value; })[0];
+  var text = c ? c.description : '';
+  // 「両立」「おまかせ」は、いま実際にどちらで出しているかを見せる
+  // （設定は変えていないのに出題が変わるので、説明がないと不具合に見える）。
+  if ((value === 'both' || value === 'auto') && effective) {
+    text += effective === 'exam'
+      ? '　→ いまは定期テスト対策で出しています。'
+      : '　→ いまは入試対策で出しています。';
+  }
+  document.getElementById('modeDesc').textContent = text;
+}
+async function saveMode(u) {
+  var value = document.getElementById('modeSel').value;
+  try {
+    var r = await postWithToken(EXAM_API, u, { mode: value });
+    if (r.res.ok && r.data.ok) {
+      applyMode(r.data);
+      setMsg('modeMsg', '保存しました。あすの「今日の1単元」から反映されます。', 'ok');
+    } else {
+      setMsg('modeMsg', r.data.reason || NET_MSG, 'warn');
+    }
+  } catch (e) { setMsg('modeMsg', NET_MSG, 'warn'); }
+}
+async function loadExam(u) {
+  try {
+    var r = await postWithToken(EXAM_API, u);
+    if (r.res.ok && r.data.ok) applyExam(r.data);
+  } catch (e) { /* 取得できないときはチェック欄を出さない（保存もできない） */ }
+}
+async function saveExam(u) {
+  var date = document.getElementById('examDate').value;
+  var unitNos = readUnits();
+  if (!date) { setMsg('examMsg', 'テストの日をえらんでください。', 'warn'); return; }
+  if (!unitNos.length) { setMsg('examMsg', '出る範囲の単元を1つ以上えらんでください。', 'warn'); return; }
+  var btn = document.getElementById('examSave');
+  btn.disabled = true; btn.textContent = '保存しています…';
+  try {
+    var r = await postWithToken(EXAM_API, u, {
+      testDate: date,
+      unitNos: unitNos,
+      confidence: document.getElementById('examConfidence').value,
+    });
+    if (r.res.ok && r.data.ok) {
+      applyExam(r.data);
+      setMsg('examMsg', '保存しました。今日の1単元は、この範囲から届きます。', 'ok');
+    } else if (r.res.status === 401 || r.res.status === 403) {
+      setMsg('examMsg', RELOGIN_MSG, 'warn');
+    } else {
+      setMsg('examMsg', r.data.reason || NET_MSG, 'warn');
+    }
+  } catch (e) { setMsg('examMsg', NET_MSG, 'warn'); }
+  btn.disabled = false; btn.textContent = EXAM_LABEL;
+}
+async function clearExam(u) {
+  var btn = document.getElementById('examClear');
+  btn.disabled = true; btn.textContent = '消しています…';
+  try {
+    var r = await postWithToken(EXAM_API, u, { clear: true });
+    if (r.res.ok && r.data.ok) {
+      document.getElementById('examDate').value = '';
+      applyExam(r.data);
+      setMsg('examMsg', 'テストの予定を消しました。今日の1単元は、順番どおりに届きます。', 'ok');
+    } else {
+      setMsg('examMsg', NET_MSG, 'warn');
+    }
+  } catch (e) { setMsg('examMsg', NET_MSG, 'warn'); }
+  btn.disabled = false; btn.textContent = 'テストの予定を消す';
+}
+
+// 初期表示（ログイン前でも選択肢を見せておく）
+fillHourSelect('schedWeekday', DEFAULT_CHOICES, 19);
+fillHourSelect('schedWeekend', DEFAULT_CHOICES, 10);
+fillHourSelect('recapHour', DEFAULT_CHOICES, 21);
+fillDays('schedDays', null);
+fillDays('recapDays', null);
+
+document.getElementById('schedSave').onclick = function () {
+  var u = auth.currentUser;
+  if (!u) { gotoLogin(); return; }
+  saveSchedule(u);
+};
+document.getElementById('gradeSel').onchange = function () {
+  var u = auth.currentUser;
+  if (!u) { gotoLogin(); return; }
+  saveGrade(u);
+};
+document.getElementById('modeSel').onchange = function () {
+  var u = auth.currentUser;
+  if (!u) { gotoLogin(); return; }
+  saveMode(u);
+};
+document.getElementById('examSave').onclick = function () {
+  var u = auth.currentUser;
+  if (!u) { gotoLogin(); return; }
+  saveExam(u);
+};
+document.getElementById('examClear').onclick = function () {
+  var u = auth.currentUser;
+  if (!u) { gotoLogin(); return; }
+  clearExam(u);
+};
+
+// リッチメニュー「テストの予定」は /settings/#exam で来る。開いた瞬間に該当欄へ寄せる
+// （上から読ませると配信設定を通り過ぎないと辿り着けない）。
+function jumpToHash() {
+  if (location.hash !== '#exam') return;
+  var el = document.getElementById('examBox');
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+onAuthStateChanged(auth, function (u) {
+  if (u) {
+    show('stMain');
+    loadSchedule(u);
+    loadExam(u).then(jumpToHash);
+  } else {
+    show('stLogin');
+  }
+});
+</script>
+</body></html>

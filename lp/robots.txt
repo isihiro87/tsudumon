@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# 会員用・手続き用のページはインデックス不要
+Disallow: /account/
+Disallow: /login/
+Disallow: /activate/
+Disallow: /settings/
+Disallow: /handoff/
+Disallow: /parents/thanks/
+Disallow: /parents/dashboard/
+Disallow: /api/
+
+Sitemap: https://tsudumon.jp/sitemap.xml

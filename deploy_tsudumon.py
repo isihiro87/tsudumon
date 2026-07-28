@@ -12,7 +12,7 @@
 このスクリプトが書き込む範囲:
   - `dist-web/{wb,ref,map}/`      … ジェネレータ生成物
   - `dist-web/_shared/img/`        … 章をまたぐ共通画像の集約先
-  - `dist-web/{login,activate,account}/` `dist-web/_healthz.txt` … `web/` の静的ページをコピー
+  - `dist-web/{login,activate,account,settings}/` `dist-web/_healthz.txt` … `web/` の静的ページをコピー
 
 LP（`index.html` / `privacy.html` / `tokushoho.html` と `img/`）は対象外。
 LPは `node lp/build-lp.mjs` が同じ `dist-web/` へ出力する。
@@ -42,7 +42,7 @@ BASE = Path(__file__).parent
 REF_DIR = BASE / "reference"
 BOOKS_DIR = BASE / "books"
 TSUDUMON = BASE / "dist-web"                # Firebase Hosting(site: tsudumon) の公開ディレクトリ
-STATIC_SRC = BASE / "web"                   # 手書き静的ページの正本（login/ activate/ account/ ほか）
+STATIC_SRC = BASE / "web"                   # 手書き静的ページの正本（login/ activate/ account/ settings/ ほか）
 WB_DEPLOY = TSUDUMON / "wb"
 REF_DEPLOY = TSUDUMON / "ref"
 MAP_DEPLOY = TSUDUMON / "map" / "index.html"
@@ -139,7 +139,9 @@ def dedupe_shared_images() -> dict:
 def copy_static() -> int:
     """`web/` 配下の手書き静的ページを dist-web/ へそのままコピーする。
 
-    login/ activate/ account/ は LINE ログイン・ライセンス有効化・支払い管理のページで、
+    login/ activate/ account/ settings/ は LINE ログイン・コード有効化・お支払い管理・
+    お知らせとテストの設定のページ、parents/ handoff/ は保護者導線（子が渡すカード →
+    保護者ページ → 決済 → 連携 → 学習の記録）のページで、
     ジェネレータの生成対象ではない（正本は web/、詳細は web/README.md）。
     冪等なので deploy のたびに実行してよい。README.md は配信対象外なので除外する。"""
     if not STATIC_SRC.is_dir():
@@ -172,7 +174,7 @@ def deploy(chapters: list[str], only: str | None, dedupe: bool = True) -> None:
         run_gen(MAP_GEN, ["--deploy"])
         print("  map     -> dist-web/map/")
 
-    # 手書きの静的ページ（login/ activate/ account/ ほか）を毎回コピーし直す
+    # 手書きの静的ページ（login/ activate/ account/ settings/ ほか）を毎回コピーし直す
     if only is None:
         n = copy_static()
         if n:
@@ -230,7 +232,10 @@ def build_summary() -> None:
     # LPは別ビルド（node lp/build-lp.mjs）なので、入っていなければ警告する
     if not (TSUDUMON / "index.html").exists():
         print("  ⚠ dist-web/index.html（LP）がありません。`node lp/build-lp.mjs` を実行してください")
-    for name in ("login", "activate", "account"):
+    # 保護者導線（parents/ parents/thanks/ parents/dashboard/ handoff/）は
+    # 中学生本人が決済できない以上、唯一の課金経路なので欠けたら必ず気づけるようにする。
+    for name in ("login", "activate", "account", "settings",
+                 "parents", "parents/thanks", "parents/dashboard", "handoff"):
         if not (TSUDUMON / name / "index.html").exists():
             print(f"  ⚠ dist-web/{name}/index.html がありません（web/ の正本を確認）")
 

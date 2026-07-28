@@ -4,44 +4,24 @@
 <meta charset="UTF-8">
 <script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fdf9f2">
+<link rel="canonical" href="https://tsudumon.jp/tokushoho.html">
+<meta name="robots" content="noindex,follow">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="img/favicon-180.png">
 <title>特定商取引法に基づく表記｜つづもん</title>
-<meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
-<style>
-:root{
-  --cream:#fdf9f2; --ink:#33291f; --brand:#b45309; --brand-deep:#8a3d05;
-  --border:#ecdfc9; --muted:#8a7a63;
-}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"Noto Sans JP",sans-serif;background:var(--cream);color:var(--ink);line-height:1.9;font-size:15px}
-a{color:var(--brand-deep)}
-.header{background:#fffdf9;border-bottom:1px solid var(--border)}
-.header .inner{max-width:860px;margin:0 auto;padding:16px 22px}
-.logo{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:20px;color:var(--brand-deep);text-decoration:none}
-main{max-width:860px;margin:0 auto;padding:48px 22px 72px}
-h1{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:26px;margin-bottom:28px}
-.doc{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden}
-.doc dl{display:grid;grid-template-columns:220px 1fr}
-.doc dt,.doc dd{padding:16px 20px;border-bottom:1px solid var(--border)}
-.doc dt{background:#faf5eb;font-weight:700;font-size:14px}
-.doc dd{font-size:14.5px}
-.doc dl:last-child dt:last-of-type,.doc dl:last-child dd:last-of-type{border-bottom:none}
-.note{font-size:13px;color:var(--muted);margin-top:18px}
-footer{border-top:1px solid var(--border);padding:28px 22px;text-align:center;font-size:13px;color:var(--muted)}
-footer a{margin:0 10px}
-@media(max-width:640px){
-  .doc dl{grid-template-columns:1fr}
-  .doc dt{border-bottom:none;padding-bottom:4px}
-  .doc dd{padding-top:0}
-}
-</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap"></noscript>
+<link rel="stylesheet" href="css/doc.css">
 </head>
 <body>
+<a class="skip-link" href="#main">本文へスキップ</a>
 <header class="header"><div class="inner"><a class="logo" href="index.html">つづもん</a></div></header>
-<main>
-<h1>特定商取引法に基づく表記</h1>
+<main id="main">
+<h1 class="wide">特定商取引法に基づく表記</h1>
 <div class="doc">
 <dl>
   <dt>販売事業者</dt><dd>ぐっとスクール</dd>
@@ -50,23 +30,25 @@ footer a{margin:0 10px}
   <dt>電話番号</dt><dd>ご請求があった場合、遅滞なく開示いたします。お問い合わせはメールにてお願いいたします。</dd>
   <dt>お問い合わせ先</dt><dd><a href="mailto:guttoschool.okazaki@gmail.com">guttoschool.okazaki@gmail.com</a><br>お返事まで2〜3日いただく場合があります。</dd>
   <dt>販売価格</dt><dd>つづもん 中学歴史（全19単元）：月額 1,280円（税込）の定額制<br>
+    きょうだいでご利用の場合、2人目以降のお子さま1名につき月額 980円（税込）<br>
+    ※きょうだい価格は、公式LINEで保護者の方と1人目のお子さまのアカウントが連携済みの場合に適用されます（同一のご家庭であることの確認のためです）。<br>
     ※今後、社会・英語・理科・数学を順次追加予定です。
   </dd>
   <dt>商品代金以外に必要な料金</dt><dd>インターネット接続にかかる通信料。教材をブラウザから印刷される場合の用紙代・印刷代はお客様のご負担となります。</dd>
-  <dt>お支払い方法</dt><dd>クレジットカード決済（Stripe決済を予定）</dd>
-  <dt>お支払い時期</dt><dd>月額課金制です。お申し込み時に初回のお支払いが発生し、以降は毎月同日に自動的に課金されます。</dd>
-  <dt>商品の引き渡し時期</dt><dd>お申し込み・決済確認後、公式LINE経由でWeb教材のご利用を有効化いたします（即時〜24時間以内にご案内します）。</dd>
+  <dt>お支払い方法</dt><dd>クレジットカード決済（決済代行：Stripe, Inc.）<br>ご利用いただけるカードブランドは、決済画面（Stripe Checkout）に表示されるものに準じます。当方がカード番号を保持することはありません。</dd>
+  <dt>お支払い時期</dt><dd>月額課金制です。お申し込み時に初回のお支払いが発生し、以降は毎月同日に自動的に課金されます（無料体験からお申し込みの場合は、体験期間の終了日から課金を開始します）。</dd>
+  <dt>商品の引き渡し時期</dt><dd>決済完了後、ただちにWeb教材（問題集・参考書 全19単元）をご利用いただけます。決済後に表示される画面、または公式LINEのご案内からそのままお使いいただけます。保護者の方がお子さまのご案内ページからお申し込みになった場合は、お子さまのアカウントで直ちにご利用いただけます。</dd>
   <dt>サービスの提供期間</dt><dd>月額サブスクリプションのため、ご利用期間の定めはありません。ご契約中は中学歴史 全19単元のWeb教材（問題集・参考書）をご利用いただけます。</dd>
   <dt>動作環境</dt><dd>インターネットに接続されたスマートフォン・タブレット・パソコン等のブラウザ、LINEアプリをインストールしたスマートフォン</dd>
-  <dt>返品・キャンセルについて</dt><dd>商品の性質上（デジタルサービス）、決済完了後の返品・返金には応じられません。無料体験（3日間・全単元）と常時無料の1単元で内容をお確かめのうえお申し込みください。<br>月額サブスクリプションはいつでも解約できます。解約手続きは「<a href="/account/">アカウント・お支払い管理</a>」ページ（クレジットカードでご登録の方向け）から行えます。次回請求日より前に解約手続きをいただければ、以降の課金は発生しません（日割りでの返金はありません）。なお、解約後も、その時点でお支払い済みの期間の終了日（数日の猶予を含みます）までは引き続きご利用いただけます。</dd>
+  <dt>返品・キャンセルについて</dt><dd>商品の性質上（デジタルサービス）、決済完了後の返品・返金には応じられません。無料体験（3日間・全単元）と常時無料の1節で内容をお確かめのうえお申し込みください。<br>月額サブスクリプションはいつでも解約できます。解約手続きは「<a href="/account/">アカウント・お支払い管理</a>」ページ（クレジットカードでご登録の方向け）から行えます。次回請求日より前に解約手続きをいただければ、以降の課金は発生しません（日割りでの返金はありません）。なお、解約後も、その時点でお支払い済みの期間の終了日（数日の猶予を含みます）までは引き続きご利用いただけます。</dd>
   <dt>その他</dt><dd>未成年の方がご利用になる場合は、保護者の方の同意のうえでご購入ください。</dd>
 </dl>
 </div>
-<p class="note">制定日：2026年7月16日／最終改定日：2026年7月23日</p>
+<p class="note note-tight">制定日：2026年7月16日／最終改定日：2026年7月26日</p>
 </main>
 <footer>
   <div>© 2026 ぐっとスクール</div>
-  <div><a href="index.html">つづもんトップ</a><a href="privacy.html">プライバシーポリシー</a></div>
+  <div><a href="index.html">つづもんトップ</a><a href="terms.html">利用規約</a><a href="privacy.html">プライバシーポリシー</a><a href="/parents/">保護者の方へ</a></div>
 </footer>
 </body>
 </html>

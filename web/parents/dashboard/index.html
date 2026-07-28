@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>学習の記録｜つづもん</title>
+<style>
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --line:#fde68a;
+          --ok:#16a34a; --ng:#dc2626; --muted:#78716c; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
+         padding:20px 14px 48px; }
+  .wrap { max-width:520px; margin:0 auto; }
+  .head { text-align:center; margin-bottom:16px; }
+  .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
+           padding:4px 16px; border-radius:20px; font-size:13px; }
+  h1 { font-size:20px; color:var(--deep); margin:12px 0 4px; }
+  .sub { font-size:13px; color:var(--muted); line-height:1.8; }
+
+  .child { background:#fff; border:2px solid var(--line); border-radius:18px;
+           padding:18px 18px 14px; box-shadow:0 6px 18px rgba(120,80,20,.12); margin-bottom:14px; }
+  .child-head { display:flex; align-items:baseline; justify-content:space-between; gap:8px;
+                margin-bottom:4px; }
+  .child-name { font-size:18px; font-weight:bold; color:var(--deep); }
+  .child-grade { font-size:12.5px; color:var(--muted); }
+  .plan { font-size:12.5px; border-radius:20px; padding:3px 11px; display:inline-block;
+          margin-bottom:12px; }
+  .plan.trial   { background:#fffbeb; color:var(--brand); border:1px solid var(--line); }
+  .plan.active  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .plan.expired { background:#fef2f2; color:var(--ng); border:1px solid #fecaca; }
+  .plan.none    { background:#f5f5f4; color:var(--muted); border:1px solid #e7e5e4; }
+
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:10px; }
+  .stat { background:#fffdf8; border:1px solid var(--line); border-radius:12px;
+          padding:10px 6px; text-align:center; }
+  .stat .v { font-size:19px; font-weight:bold; color:var(--deep); line-height:1.3; }
+  .stat .v small { font-size:12px; font-weight:normal; }
+  .stat .k { font-size:11px; color:var(--muted); line-height:1.5; margin-top:2px; }
+  .last { font-size:12.5px; color:var(--muted); margin-bottom:10px; }
+
+  .row { display:flex; gap:8px; }
+  .btn { flex:1; border:none; border-radius:12px; padding:11px; font-size:13.5px; font-weight:bold;
+         cursor:pointer; font-family:inherit; text-align:center; text-decoration:none; }
+  .btn-sub { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .btn:disabled { opacity:.5; cursor:default; }
+
+  .privacy { background:#fff; border:1.5px solid var(--line); border-radius:16px;
+             padding:16px 18px; margin-top:18px; }
+  .privacy h2 { font-size:15px; color:var(--deep); margin-bottom:8px; }
+  .privacy .cols { display:grid; grid-template-columns:1fr; gap:10px; }
+  @media(min-width:480px){ .privacy .cols { grid-template-columns:1fr 1fr; } }
+  .privacy .box { border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.85; }
+  .privacy .see  { background:#f0fdf4; border:1px solid #bbf7d0; }
+  .privacy .hide { background:#fafaf9; border:1px solid #e7e5e4; }
+  .privacy ul { margin:6px 0 0; padding-left:19px; }
+  .privacy h3 { font-size:13.5px; margin:0; }
+  .privacy .see h3 { color:#15803d; }
+  .privacy .hide h3 { color:#57534e; }
+
+  .card { background:#fff; border:1.5px solid var(--line); border-radius:16px;
+          padding:18px; text-align:center; }
+  .card p { font-size:14px; line-height:1.9; color:#44403c; margin-bottom:10px; }
+  .links { text-align:center; margin-top:18px; }
+  .links a { font-size:13px; color:var(--brand); margin:0 8px; }
+  .msg { font-size:13px; border-radius:10px; padding:9px 13px; margin-top:8px; line-height:1.8; }
+  .msg.err { background:#fef2f2; color:var(--ng); border:1px solid #fecaca; }
+  .spinner { width:32px; height:32px; margin:28px auto; border:4px solid #f1e6cf;
+             border-top-color:var(--amber); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .hidden { display:none; }
+  .btn-line { background:#06c755; color:#fff; }
+</style></head><body>
+<div class="wrap">
+  <div class="head">
+    <span class="badge">つづもん</span>
+    <h1>学習の記録</h1>
+    <p class="sub">お子さまが取り組んだ記録です。</p>
+  </div>
+
+  <section id="stLoading"><div class="spinner"></div></section>
+
+  <section id="stLogin" class="hidden">
+    <div class="card">
+      <p>お子さまの学習の記録を見るには、公式LINEでのログインが必要です。</p>
+      <button class="btn btn-line" id="loginBtn" type="button" style="width:100%">LINEでログイン</button>
+    </div>
+  </section>
+
+  <section id="stEmpty" class="hidden">
+    <div class="card">
+      <p>まだ、つながっているお子さまがいません。</p>
+      <p class="sub">お子さまから届いたご案内ページ（QRコードやリンク）を開き、「公式LINEでつながる」からお進みください。</p>
+    </div>
+  </section>
+
+  <section id="stChildren" class="hidden"></section>
+
+  <div class="privacy" id="privacyBox" style="display:none">
+    <h2>見えるもの・見えないもの</h2>
+    <div class="cols">
+      <div class="box see">
+        <h3>✅ 見えるもの</h3>
+        <ul><li>学習した日・時間</li><li>進んだ単元</li><li>問題数・正答率</li></ul>
+      </div>
+      <div class="box hide">
+        <h3>🔒 見えないもの</h3>
+        <ul><li>AIとのトークの内容</li><li>質問した文章・相談</li><li>まちがえた問題（件数も）</li></ul>
+      </div>
+    </div>
+    <p class="sub" style="margin-top:10px">「間違えると親に見られる」と分かると、お子さまは簡単な問題だけを解くようになります。つまずきはお子さま本人とAIの間で解決できるようにしています。</p>
+  </div>
+
+  <div class="links">
+    <a href="/parents/">サービスの説明</a>
+    <a href="mailto:guttoschool.okazaki@gmail.com">お問い合わせ</a>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  initializeAuth, browserLocalPersistence, browserSessionPersistence,
+  inMemoryPersistence, onAuthStateChanged,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+// 保護者ダッシュボード。表示するのは学習の記録だけで、
+// トーク内容はサーバ側の関数がそもそも読まない（tsudumonParentDashboard.ts）。
+var FN = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net';
+var DASH_API = FN + '/tsudumonParentDashboard';
+var PORTAL_API = FN + '/tsudumonParentPortal';
+var RENAME_API = FN + '/tsudumonParentRenameChild';
+
+var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
+var auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+});
+
+var $ = function (id) { return document.getElementById(id); };
+function show(id) {
+  ['stLoading', 'stLogin', 'stEmpty', 'stChildren'].forEach(function (s) {
+    $(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+$('loginBtn').addEventListener('click', function () {
+  location.href = '/login/?next=' + encodeURIComponent('/parents/dashboard/');
+});
+
+onAuthStateChanged(auth, function (user) {
+  if (!user) { show('stLogin'); return; }
+  load(user);
+});
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function stat(v, unit, label) {
+  return '<div class="stat"><div class="v">' + esc(v) +
+    (unit ? '<small>' + esc(unit) + '</small>' : '') +
+    '</div><div class="k">' + label + '</div></div>';
+}
+
+function childCard(c) {
+  var st = c.study;
+  var html = '<div class="child" data-uid="' + esc(c.uid) + '">';
+  html += '<div class="child-head"><span class="child-name">' + esc(c.name) + '</span>' +
+          '<span class="child-grade">' + esc(c.grade || '') + '</span></div>';
+  html += '<span class="plan ' + esc(c.plan.state) + '">' + esc(c.plan.label) + '</span>';
+  html += '<div class="stats">';
+  html += stat(st.daysThisWeek + '/7', '日', 'この1週間で<br>学習した日');
+  html += stat(st.minutesThisWeek, '分', 'この1週間の<br>学習時間');
+  html += stat(st.unitsStarted + '/' + st.unitsTotal, '', '進んだ単元');
+  html += stat(st.answered, '問', '解いた問題');
+  html += stat(st.accuracy == null ? '—' : st.accuracy, st.accuracy == null ? '' : '%', '正答率');
+  html += stat(st.minutesTotal, '分', 'これまでの<br>合計学習時間');
+  html += '</div>';
+  if (st.lastStudiedLabel) {
+    html += '<p class="last">最後に学習したのは ' + esc(st.lastStudiedLabel) + 'です。</p>';
+  } else {
+    html += '<p class="last">まだ学習の記録がありません。</p>';
+  }
+  html += '<div class="row">';
+  html += '<button class="btn btn-sub js-rename" type="button">表示名を変える</button>';
+  if (c.plan.canManage) {
+    html += '<button class="btn btn-sub js-portal" type="button">お支払い・解約</button>';
+  }
+  html += '</div><div class="js-msg"></div></div>';
+  return html;
+}
+
+async function load(user) {
+  show('stLoading');
+  try {
+    var idToken = await user.getIdToken();
+    var res = await fetch(DASH_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken }),
+    });
+    if (res.status === 403) { show('stEmpty'); return; }
+    var data = await res.json();
+    if (!data.ok || !data.children || data.children.length === 0) {
+      show('stEmpty');
+      return;
+    }
+    $('stChildren').innerHTML = data.children.map(childCard).join('');
+    show('stChildren');
+    $('privacyBox').style.display = 'block';
+    wire(user);
+  } catch (e) {
+    show('stEmpty');
+  }
+}
+
+function wire(user) {
+  Array.prototype.forEach.call($('stChildren').querySelectorAll('.child'), function (el) {
+    var uid = el.dataset.uid;
+    var msg = el.querySelector('.js-msg');
+    var portal = el.querySelector('.js-portal');
+    if (portal) {
+      portal.addEventListener('click', async function () {
+        portal.disabled = true;
+        try {
+          var idToken = await user.getIdToken();
+          var res = await fetch(PORTAL_API, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: idToken, childUid: uid }),
+          });
+          var data = await res.json();
+          if (data.ok && data.url) { location.href = data.url; return; }
+          msg.innerHTML = '<div class="msg err">お支払いページを開けませんでした。</div>';
+        } catch (e) {
+          msg.innerHTML = '<div class="msg err">通信に失敗しました。</div>';
+        }
+        portal.disabled = false;
+      });
+    }
+    el.querySelector('.js-rename').addEventListener('click', async function () {
+      var current = el.querySelector('.child-name').textContent;
+      var next = prompt('この画面での表示名を入力してください（12文字まで）', current);
+      if (!next) return;
+      try {
+        var idToken = await user.getIdToken();
+        var res = await fetch(RENAME_API, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken: idToken, childUid: uid, name: next }),
+        });
+        var data = await res.json();
+        if (data.ok) {
+          el.querySelector('.child-name').textContent = data.name;
+          msg.innerHTML = '';
+          return;
+        }
+        msg.innerHTML = '<div class="msg err">その名前は使えませんでした（12文字まで・URLは不可）。</div>';
+      } catch (e) {
+        msg.innerHTML = '<div class="msg err">通信に失敗しました。</div>';
+      }
+    });
+  });
+}
+</script>
+</body></html>

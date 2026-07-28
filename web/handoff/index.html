@@ -1,0 +1,189 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>おうちの人に見せる｜つづもん</title>
+<style>
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --line:#fde68a;
+          --ok:#16a34a; --ng:#dc2626; --muted:#78716c; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
+         padding:20px 14px 40px; }
+  .wrap { max-width:440px; margin:0 auto; }
+  .card { background:#fff; border:2px solid var(--line); border-radius:20px; padding:22px 20px;
+          box-shadow:0 8px 24px rgba(120,80,20,.14); margin-bottom:16px; }
+  .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
+           padding:4px 16px; border-radius:20px; font-size:13px; }
+  h1 { font-size:20px; color:var(--deep); margin:12px 0 8px; line-height:1.55; }
+  h2 { font-size:15.5px; color:var(--deep); margin:0 0 8px; }
+  p  { font-size:14px; line-height:1.9; color:#44403c; margin-bottom:10px; }
+  .small { font-size:12.5px; color:var(--muted); line-height:1.8; }
+  .center { text-align:center; }
+
+  /* 見える／見えない：子がいちばん先に読む場所 */
+  .privacy { border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+  .privacy.see  { background:#f0fdf4; border:1.5px solid #bbf7d0; }
+  .privacy.hide { background:#fff7ed; border:1.5px solid #fed7aa; }
+  .privacy h2 { font-size:14.5px; margin-bottom:6px; }
+  .privacy.see h2  { color:#15803d; }
+  .privacy.hide h2 { color:#c2410c; }
+  .privacy ul { margin:0; padding-left:20px; }
+  .privacy li { font-size:13.5px; line-height:1.85; }
+
+  /* QR：いちばん使われる導線 */
+  .qrbox { text-align:center; padding:6px 0 2px; }
+  .qrbox img { width:100%; max-width:260px; height:auto; border:1px solid var(--line);
+               border-radius:12px; background:#fff; }
+  .qrcap { font-size:13px; color:var(--muted); margin-top:8px; line-height:1.8; }
+
+  .big-btn { display:block; width:100%; margin-top:10px; border:none; border-radius:14px; padding:14px;
+             font-size:15.5px; font-weight:bold; text-decoration:none; cursor:pointer;
+             font-family:inherit; text-align:center; }
+  .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
+  .btn-sub  { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+
+  /* 台本 */
+  .script { border:1.5px solid var(--line); border-radius:14px; padding:14px 16px; margin-bottom:12px;
+            background:#fffdf8; }
+  .script .tag { display:inline-block; background:#fef3c7; color:var(--deep); font-size:11.5px;
+                 font-weight:bold; padding:2px 10px; border-radius:20px; margin-bottom:8px; }
+  .script .line { font-size:15px; line-height:1.9; color:#1c1917; }
+  .script .why { font-size:12px; color:var(--muted); margin-top:8px; line-height:1.75; }
+  .copy { background:none; border:none; color:var(--brand); font-size:13px; font-weight:bold;
+          cursor:pointer; font-family:inherit; padding:6px 0 0; }
+
+  .msg { font-size:13px; border-radius:10px; padding:9px 13px; margin-top:10px; line-height:1.8; }
+  .msg.ok { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .msg.err{ background:#fef2f2; color:var(--ng); border:1px solid #fecaca; }
+  .hidden { display:none; }
+</style></head><body>
+<div class="wrap">
+
+  <div class="card">
+    <div class="center"><span class="badge">つづもん</span></div>
+    <h1>おうちの人に見せる</h1>
+    <p>下のQRコードを、<strong>おうちの人のスマホで読んでもらう</strong>のがいちばんかんたんです。自分のスマホを渡さなくて大丈夫。</p>
+
+    <div class="privacy see">
+      <h2>おうちの人に見えるもの</h2>
+      <ul>
+        <li>勉強した日と時間</li>
+        <li>進んだ単元の数</li>
+        <li>解いた問題の数と正答率</li>
+      </ul>
+    </div>
+    <div class="privacy hide">
+      <h2>見えないもの</h2>
+      <ul>
+        <li>つづ先生に送ったトークの内容</li>
+        <li>質問した文章・相談したこと</li>
+        <li><strong>まちがえた問題</strong>（数も見えません）</li>
+      </ul>
+    </div>
+    <p class="small">安心して見せてください。まちがえたところが親に伝わることはありません。</p>
+  </div>
+
+  <div class="card">
+    <h2>① QRコードを見せる</h2>
+    <div class="qrbox" id="qrbox">
+      <p class="small">読み込んでいます…</p>
+    </div>
+    <p class="qrcap">おうちの人のカメラアプリで読み取ってもらってください。</p>
+    <button class="big-btn btn-sub" id="shareBtn" type="button">リンクを送る・コピーする</button>
+    <div id="shareMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>② なんて言えばいい？</h2>
+    <p class="small">言いやすいものを1つ選んで、そのまま言ってみてください。うまく言えなくても大丈夫です。</p>
+
+    <div class="script">
+      <span class="tag">やった結果から言う</span>
+      <div class="line" id="s1">「3日間ためしてみたんだけど、歴史がわかるようになってきた。続けたいから、これ見てほしい」</div>
+      <button class="copy" data-target="s1" type="button">この文をコピー</button>
+      <div class="why">いちばん強いのは「自分からやりたい」と伝わること。数字はページに出ています。</div>
+    </div>
+
+    <div class="script">
+      <span class="tag">お金の話を先に言う</span>
+      <div class="line" id="s2">「月1,280円で、いつでもやめられるやつ。3日ためして良かったから、まず見てほしい」</div>
+      <button class="copy" data-target="s2" type="button">この文をコピー</button>
+      <div class="why">金額を自分から先に言うと、話が早く終わります。あとで言うより気がラクです。</div>
+    </div>
+
+    <div class="script">
+      <span class="tag">言葉が出ないとき</span>
+      <div class="line" id="s3">「これ読んでみて」</div>
+      <button class="copy" data-target="s3" type="button">この文をコピー</button>
+      <div class="why">これで十分です。QRを見せて、あとはページに説明してもらいましょう。</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>このあとどうなるの？</h2>
+    <p>おうちの人がページを見ると、あなたのLINEに「見てくれたみたい」とお知らせが届きます。</p>
+    <p>すぐに決まらなくても、よくあることです。<strong>断られてもあなたのせいではありません。</strong>体験の続きはそのまま使えます。</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var FN = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net';
+  var token = new URLSearchParams(location.search).get('t') || '';
+  var parentUrl = location.origin + '/parents/?t=' + encodeURIComponent(token);
+  var $ = function (id) { return document.getElementById(id); };
+
+  if (!token) {
+    $('qrbox').innerHTML =
+      '<p class="small">このページは、LINEの「おうちの人に見せる」から開いてください。</p>';
+    $('shareBtn').classList.add('hidden');
+    return;
+  }
+
+  // QRは Cloud Function が SVG を返す（外部CDNを使わない・Firestoreも読まない）
+  var img = new Image();
+  img.alt = 'おうちの人に見せるQRコード';
+  img.onload = function () { $('qrbox').innerHTML = ''; $('qrbox').appendChild(img); };
+  img.onerror = function () {
+    $('qrbox').innerHTML =
+      '<p class="small">QRコードを出せませんでした。下のボタンからリンクを送ってください。</p>';
+  };
+  img.src = FN + '/tsudumonInviteQr?t=' + encodeURIComponent(token);
+
+  function note(kind, text) {
+    $('shareMsg').innerHTML = '<div class="msg ' + kind + '"></div>';
+    $('shareMsg').firstChild.textContent = text;
+  }
+
+  $('shareBtn').addEventListener('click', async function () {
+    // LINE内ブラウザでは navigator.share が使えないことがあるので、必ずコピーに落とす。
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'つづもん（保護者の方へ）', url: parentUrl });
+        return;
+      } catch (e) { /* キャンセルされたらコピーへ */ }
+    }
+    try {
+      await navigator.clipboard.writeText(parentUrl);
+      note('ok', 'リンクをコピーしました。LINEやメールで送れます。');
+    } catch (e) {
+      note('err', 'コピーできませんでした。QRコードを見せてください。');
+    }
+  });
+
+  Array.prototype.forEach.call(document.querySelectorAll('.copy'), function (btn) {
+    btn.addEventListener('click', async function () {
+      var text = $(btn.dataset.target).textContent.replace(/^「|」$/g, '');
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = 'コピーしました';
+        setTimeout(function () { btn.textContent = 'この文をコピー'; }, 2000);
+      } catch (e) {
+        btn.textContent = 'コピーできませんでした';
+      }
+    });
+  });
+})();
+</script>
+</body></html>

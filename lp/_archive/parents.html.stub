@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>保護者の方へ｜つづもん</title>
+<!--
+  保護者向けページの正本は `pdf-workbook/web/parents/index.html`（URL: /parents/）に移した。
+  こちらは「子が発行したカード（?t=…）」を受けてお子さまの学習実績を出し分けるため、
+  静的LPとして二重に持つとドリフトする。
+
+  このファイルは、LP・各規約ページ・外部に残った `parents.html` へのリンクを
+  取りこぼさないための転送だけを担う。クエリとハッシュはそのまま引き継ぐ。
+  設計: pdf-workbook/.steering/20260727-parent-handoff/design.md §5
+-->
+<link rel="canonical" href="https://tsudumon.jp/parents/">
+<meta http-equiv="refresh" content="0;url=/parents/">
+<script>location.replace('/parents/' + location.search + location.hash);</script>
+<link rel="stylesheet" href="css/doc.css">
+</head>
+<body>
+<a class="skip-link" href="#main">本文へスキップ</a>
+<p>保護者の方へのご案内は<a href="/parents/">こちら</a>に移動しました。<br>自動で移動しない場合は、リンクをタップしてください。</p>
+</body>
+</html>
