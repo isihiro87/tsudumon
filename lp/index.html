@@ -197,12 +197,12 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
 }
 .hero h1{
   font-family:"Zen Maru Gothic",sans-serif;font-weight:900;
-  font-size:clamp(30px,3.9vw,46px);line-height:1.42;letter-spacing:.02em;
-  color:var(--ink);margin-bottom:18px;
+  font-size:clamp(32px,4.5vw,53px);line-height:1.38;letter-spacing:.02em;
+  color:var(--ink);margin-bottom:20px;
 }
 .hero h1 .h1-top{
-  display:block;font-size:clamp(20px,2.4vw,28px);color:var(--brand-deep);
-  margin-bottom:8px;letter-spacing:.05em;
+  display:block;font-size:clamp(19px,2.3vw,27px);color:var(--brand-deep);
+  margin-bottom:10px;letter-spacing:.05em;
 }
 .hero h1 .h1-lead{display:block;font-size:clamp(18px,2vw,24px);font-weight:800;color:var(--ink);letter-spacing:.04em;margin-bottom:2px}
 .hero h1 .h1-punch{display:block;white-space:nowrap}
@@ -255,7 +255,7 @@ h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
   .hero .copy{max-width:none}
 }
 @media(max-width:560px){
-  .hero h1{font-size:27px}
+  .hero h1{font-size:31px}
   .hero h1 .h1-top{font-size:18px}
   .hero .inner{padding-bottom:44px}
 }
@@ -415,10 +415,8 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
   margin:0 auto;background:#12100d;border-radius:30px;padding:9px;
   box-shadow:0 18px 44px rgba(20,16,10,.28);flex:none;
 }
-.pv-phone::before{
-  content:"";position:absolute;left:50%;top:9px;transform:translateX(-50%);
-  width:38%;height:16px;border-radius:0 0 12px 12px;background:#12100d;z-index:3;
-}
+/* 中身がブラウザの実スクリーンショット（デバイスの画面ではない）なので、
+   作り物のノッチは置かない。置くとアプリ自身のヘッダーに被ってしまう。 */
 .pv-screen{
   position:relative;width:100%;height:100%;border-radius:22px;overflow:hidden;background:#f4ecdd;
 }
@@ -442,9 +440,9 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
   background:#fff;color:#7c5a2e;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
 .ctab:hover{border-color:var(--brand);color:var(--brand)}
 .ctab.is-active{background:var(--brand);border-color:var(--brand);color:#fff}
-.ctabs-body{display:flex;align-items:center;justify-content:center;gap:44px;max-width:780px;margin:0 auto}
-.ctabs-body .pv-phone{flex:none;max-width:264px}
-.ctabs-desc{flex:1;max-width:360px}
+.ctabs-body{display:flex;align-items:center;justify-content:center;gap:46px;max-width:840px;margin:0 auto}
+.ctabs-body .pv-phone{flex:none;max-width:320px;aspect-ratio:400/660}  /* 実画面のスクショ（400x660で撮影）に合わせる。ずらすと cover で端が切れる */
+.ctabs-desc{flex:1;max-width:380px}
 .ctabs-desc .ctd{display:none}
 .ctabs-desc .ctd.is-active{display:block}
 .ctabs-desc h3{font-size:23px;font-weight:900;color:var(--brand-deep);margin-bottom:12px;line-height:1.4}
@@ -502,51 +500,17 @@ h2 .accent{color:var(--brand);background:linear-gradient(transparent 68%,#ffdfae
 
 /* ---------- AI relation diagram（LINE / Web教材 → AI） ---------- */
 .ai-diagram{
-  width:100%;background:#fff;border:1px solid var(--border);border-radius:var(--radius);
-  box-shadow:var(--shadow);padding:26px 22px 22px;
+  width:100%;margin:0;border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;background:#fff;
 }
-.diagram-row{display:flex;align-items:center;justify-content:center;gap:10px}
-.diagram-col{flex:1;min-width:0;max-width:180px;display:flex;flex-direction:column;align-items:center;gap:10px}
-.diagram-label{
-  display:inline-block;font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:13px;
-  color:var(--brand-deep);background:#fff;border:2px solid var(--brand);border-radius:999px;padding:4px 16px;
-}
-.diagram-box{
-  background:#fbf4e7;border:1px solid var(--border);border-radius:12px;
-  padding:11px 12px;width:100%;font-size:11px;line-height:1.55;
-}
-.dchat{border-radius:9px;padding:6px 9px;margin-bottom:6px;background:#fff;max-width:96%}
-.dchat.me{background:#c9f0a8;margin-left:auto;text-align:right}
-.dchat:last-child{margin-bottom:0}
-.dweb{background:#fff;border-radius:9px;padding:8px 10px}
-.dweb .dweb-q{margin-bottom:8px}
-.dweb .dweb-btn{
-  background:var(--brand);color:#fff;text-align:center;border-radius:7px;
-  padding:5px 6px;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:10.5px;
-}
-.diagram-arrow{flex:0 0 auto;font-size:26px;color:var(--brand);line-height:1;font-weight:700}
-.ai-node{
-  flex:0 0 auto;width:78px;height:78px;border-radius:50%;background:#fff;
-  border:3px solid var(--brand);display:flex;align-items:center;justify-content:center;
-  font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:24px;color:var(--brand);
-  box-shadow:0 8px 20px rgba(180,83,9,.18);
-}
-.diagram-note{
-  text-align:center;margin-top:16px;font-family:"Zen Maru Gothic",sans-serif;font-weight:700;
-  font-size:13px;color:var(--brand-deep);background:var(--brand-pale);border-radius:999px;
-  padding:7px 18px;width:max-content;max-width:100%;margin-left:auto;margin-right:auto;
-}
-@media(max-width:700px){
-  .diagram-row{flex-direction:column}
-  .diagram-arrow{transform:rotate(90deg)}
-  .diagram-col{max-width:260px}
-}
+.ai-diagram img{display:block;width:100%;height:auto}
 .ai-brief{display:flex;gap:14px;margin-top:18px}
 .ai-brief-item{
   flex:1;background:#fbf4e7;border-radius:14px;padding:16px 14px;
   display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;
 }
-.ai-brief-item .ico{margin:0}
+.ai-brief-item .ico{margin:0;width:52px;height:52px}
+.ai-brief-item .ico img{width:32px;height:32px}
 .ai-brief-item p{font-size:13px;font-weight:700;color:var(--ink)}
 @media(max-width:700px){.ai-brief{flex-direction:column}}
 
@@ -1311,7 +1275,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{
     <div class="copy">
       <span class="hero-badge a a1">中学生向け｜LINEとつながる歴史教材</span>
       <h1 class="a a2"><span class="h1-top">今日やることが、LINEに届く。</span><span class="h1-punch">だから、<span class="accent">毎日つづく。</span></span></h1>
-      <p class="lead a a3">今日やる1単元が、毎日LINEに届きます。何を勉強するか迷わず、1単元15分から始められます。</p>
+      <p class="lead a a3">中学歴史 全19単元。1日にやるのは、<span class="nb">15分の1単元だけ。</span></p>
       <div class="hero-cta a a4">
         <a class="btn btn-line" href="account/?do=trial"><svg class="line-ic" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.2 2.5 1.5 6.3 1.5 11c0 4.2 3.7 7.7 8.7 8.4.34.07.8.22.92.51.1.26.07.67.03.94l-.15.9c-.05.27-.21 1.04.91.57 1.12-.48 6.05-3.56 8.25-6.1 1.52-1.66 2.34-3.34 2.34-5.22 0-4.7-4.7-8.5-10.5-8.5z"/><text x="12" y="13.4" text-anchor="middle" font-size="6" font-weight="900" font-family="Arial,Helvetica,sans-serif" fill="#06c755">LINE</text></svg>3日間無料でためす<span class="btn-arrow" aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="#contents">教材の中身を見る</a>
@@ -1456,9 +1420,9 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{
   <div class="inner">
     <div class="sec-label rv">教材の中身</div>
     <h2 class="rv">市販ワークの<span class="nb">「いいとこ取り」。</span><br>1つの単元で要点整理から<span class="nb">テスト対策まで。</span></h2>
-    <p class="sec-lead rv">1単元は、年表 → 要点まとめ → 一問一答 → 実戦問題 → 記述 → 資料の6ステップ。どの単元も同じ流れで進むので、勉強のリズムがつくりやすくなっています。タブを押すと、実際の画面が切り替わります。</p>
+    <p class="sec-lead rv">1単元は、年表 → 要点まとめ → 一問一答 → 実戦問題 → 記述 → 資料の6ステップ。どの単元も同じ流れで進むので、勉強のリズムがつくりやすくなっています。下の6枚は加工なしの実画面です（歴史④「古代の国家」より）。</p>
 
-    <div class="rv tc"><span class="shot-note">タップ／クリックで拡大できます</span></div>
+    <div class="rv tc"><span class="shot-note">ぜんぶ実際の画面です（タップ／クリックで拡大）</span></div>
 
     <div class="ctabs-nav rv" role="tablist" aria-label="教材の画面を切り替え">
       <button type="button" class="ctab is-active" role="tab" id="ctab-nenpyo"  aria-selected="true"  aria-controls="ctd-nenpyo"  data-t="nenpyo">年表</button>
@@ -1472,43 +1436,43 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{
     <div class="ctabs-body rv">
       <div class="pv-phone zoomable">
         <div class="pv-screen pv-stack" id="ctabScreen">
-          <img src="img/screen-app-timeline.webp" width="941" height="1672" loading="lazy" decoding="async" class="is-active" data-t="nenpyo"  alt="穴埋め年表の画面。645年 大化の改新、672年 壬申の乱、701年 律令の完成、710年 都を平城京へ、が縦のタイムラインで並んでいる">
-          <img src="img/screen-app-summary.webp"  width="941" height="1672" loading="lazy" decoding="async" data-t="youten"  alt="要点まとめの画面。「大化の改新は、□□□□皇子と中臣鎌足が始めた」という穴埋め文と「答えを見る」ボタン">
-          <img src="img/screen-app-qa.webp"       width="941" height="1672" loading="lazy" decoding="async" data-t="ichimon" alt="一問一答の画面。「645年の政治改革は？→大化の改新」などがチェックボックスつきで並んでいる">
-          <img src="img/screen-app-quiz.webp"     width="941" height="1672" loading="lazy" decoding="async" data-t="jissen"  alt="実戦問題の画面。「飛鳥文化の説明として正しいものはどれ？」の4択問題と「答え合わせ」ボタン">
-          <img src="img/screen-app-write.webp"    width="941" height="1672" loading="lazy" decoding="async" data-t="kijutsu" alt="記述問題の画面。「なぜ大化の改新が行われたのか、目的を書こう」への解答と、AIの採点コメント">
-          <img src="img/screen-app-shiryo.webp"   width="941" height="1672" loading="lazy" decoding="async" data-t="shiryo"  alt="資料問題の画面。寺院と仏像の資料画像を見て「日本最初の仏教文化を何という？」に答える">
+          <img src="img/real-nenpyo.webp" width="880" height="1452" loading="lazy" decoding="async" class="is-active" data-t="nenpyo" alt="年表でチェックの実際の画面。593年〜743年のできごとが年代順の表になっていて、①〜⑩の空欄をタップすると答えが出る">
+          <img src="img/real-youten.webp" width="880" height="1452" loading="lazy" decoding="async" data-t="youten" alt="要点まとめの実際の画面。大化の改新の要点が穴埋め文になっていて、タップした①中大兄皇子・②中臣鎌足だけ黄色く答えが表示されている">
+          <img src="img/real-ichimon.webp" width="880" height="1452" loading="lazy" decoding="async" data-t="ichimon" alt="一問一答の実際の画面。「645年に始まった天皇中心の政治改革を何という？」に入力して「せいかい！」と判定され、ふりがなつきの答えと解説が出ている">
+          <img src="img/real-jissen.webp" width="880" height="1452" loading="lazy" decoding="async" data-t="jissen" alt="実戦問題の実際の画面。4つの選択肢から正解の「土地と人民は国家のものとする」が緑で示され、下に解説が表示されている">
+          <img src="img/real-kijutsu.webp" width="880" height="1452" loading="lazy" decoding="async" data-t="kijutsu" alt="記述問題の実際の画面。指定語句「土地」「人民」が示され、書いた文章の文字数が出て、「AI採点」ボタンが並んでいる">
+          <img src="img/real-shiryo.webp" width="880" height="1452" loading="lazy" decoding="async" data-t="shiryo" alt="資料問題の実際の画面。法隆寺の写真を見て「この寺院を何というか」「日本で最初の仏教文化を何というか」に答える">
         </div>
       </div>
       <div class="ctabs-desc">
         <div class="ctd is-active" role="tabpanel" id="ctd-nenpyo" aria-labelledby="ctab-nenpyo">
           <h3>穴埋め年表で、<br>全体をつかむ</h3>
-          <p>章の流れを年表でひとまとめ。バラバラの用語が「順番」でつながります。テスト前の総復習にも、そのまま使えます。</p>
+          <p>章まるごとの流れを1枚の年表に。空欄をタップすると、その場で答えが出ます。バラバラだった用語が「順番」でつながるので、テスト前の総復習にもそのまま使えます。</p>
         </div>
         <div class="ctd" role="tabpanel" id="ctd-youten" aria-labelledby="ctab-youten" hidden>
           <h3>穴埋めで、<br>要点を整理</h3>
-          <p>教科書の要点を短い文章に凝縮。空欄を埋めながら、流れごと理解します。答えはその場で確認できます。</p>
+          <p>教科書の要点を短い文章に凝縮。空欄をタップした分だけ答えが開くので、思い出せたところは飛ばし、あやしいところだけ確かめられます。「先に参考書で理解する」ボタンから、いつでも読み物に戻れます。</p>
         </div>
         <div class="ctd" role="tabpanel" id="ctd-ichimon" aria-labelledby="ctab-ichimon" hidden>
           <h3>基礎用語を、<br>一問一答で</h3>
-          <p>チェックボックスつきで、できるまで何周でも。基礎固めの定番です。まちがえた問題は、ニガテとして後日もう一度出ます。</p>
+          <p>答えを打ち込むと、その場で「せいかい！」。読みがなつきの答えと、なぜそうなるかの解説まで出ます。まちがえた問題は、ニガテとして後日もう一度出ます。</p>
         </div>
         <div class="ctd" role="tabpanel" id="ctd-jissen" aria-labelledby="ctab-jissen" hidden>
           <h3>テスト形式の、<br>4択問題</h3>
-          <p>定期テストと同じ選択形式。まぎらわしい選択肢で、本当に理解できているかを確かめます。押した瞬間に丸がつきます。</p>
+          <p>定期テストと同じ選択形式。まぎらわしい選択肢を混ぜてあるので、なんとなくでは正解できません。押した瞬間に正解が示され、そのまま解説が続きます。</p>
         </div>
         <div class="ctd" role="tabpanel" id="ctd-kijutsu" aria-labelledby="ctab-kijutsu" hidden>
           <h3>理由・しくみを、<br>書く練習</h3>
-          <p>「なぜ？」を自分の言葉で説明する記述問題。<strong>AIがその場で採点し、「この言葉を入れるともっと良くなる」まで返します。</strong></p>
+          <p>「なぜ？」を自分の言葉で説明する記述問題。指定語句と目安の字数が出るので、何を書けばいいか迷いません。書けたら<strong>「AI採点」を押すだけで、その場で採点とアドバイスが返ります。</strong></p>
         </div>
         <div class="ctd" role="tabpanel" id="ctd-shiryo" aria-labelledby="ctab-shiryo" hidden>
           <h3>写真・図で解く、<br>資料問題</h3>
-          <p>入試や実力テストで問われる、資料の読み取り問題。用語を覚えるだけでは解けない力を鍛えます。順次拡充しています。</p>
+          <p>入試や実力テストで問われる、資料の読み取り問題。写真は実物の資料をそのまま使っています（タップで拡大）。用語を覚えるだけでは解けない力を鍛えます。順次拡充しています。</p>
         </div>
       </div>
     </div>
 
-    <p class="sec-note rv">※ スマホ・タブレット・PCでそのまま開いて使えます。紙で解きたい人は、画面から印刷することもできます。</p>
+    <p class="sec-note rv">※ 上の6枚は加工していない実際の画面です。スマホ・タブレット・PCでそのまま開いて使えます。紙で解きたい人は、画面から印刷することもできます（解答つき）。</p>
   </div>
 </section>
 
@@ -1533,32 +1497,14 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{
         <p class="pv-toggle-note">どちらで解いても、記録はAIがまとめて把握します。</p>
       </div>
       <div class="features rv-group">
-        <div class="ai-diagram">
-          <div class="diagram-row">
-            <div class="diagram-col">
-              <span class="diagram-label">LINE</span>
-              <div class="diagram-box">
-                <div class="dchat">今日は「鎌倉幕府の成立」を解いてみよう。</div>
-                <div class="dchat me">征夷大将軍は誰？→源頼朝</div>
-              </div>
-            </div>
-            <div class="diagram-arrow" aria-hidden="true">→</div>
-            <div class="ai-node">AI</div>
-            <div class="diagram-arrow" aria-hidden="true">←</div>
-            <div class="diagram-col">
-              <span class="diagram-label">Web教材</span>
-              <div class="diagram-box dweb">
-                <div class="dweb-q">問. 守護と地頭の違いは？</div>
-                <div class="dweb-btn">解答を送信する</div>
-              </div>
-            </div>
-          </div>
-          <p class="diagram-note">記録をひとつにまとめる</p>
-        </div>
+        <figure class="ai-diagram">
+          <img src="img/ai-diagram.webp" width="1288" height="859" loading="lazy" decoding="async"
+               alt="LINEのトーク画面とWeb教材の問題画面から、それぞれ矢印がAIへ集まり、「記録は、ぜんぶひとつに。」とまとまることを示した図">
+        </figure>
         <div class="ai-brief">
-          <div class="ai-brief-item"><span class="ico"><img src="img/icons/ic-bolt.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></span><p>その場で採点・その場で解説</p></div>
-          <div class="ai-brief-item"><span class="ico"><img src="img/icons/ic-pen.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></span><p>記述問題もAIが採点</p></div>
-          <div class="ai-brief-item"><span class="ico"><img src="img/icons/ic-cycle.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></span><p>まちがいはニガテとして再出題</p></div>
+          <div class="ai-brief-item"><span class="ico"><img src="img/ic-ai-grade.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></span><p>その場で採点・その場で解説</p></div>
+          <div class="ai-brief-item"><span class="ico"><img src="img/ic-ai-write.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></span><p>記述問題もAIが採点</p></div>
+          <div class="ai-brief-item"><span class="ico"><img src="img/ic-ai-retry.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></span><p>まちがいはニガテとして再出題</p></div>
         </div>
       </div>
     </div>
