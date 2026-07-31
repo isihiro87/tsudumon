@@ -294,20 +294,29 @@ footer a{margin:0 10px}
   }
 
   function renderCta(s) {
+    var linkUrl = '/parents/link/?t=' + encodeURIComponent(token);
+    // 学習の記録を見る導線は**どの状態でも出す**。無料体験中の様子を見たい保護者にも、
+    // 決済後にこのページへ戻ってきた保護者にも、連携の入口が必要（設計 §4-4）。
+    var seeRecord =
+      '<a class="cta-sub" href="' + linkUrl + '">' +
+      '公式LINEでお子さまの学習の記録を見る</a>' +
+      '<p style="font-size:12.5px;color:var(--muted);text-align:center;margin:0">' +
+      '見えるのは学習の記録だけです（トークの内容は表示されません）</p>';
+
     if (s.plan.state === 'active') {
       // すでにご登録済み。二重に払わせない。
       $('ctaArea').innerHTML =
         '<p style="text-align:center;font-weight:700;color:var(--ok)">' +
         'すでにご登録いただいています</p>' +
-        '<p style="text-align:center;font-size:13px;color:var(--muted)">' +
-        s.plan.label + '</p>' +
-        '<a class="cta-sub" href="/account/">お支払い・解約の管理</a>';
+        '<p style="text-align:center;font-size:13px;color:var(--muted);margin-bottom:10px">' +
+        s.plan.label + '</p>' + seeRecord;
       return;
     }
     $('ctaArea').innerHTML =
       '<button class="cta" id="payBtn" type="button">このまま登録する（月1,280円）</button>' +
-      '<p style="font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 8px">' +
+      '<p style="font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 10px">' +
       'カード情報はStripe社が扱い、当方では保持しません</p>' +
+      seeRecord +
       '<a class="cta-sub" href="/ref/04/">まず中身を見る（無料の1単元）</a>';
     $('payBtn').addEventListener('click', startCheckout);
   }

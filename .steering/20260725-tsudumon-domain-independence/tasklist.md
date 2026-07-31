@@ -142,7 +142,10 @@
   - [x] `lp/index.html` / `lp/privacy.html` / `lp/tokushoho.html`
   - [x] `web/login/index.html` / `web/activate/index.html` / `web/account/index.html`
         （当初の計画では6ファイルだったが、フェーズ1で移設した3ページにも同じガードがあった）
-- [ ] **ホスト名ガードの対象に `www.tsudumon.jp` を追加する（2026-07-25 追記）**
+- [x] ~~**ホスト名ガードの対象に `www.tsudumon.jp` を追加する（2026-07-25 追記）**~~
+      → **不要と判断（2026-07-31）**。実測で `https://www.tsudumon.jp/login/?x=1` が
+      `https://tsudumon.jp/login/?x=1` へ **301（パス・クエリ保持）** されることを確認した。
+      Hosting 側で完結しているので、クライアント側ガードを増やすと二重管理になるだけ。
       名刺・チラシに `www.tsudumon.jp` を載せる可能性があるため、お名前.com に
       `www` の CNAME → `tsudumon.web.app` を追加し、Firebase の同一サイトに紐づける方針。
       この方式は**リダイレクトではなく同じ内容を配信する**ので、`tsudumon.jp` と

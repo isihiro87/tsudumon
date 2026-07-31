@@ -12,7 +12,9 @@
 このスクリプトが書き込む範囲:
   - `dist-web/{wb,ref,map}/`      … ジェネレータ生成物
   - `dist-web/_shared/img/`        … 章をまたぐ共通画像の集約先
-  - `dist-web/{login,activate,account,settings}/` `dist-web/_healthz.txt` … `web/` の静的ページをコピー
+  - `dist-web/{login,activate,account,settings}/`      … LINEログイン・コード有効化・お支払い・設定
+  - `dist-web/{parents,parents/link,parents/thanks,parents/dashboard,handoff}/` … 保護者導線
+  - `dist-web/_healthz.txt`                             … 上記いずれも `web/` 配下を丸ごとコピー
 
 LP（`index.html` / `privacy.html` / `tokushoho.html` と `img/`）は対象外。
 LPは `node lp/build-lp.mjs` が同じ `dist-web/` へ出力する。
@@ -235,7 +237,8 @@ def build_summary() -> None:
     # 保護者導線（parents/ parents/thanks/ parents/dashboard/ handoff/）は
     # 中学生本人が決済できない以上、唯一の課金経路なので欠けたら必ず気づけるようにする。
     for name in ("login", "activate", "account", "settings",
-                 "parents", "parents/thanks", "parents/dashboard", "handoff"):
+                 "parents", "parents/link", "parents/thanks", "parents/dashboard",
+                 "handoff"):
         if not (TSUDUMON / name / "index.html").exists():
             print(f"  ⚠ dist-web/{name}/index.html がありません（web/ の正本を確認）")
 

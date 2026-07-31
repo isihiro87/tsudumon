@@ -162,3 +162,18 @@ pdf-workbook/richmenu/ に生成してください。
 3. 本実行（**ユーザー承認後**）。既定は張り替えないので、子用メニューには影響しない
 4. 出力される `LINE_TSUDUMON_RICHMENU_PARENT=...` を `functions/.env` に追加
 5. `firebase deploy --only functions:tsudumonParentLink` で反映
+
+### ✅ 決着（2026-07-28）
+
+- **採用は `parent-a.png`**（`tsudumon-menu-parent.png` にコピー済み・887,945 bytes）
+- 生成方式は **2段階**（`scripts/generate_tsudumon_parent_richmenus.ps1`）:
+  1. 文字を一切含まない背景ビジュアルを Codex で生成（`parent-{a,b}-visual.png`）
+  2. BIZ-UDGothic を PowerShell の DrawString で合成 → 境界線を再描画 → ffmpeg でパレット量子化
+- ⚠️ **教訓: 文字入り生成と文字合成を混ぜない**。初回は Codex が「文字入りで生成した画像」に
+  さらにテキストを重ねたため、パネルの下から元の文字がはみ出して**二重に見える**欠陥が出た
+  （Codex 自身の自己チェックは「誤字・にじみなし」と報告しており、目視で初めて分かった）。
+  子用 `pro-f` は①のみ（文字ごと生成）、保護者用は②のみ（文字は合成）で統一する。
+- ⚠️ 色数は 22（28 だと 999,727 bytes ＝上限まで残り273バイトで、文言を直すだけで超える）
+- 文言は `scripts/setup-tsudumon-richmenu.ts --variant parent` のラベルと一致確認済み
+- B案（`parent-b.png`・932,842 bytes）は不採用。落ち着いてはいるが財布が茶・ノートが
+  グレー寄りで、`tsudumon-menu.png` と並べたときにオレンジ基調から外れて見える

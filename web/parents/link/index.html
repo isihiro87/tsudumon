@@ -1,0 +1,162 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>お子さまとつながる｜つづもん</title>
+<style>
+  :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --line:#fde68a;
+          --ok:#16a34a; --ng:#dc2626; --muted:#78716c; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+         color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
+         display:flex; align-items:flex-start; justify-content:center; padding:24px 16px 48px; }
+  .card { width:100%; max-width:460px; background:#fff; border:2px solid var(--line); border-radius:20px;
+          padding:28px 22px 26px; box-shadow:0 8px 24px rgba(120,80,20,.14); margin-top:12px; }
+  .center { text-align:center; }
+  .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
+           padding:4px 16px; border-radius:20px; font-size:13px; }
+  h1 { font-size:20px; color:var(--deep); margin:14px 0 8px; line-height:1.55; }
+  p { font-size:14px; line-height:1.9; color:#44403c; margin-bottom:10px; }
+  .big-btn { display:block; width:100%; margin-top:12px; border:none; border-radius:14px; padding:14px;
+             font-size:16px; font-weight:bold; text-decoration:none; cursor:pointer; font-family:inherit;
+             text-align:center; }
+  .big-btn:disabled { opacity:.6; cursor:default; }
+  .btn-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
+  .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
+  .btn-sub  { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .privacy { display:grid; grid-template-columns:1fr; gap:10px; margin:16px 0 6px; }
+  @media(min-width:440px){ .privacy { grid-template-columns:1fr 1fr; } }
+  .privacy .box { border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.85; }
+  .privacy .see  { background:#f0fdf4; border:1.5px solid #bbf7d0; }
+  .privacy .hide { background:#fafaf9; border:1.5px solid #e7e5e4; }
+  .privacy h2 { font-size:13.5px; margin:0 0 4px; }
+  .privacy .see h2 { color:#15803d; }
+  .privacy .hide h2 { color:#57534e; }
+  .privacy ul { margin:0; padding-left:19px; }
+  .note { font-size:12.5px; color:var(--muted); line-height:1.85; margin-top:12px; }
+  .msg { font-size:13.5px; line-height:1.8; border-radius:10px; padding:10px 13px; margin-top:12px; }
+  .msg.err { background:#fef2f2; color:var(--ng); border:1px solid #fecaca; }
+  .msg.ok  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .spinner { width:32px; height:32px; margin:18px auto; border:4px solid #f1e6cf;
+             border-top-color:var(--amber); border-radius:50%; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .hidden { display:none; }
+</style></head><body>
+<div class="card">
+  <div class="center"><span class="badge">つづもん</span></div>
+
+  <section id="stIntro" class="hidden">
+    <h1>お子さまの学習の記録を見る</h1>
+    <p>公式LINEでつづもんと友だちになり、お子さまとつながると、学習した日・時間・進んだ単元・正答率を、いつでもご自身のスマートフォンからご覧いただけます。</p>
+    <p class="note">無料体験の期間中でもご覧いただけます。ご登録（お支払い）は必要ありません。</p>
+
+    <div class="privacy">
+      <div class="box see">
+        <h2>✅ 見えるもの</h2>
+        <ul><li>学習した日・時間</li><li>進んだ単元</li><li>問題数・正答率</li></ul>
+      </div>
+      <div class="box hide">
+        <h2>🔒 見えないもの</h2>
+        <ul><li>AIとのトークの内容</li><li>質問した文章・相談</li><li>まちがえた問題（件数も）</li></ul>
+      </div>
+    </div>
+    <p class="note">つながったことは、お子さまのLINEにも通知されます。お子さまはいつでもご自身で解除できます。</p>
+
+    <button class="big-btn btn-line" id="linkBtn" type="button">公式LINEでつながる</button>
+    <a class="big-btn btn-sub" id="backLink" href="/parents/">もどる</a>
+  </section>
+
+  <section id="stWorking">
+    <h1>確認しています…</h1>
+    <div class="spinner"></div>
+  </section>
+
+  <section id="stDone" class="hidden">
+    <h1 id="doneTitle">つながりました</h1>
+    <p id="doneBody"></p>
+    <a class="big-btn btn-main" href="/parents/dashboard/">学習の記録をひらく</a>
+    <p class="note">次からは、公式LINEのメニュー「学習の記録」からいつでも開けます。</p>
+  </section>
+
+  <section id="stError" class="hidden">
+    <h1>つながることができませんでした</h1>
+    <p id="errBody"></p>
+    <a class="big-btn btn-sub" href="/parents/">保護者の方へ（サービスの説明）</a>
+  </section>
+
+  <div id="msgArea"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {
+  initializeAuth, browserLocalPersistence, browserSessionPersistence,
+  inMemoryPersistence, onAuthStateChanged,
+} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+// 親子連携の**唯一の実装**。/parents/（体験中でも）と /parents/thanks/（決済直後）の
+// どちらからもここに来る。以前は決済完了ページだけに実装があり、決済しない保護者と
+// ページを閉じた保護者が連携できなかった。
+// 設計: pdf-workbook/.steering/20260727-parent-handoff/design.md §4-4
+var LINK_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonParentLink';
+var token = new URLSearchParams(location.search).get('t') || '';
+
+var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
+var auth = initializeAuth(app, {
+  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
+});
+
+var $ = function (id) { return document.getElementById(id); };
+function show(id) {
+  ['stIntro', 'stWorking', 'stDone', 'stError'].forEach(function (s) {
+    $(s).classList.toggle('hidden', s !== id);
+  });
+}
+function fail(text) {
+  show('stError');
+  $('errBody').textContent = text;
+}
+
+if (!token) {
+  fail('ご案内のリンクが読み取れませんでした。お子さまから届いたQRコードかリンクを、もう一度開いてください。');
+} else {
+  $('backLink').href = '/parents/?t=' + encodeURIComponent(token);
+  onAuthStateChanged(auth, function (user) {
+    if (!user) {
+      show('stIntro');
+      $('linkBtn').onclick = function () {
+        var next = '/parents/link/?t=' + encodeURIComponent(token);
+        location.href = '/login/?next=' + encodeURIComponent(next);
+      };
+      return;
+    }
+    // ログイン済みで戻ってきた＝そのまま連携まで済ませる（もう1タップさせない）。
+    linkNow(user);
+  });
+}
+
+async function linkNow(user) {
+  show('stWorking');
+  try {
+    var idToken = await user.getIdToken();
+    var res = await fetch(LINK_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken, t: token }),
+    });
+    var data = await res.json();
+    if (data.ok) {
+      show('stDone');
+      $('doneTitle').textContent = (data.childName || 'お子さま') + 'とつながりました';
+      $('doneBody').textContent = data.childCount > 1
+        ? '連携中のお子さまは' + data.childCount + '人です。学習の記録は、お一人ずつご覧いただけます。'
+        : '学習した日・時間・進んだ単元・正答率をご覧いただけます。トークの内容は表示されません。';
+      return;
+    }
+    fail(data.message || 'つながることができませんでした。時間をおいてお試しください。');
+  } catch (e) {
+    fail('通信に失敗しました。電波の良い場所でお試しください。');
+  }
+}
+</script>
+</body></html>

@@ -21,6 +21,7 @@ PDF は A4 紙面・印刷・所有用、Web 版はスマホで読む「レッ�
    全巻の購入者向け公開はライセンスゲートの設計が決まってから。
 """
 import argparse
+import hashlib
 import html
 import json
 import os
@@ -307,16 +308,29 @@ def build(chapter: str) -> tuple[str, list[str]]:
 
     char_dir = BASE / "assets" / "characters"
 
-    def char_web(name: str, cls: str):
+    def char_web(name: str, cls: str, bust: bool = False):
+        """assets/characters/{name} をページの img/ へ。
+
+        bust=True にすると、出力名に中身のハッシュを入れる
+        （例 char_fab_sensei.3f9a2c11.png）。画像は Cache-Control 24時間＋
+        Service Worker のキャッシュ優先で配っているので、**同じ名前のまま
+        中身を差し替えると、古い絵が最大1日返り続ける**。差し替えの多い
+        アイコン類はハッシュ付きにして、名前ごと変わるようにする。"""
         src = char_dir / name
         if not src.exists():
             return ""
         flat = "char_" + name
+        if bust:
+            stem, ext = flat.rsplit(".", 1)
+            h = hashlib.md5(src.read_bytes()).hexdigest()[:8]
+            flat = f"{stem}.{h}.{ext}"
         images.append(str(src) + "|" + flat)
         return f'<img class="{cls}" src="img/{flat}" alt="">'
 
     navi_html = (char_web("char_sensei_m_sm.png", "navi navi-char")
                  or '<div class="navi navi-emoji">🦉</div>')
+    # チャットの丸ボタンの中身（AIロボットのアイコン）。無ければ従来の絵文字にフォールバック。
+    fab_html = char_web("fab_ai.png", "fab-img", bust=True) or "🤖"
 
     # ── ホーム（表紙＋目次。進捗表示は JS が data-t を見て差し込む）──
     def toc_thumb(t):
@@ -560,6 +574,7 @@ def build(chapter: str) -> tuple[str, list[str]]:
             .replace("__TITLE__", f"{spec['volume']} {spec['title']}｜つづもん参考書")
             .replace("__HEADBAR__", f"{esc(spec['volume'])} {esc(spec['title'])}")
             .replace("__DRAWER__", drawer)
+            .replace("__FAB__", fab_html)
             .replace("__NTOPICS__", str(len(spec["topics"])))
             .replace("__STORAGE_KEY__", f"tzmref-{ch_no}")
             .replace("__CH_NO__", ch_no)
@@ -654,7 +669,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   @media (hover:hover) { .play-unit:hover { filter:brightness(1.06); } }
   .play-unit[hidden] { display:none; }
   /* 問題集の「解説を読む」から来たときに出す「問題にもどる」ボタン（すぐ問題へ戻れる） */
-  .backpill { position:fixed; left:50%; transform:translateX(-50%); bottom:74px; z-index:40;
+  .backpill { position:fixed; left:50%; transform:translateX(-50%);
+              bottom:calc(78px + env(safe-area-inset-bottom)); z-index:40;
               background:var(--brand); color:#fff; font-weight:bold; font-size:13.5px;
               border-radius:22px; padding:9px 18px 9px 13px; text-decoration:none;
               box-shadow:0 4px 14px rgba(120,50,10,.35); display:inline-flex; align-items:center; gap:5px; }
@@ -726,7 +742,8 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
                white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .bar-step { flex:none; font-size:11px; font-weight:bold; color:var(--brand); }
   /* 初回だけ出す操作ヒント（PCはキー、スマホはスワイプ） */
-  .hintbar { position:fixed; left:50%; transform:translateX(-50%); bottom:132px; z-index:35;
+  .hintbar { position:fixed; left:50%; transform:translateX(-50%);
+             bottom:calc(86px + env(safe-area-inset-bottom)); z-index:35;
              background:rgba(28,25,23,.88); color:#fff; font-size:12.5px; font-weight:bold;
              border-radius:20px; padding:8px 16px; box-shadow:0 4px 14px rgba(0,0,0,.3);
              animation:hintIn .3s ease; }
@@ -1248,16 +1265,38 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   }
 
   /* ── ページ内チャット（AI）── */
-  .chat-fab { position:fixed; right:14px; bottom:calc(84px + env(safe-area-inset-bottom));
+  /* 中身はつづ先生の顔アイコン（丸くトリミングして全面に敷く）。
+     下端からの位置は「ナビの高さ（8+54+8=70）＋すこし」。丸ボタン化で低くなったぶん下げる。 */
+  .chat-fab { position:fixed; right:14px; bottom:calc(80px + env(safe-area-inset-bottom));
+              padding:0; overflow:hidden;
               z-index:20; width:56px; height:56px; border-radius:50%;
               border:none; background:var(--brand); color:#fff; font-size:26px;
-              cursor:pointer; box-shadow:0 4px 12px rgba(180,83,9,.4); }
+              cursor:pointer;
+              /* ブランド色のリング＋落ち影。イラストが淡いので、これが無いと
+                 クリーム地のページに溶けて「押せるもの」に見えない。 */
+              box-shadow:0 0 0 2.5px var(--brand), 0 4px 12px rgba(180,83,9,.4); }
   .chat-fab.hidden { display:none; }
-  /* スクロール中は薄く小さくして本文を隠さない（読んでいる最中は主役ではない） */
-  .chat-fab { transition:opacity .2s ease, transform .2s ease; }
-  .chat-fab.dim { opacity:.34; transform:scale(.82); }
-  /* プレーヤーが出ているときは、その上に重ねる */
-  body.has-player .chat-fab { bottom:calc(146px + env(safe-area-inset-bottom)); }
+  /* 画像側で「円に切られても欠けない余白」を持たせてあるので、ここでは素直に敷くだけ。 */
+  .fab-img { width:100%; height:100%; display:block; border-radius:50%;
+             object-fit:contain; }
+  /* 読んでいる最中のチャットボタンは主役ではないので、じゃまにならないよう薄くする。
+       - スクロール中   … 動かしている間だけ薄く（止まれば戻る）
+       - 読み上げ中     … 読み終わる／止めるまでずっと薄いまま
+     どちらも押せることは変えない（触れれば元の濃さに戻る）。 */
+  .chat-fab { transition:opacity .25s ease, transform .25s ease, bottom .18s ease; }
+  .chat-fab.dim { opacity:.3; transform:scale(.82); }
+  body.reading .chat-fab { opacity:.22; transform:scale(.78); }
+  /* 触れた・押した・キーボードで選んだときは、はっきり出す */
+  .chat-fab:active, .chat-fab:focus-visible,
+  body.reading .chat-fab:active, body.reading .chat-fab:focus-visible {
+    opacity:1; transform:none; }
+  @media (hover:hover) {
+    .chat-fab:hover, body.reading .chat-fab:hover { opacity:1; transform:none; }
+  }
+  /* プレーヤーが出ているときは、その1行ぶんだけ上げる。
+     ナビとプレーヤーが上下2段だった頃の高さ（146px）のままだと、
+     1行に統合したいま、フッターとの間が大きく空いてしまう。 */
+  body.nav-merged .chat-fab { bottom:calc(68px + env(safe-area-inset-bottom)); }
   .chat-panel { position:fixed; right:12px; bottom:calc(84px + env(safe-area-inset-bottom));
                 z-index:21; width:min(400px, calc(100vw - 24px));
                 height:min(540px, calc(100vh - 160px));
@@ -1420,7 +1459,7 @@ __VIEWS__
   <button class="lock-sublink" id="lockSub">ためさずに月額プランに登録（1,280円／月）</button>
   <button class="lock-close" id="lockClose">とじる</button>
 </div></div>
-<button class="chat-fab" id="chatFab" aria-label="AIに質問する">🤖</button>
+<button class="chat-fab" id="chatFab" aria-label="AIに質問する">__FAB__</button>
 <section class="chat-panel" id="chatPanel" hidden>
   <header class="chat-head">
     <span class="chat-title">🤖 AIに質問</span>
@@ -2215,7 +2254,8 @@ __VIEWS__
       if (fab && (down || up)) {
         fab.classList.add('dim');
         clearTimeout(fabTimer);
-        fabTimer = setTimeout(function () { fab.classList.remove('dim'); }, 900);
+        // 指を止めてから戻す。900ms だと連続スクロール中に何度も濃くなって目ざわりだった。
+        fabTimer = setTimeout(function () { fab.classList.remove('dim'); }, 1400);
       }
       lastY = y;
     }

@@ -70,6 +70,175 @@ SETS = {
     ],
 }
 
+# ── 実画面チラ見せの面 ────────────────────────────────────────
+# 価格・日付・アプリ画面など「1文字でも崩れたら困るもの」は画像生成AIに描かせず、
+# LP の実スクリーンショット（lp/img/）を敷いてここで組む。
+SHOT_DIR = BASE.parent / "lp" / "img"
+TMP_DIR = BASE / "assets"
+
+SHOT_SETS = {
+    "reveal": [
+        {
+            # 質問スタンプを上に乗せる面。下半分は意図的に空けておく。
+            "name": "ask",
+            "lines": ["つづもんって、", "どんな教材だと思う？"],
+            "mark": 1,
+            "note": "↓ 下のスタンプから、なんでも聞いてください",
+            "align": "top",
+        },
+        {
+            "name": "line",
+            "lines": ["今日やることが、", "LINEに届く。"],
+            "mark": 1,
+            "shot": "screen-app-line.webp",
+            "shotCropTop": 130,      # 「チャットでスタディ」のヘッダーを切る
+            "shotCropBottom": 1240,  # 会話の下の空白を切る
+            "note": "選んだ時刻に、その日の1単元が。",
+        },
+        {
+            "name": "write",
+            "lines": ["記述も、", "AIがその場で採点。"],
+            "mark": 1,
+            "shot": "screen-app-write.webp",
+            "note": "「この答えで合ってる？」が、もう起きない。",
+        },
+        {
+            "name": "qa",
+            "lines": ["基礎用語は、", "一問一答で何周でも。"],
+            "mark": 1,
+            "shot": "screen-app-qa.webp",
+            "shotCropBottom": 1180,   # 下の空白を切る
+            "note": "まちがえた問題は、ニガテとして後日もう一度。",
+        },
+        {
+            # AI先生はLPの公式キャラ（3D）。連作の水彩とはトーンが違うので、
+            # 周囲を溶かして地に馴染ませ、文字を主役にする。
+            "name": "ai",
+            "lines": ["わからないことは、", "質問し放題。"],
+            "mark": 1,
+            "shot": "ai-teacher-card.webp",
+            "shotW": 600,
+            "shotBlend": True,
+            "note": "24時間、何度聞いても嫌な顔をしません。",
+        },
+    ],
+    # 8/1(土) — 保護者に見せてもらうための1枚。
+    # 価格・解約・安全性という「1文字も崩せない情報」なので、必ずこちら（HTML→PNG）で作る。
+    "parent": [
+        {
+            "name": "price",
+            "lines": ["おうちの人に、", "見せてください。"],
+            "mark": 1,
+            "card": [
+                ("料金", "月額 1,280円", True),
+                ("おためし", "3日間 無料。お支払いの登録はいりません", False),
+                ("解約", "いつでもできます。違約金はありません", False),
+                ("安全", "AIとのやり取りは、運営が定期的に確認しています", False),
+            ],
+            "note": "↑ くわしくは、上のリンクから（保護者の方へのページ）",
+        },
+    ],
+}
+
+PAGE_SHOT = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { background:#888; }
+  .story { position:absolute; top:0; left:0; width:%dpx; height:%dpx; overflow:hidden;
+           font-family:"Yu Mincho","YuMincho","Hiragino Mincho ProN","MS PMincho",serif;
+           background:
+             radial-gradient(circle at 20%% 12%%, rgba(255,255,255,.92) 0 32%%, transparent 64%%),
+             radial-gradient(circle at 84%% 84%%, rgba(253,230,138,.22) 0 26%%, transparent 58%%),
+             linear-gradient(160deg,#fffdf8,#fdf6e8); color:#3b2415; }
+  /* セーフエリア（上下250pxはUIに隠れる） */
+  .inner { position:absolute; inset:280px 90px 300px; display:flex; flex-direction:column;
+           align-items:flex-start; justify-content:center; }
+  .inner.top { justify-content:flex-start; }
+  .line { font-size:72px; font-weight:bold; line-height:1.55; letter-spacing:.03em;
+          white-space:nowrap; }
+  .line .mk { background:linear-gradient(transparent 62%%, rgba(245,158,11,.55) 62%%);
+              padding:0 6px; }
+  /* 実画面。角丸＋影で「スマホの中身」に見せる */
+  .shotwrap { align-self:center; margin-top:44px; border-radius:26px; overflow:hidden;
+              box-shadow:0 18px 40px rgba(120,80,20,.28); border:3px solid rgba(124,45,18,.14);
+              background:#fff; }
+  .shotwrap img { display:block; width:%dpx; height:auto; }
+  /* 背景が紙色の素材（AI先生など）は、枠に入れず周囲を溶かして地に馴染ませる */
+  .shotwrap.blend { border:none; box-shadow:none; background:transparent; border-radius:0;
+                    margin-top:24px; }
+  .shotwrap.blend img { -webkit-mask-image:radial-gradient(ellipse at 50%% 48%%,
+                          #000 52%%, transparent 76%%);
+                        mask-image:radial-gradient(ellipse at 50%% 48%%,
+                          #000 52%%, transparent 76%%); }
+  .note { font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+          font-size:32px; line-height:1.75; margin-top:38px; color:#7c5a3a; }
+  /* 価格・解約などの「崩せない情報」を並べるカード */
+  .card { align-self:stretch; margin-top:46px; background:rgba(255,255,255,.88);
+          border:2px solid rgba(124,45,18,.13); border-radius:30px; padding:20px 44px;
+          box-shadow:0 14px 34px rgba(120,80,20,.15); }
+  .card .row { display:flex; align-items:baseline; gap:22px; padding:26px 0;
+               border-bottom:1px solid rgba(124,45,18,.10); }
+  .card .row:last-child { border-bottom:none; }
+  .card .k { font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+             font-size:27px; font-weight:bold; color:#b45309; white-space:nowrap;
+             min-width:150px; letter-spacing:.08em; }
+  .card .v { font-family:"Yu Gothic","Hiragino Kaku Gothic ProN",sans-serif;
+             font-size:33px; line-height:1.5; color:#3b2415; }
+  .card .v.big { font-size:62px; font-weight:bold; letter-spacing:.01em; }
+  .card .tax { font-family:"Yu Gothic",sans-serif; font-size:28px; color:#7c5a3a;
+               margin-left:10px; }
+  .no { position:absolute; right:90px; bottom:250px; font-family:"Yu Gothic",sans-serif;
+        font-size:28px; letter-spacing:.2em; color:rgba(124,45,18,.35); }
+</style></head><body>
+<div class="story">
+  <div class="inner %s">
+    <div>%s</div>
+    %s
+    %s
+  </div>
+  <div class="no">%s</div>
+</div></body></html>"""
+
+SHOT_W = 520   # 実画面の表示幅
+
+
+def prep_shot(item: dict) -> str:
+    """スクショを必要なら上部トリミングして、HTMLから参照できるURIを返す。"""
+    from PIL import Image
+    src = SHOT_DIR / item["shot"]
+    crop = item.get("shotCropTop", 0)
+    dest = TMP_DIR / f"_shot-{item['name']}.png"
+    im = Image.open(src)
+    bottom = item.get("shotCropBottom") or im.height
+    if crop or bottom != im.height:
+        im = im.crop((0, crop, im.width, bottom))
+    im.save(dest)
+    return dest.as_uri()
+
+
+def render_shot(item: dict, no: str) -> str:
+    lines = []
+    for i, ln in enumerate(item["lines"]):
+        body = esc(ln)
+        if item.get("mark") == i:
+            body = f'<span class="mk">{body}</span>'
+        lines.append(f'<div class="line">{body}</div>')
+    shot = ""
+    if item.get("shot"):
+        cls = "shotwrap blend" if item.get("shotBlend") else "shotwrap"
+        shot = f'<div class="{cls}"><img src="{prep_shot(item)}" alt=""></div>'
+    elif item.get("card"):
+        rows = []
+        for key, val, big in item["card"]:
+            v = f'<span class="v big">{esc(val)}</span><span class="tax">（税込）</span>' \
+                if big else f'<span class="v">{esc(val)}</span>'
+            rows.append(f'<div class="row"><span class="k">{esc(key)}</span>{v}</div>')
+        shot = f'<div class="card">{"".join(rows)}</div>'
+    note = f'<div class="note">{esc(item["note"])}</div>' if item.get("note") else ""
+    align = "top" if item.get("align") == "top" else ""
+    return PAGE_SHOT % (W, H, item.get("shotW", SHOT_W),
+                        align, "".join(lines), shot, note, no)
+
+
 PAGE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8"><style>
   * { margin:0; padding:0; box-sizing:border-box; }
   html, body { background:#888; }
@@ -179,8 +348,18 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--set", default="teaser")
     args = ap.parse_args()
-    items = SETS[args.set]
     OUT.mkdir(parents=True, exist_ok=True)
+
+    # 実画面を敷く面（SHOT_SETS）は連番ではなくファイル名で出す
+    if args.set in SHOT_SETS:
+        items = SHOT_SETS[args.set]
+        for item in items:
+            dest = OUT / f"{args.set}-{item['name']}.png"
+            shoot(render_shot(item, ""), dest)
+            print(f"wrote {dest}")
+        return
+
+    items = SETS[args.set]
     for i, item in enumerate(items, 1):
         dest = OUT / f"{args.set}-{i}.png"
         shoot(render(item, f"{i} / {len(items)}"), dest)

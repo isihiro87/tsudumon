@@ -19,8 +19,9 @@ LPの「月額登録できます」系の文言は、公開時点でStripeが動
       フッターから相互リンク。`build-lp.mjs` のコピー対象にも追加済み
       ⚠️ 管轄裁判所は「名古屋地方裁判所岡崎支部」と仮置き。公開前に事業所所在地と整合を確認する
 - [x] LP脚注のLINE ID を `@824cebif`（一問一答）→ `@215uijik`（つづもん）に修正（2026-07-26）
-- [ ] **LPの「今日やることがLINEに届く」と実装の整合**（日次プッシュは未実装）。
-      実装するか表現を変えるかを公開前に決める（`docs/つづもん-登録フロー設計.md` §9 参照）
+- [x] **LPの「今日やることがLINEに届く」と実装の整合**
+      → 2026-07-31 解決。`tsudumonDailyUnit`（毎正時起動→各自の設定時刻の人にだけ送る）が
+      本番にデプロイ済みであることを `firebase functions:list` で確認した。**表現の変更は不要**
 
 ## B. 公開前に修正（Stripeと無関係・いつでも着手可）
 
@@ -45,8 +46,22 @@ LPの「月額登録できます」系の文言は、公開時点でStripeが動
 
 - [ ] 利用者の声セクション：実声3件が揃うまでコメントアウト維持（ダミーのまま有効化禁止）
 - [ ] GA4 等の計測導入
+      → 計装は完成済み（`tzmTrack()` が cta_click / scroll_depth / faq_open ほかを送る）。
+      **`lp/index.html` の `window.TZM_GA_ID = ''` に測定IDを入れるだけ**で有効になる。
+      空のままだと公開日の数字が一切取れない（告知プラン §7「見るべき数字」）
 - [ ] 全19章の教材公開状態の最終確認（ゲート動作・無料単元のみ開放）は
       tasklist.md フェーズ4の実機検証と同時に実施
+
+## D. 2026-07-31 の実測で解決したもの
+
+- [x] Stripe は**本番モード**（`sk_live`）で稼働。きょうだい価格 Price も設定ずみ
+- [x] 販売に必要なページは全て 200（`/` `/parents/` `/parents/link/` `/parents/dashboard/`
+      `/settings/` `/account/` `terms` `tokushoho` `privacy` `/map/`）
+- [x] `www.tsudumon.jp` は Hosting 側で `tsudumon.jp` へ 301（**パスとクエリを保持**）。
+      ドメイン独立タスクの「ホスト名ガードに www を足す」は**不要**と判断した
+- [x] LP相談チャット（`tsudumonLpChat`）は本番で「月額1,280円」を正しく回答する
+- [x] cron 4本（`tsudumonDailyUnit` / `TrialReminder` / `Lifecycle` / `Recap`）はデプロイ済み
+- [x] Functions のテスト 1,334件 全通過
 
 ## 監査でOK確認済み（再確認不要）
 

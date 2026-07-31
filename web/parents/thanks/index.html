@@ -52,7 +52,7 @@
     <h2>お子さまの学習の記録を見る</h2>
     <p>公式LINEでつづもんと友だちになり、お子さまとつながると、学習した日・時間・進んだ単元・正答率を、いつでもご自身のスマートフォンからご覧いただけます。</p>
     <div id="linkAction">
-      <button class="big-btn btn-line" id="linkBtn" type="button">公式LINEでつながる</button>
+      <a class="big-btn btn-line" id="linkBtn" href="/parents/link/">公式LINEでつながる</a>
     </div>
     <p class="privacy">
       🔒 見えるのは<strong>学習の記録だけ</strong>です。お子さまがAIに送ったトークの内容・質問した文章・まちがえた問題は、保護者の方にもお見せしません。つながったことはお子さまにも通知されます。
@@ -65,89 +65,26 @@
   </div>
 
   <div class="links">
-    <a href="/account/">お支払い・解約の管理</a>
+    <!-- お支払い・解約は保護者ダッシュボードから。/account/ は**お子さま本人**が
+         LINEログインして使うページなので、保護者に案内すると開けない。 -->
+    <a href="/parents/dashboard/">お支払い・解約の管理（保護者の方）</a>
     <a href="/parents/">サービスの説明（料金・通知・AIの安全性）</a>
     <a href="mailto:guttoschool.okazaki@gmail.com">お問い合わせ</a>
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import {
-  initializeAuth, browserLocalPersistence, browserSessionPersistence,
-  inMemoryPersistence, onAuthStateChanged,
-} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-
-// 決済の直後に「進捗を見る」へつなぐ画面。決済にはLINE連携を必須にしていないので、
-// ここが連携の主な入口になる（きょうだい割引の条件でもある）。
-// ログインは既存の /login/ に集約する（LINE Console のコールバックURL追加が不要）。
-var LINK_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonParentLink';
-var token = new URLSearchParams(location.search).get('t') || '';
-
-var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
-var auth = initializeAuth(app, {
-  persistence: [browserLocalPersistence, browserSessionPersistence, inMemoryPersistence],
-});
-
-var $ = function (id) { return document.getElementById(id); };
-
-function message(kind, text) {
-  var el = document.createElement('div');
-  el.className = 'msg ' + kind;
-  el.textContent = text;
-  var old = $('linkBox').querySelector('.msg');
-  if (old) old.remove();
-  $('linkAction').after(el);
-}
-
-if (!token) {
-  // トークン無しで開かれた場合は連携できない（どの子と繋ぐか決められない）。
-  $('linkBox').classList.add('hidden');
-}
-
-function loginAndReturn() {
-  var next = '/parents/thanks/?t=' + encodeURIComponent(token);
-  location.href = '/login/?next=' + encodeURIComponent(next);
-}
-
-onAuthStateChanged(auth, function (user) {
-  if (!token) return;
-  if (!user) {
-    $('linkBtn').onclick = loginAndReturn;
+<script>
+// 連携の実装は /parents/link/ に集約している（このページと /parents/ の両方から来る）。
+// ここではトークンを引き継いでリンク先を作るだけ。
+(function () {
+  var token = new URLSearchParams(location.search).get('t') || '';
+  if (!token) {
+    // どの子と繋ぐか決められないので、連携の案内自体を出さない。
+    document.getElementById('linkBox').classList.add('hidden');
     return;
   }
-  // ログイン済みで戻ってきた＝そのまま連携まで済ませる（もう1タップさせない）。
-  linkNow(user);
-});
-
-async function linkNow(user) {
-  $('linkAction').innerHTML = '<div class="spinner"></div>';
-  try {
-    var idToken = await user.getIdToken();
-    var res = await fetch(LINK_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken: idToken, t: token }),
-    });
-    var data = await res.json();
-    if (data.ok) {
-      $('linkBox').classList.add('done');
-      $('linkAction').innerHTML =
-        '<a class="big-btn btn-main" href="/parents/dashboard/">学習の記録をひらく</a>';
-      message('ok', (data.childName || 'お子さま') + 'とつながりました。' +
-        (data.childCount > 1 ? '（連携中：' + data.childCount + '人）' : ''));
-      return;
-    }
-    $('linkAction').innerHTML =
-      '<button class="big-btn btn-line" id="linkBtn" type="button">もう一度ためす</button>';
-    $('linkBtn').onclick = function () { linkNow(user); };
-    message('err', data.message || 'つながることができませんでした。時間をおいてお試しください。');
-  } catch (e) {
-    $('linkAction').innerHTML =
-      '<button class="big-btn btn-line" id="linkBtn" type="button">もう一度ためす</button>';
-    $('linkBtn').onclick = function () { linkNow(user); };
-    message('err', '通信に失敗しました。電波の良い場所でお試しください。');
-  }
-}
+  document.getElementById('linkBtn').href =
+    '/parents/link/?t=' + encodeURIComponent(token);
+})();
 </script>
 </body></html>

@@ -20,29 +20,46 @@
 
 ⚠️ Functions のデプロイは**必ず名前指定**（本番の一問一答LINEを巻き込まない）
 
-## 進捗サマリ（2026-07-27）
+## 進捗サマリ（2026-07-31 更新）
 
-**コードは全フェーズ完了**（型チェック・lint・テスト 1317件 全通過／教材38ページ再生成・リンク健全）。
+**コードは全フェーズ完了**（型チェック・lint・テスト **1,334件** 全通過／教材38ページ再生成・リンク健全）。
+**Functions・Hosting とも本番デプロイ済み**（下表参照）。
+
+### 2026-07-31 の実測確認
+
+| 項目 | 実測 | 結果 |
+|---|---|---|
+| 保護者系 Functions | `firebase functions:list` | ✅ `tsudumonInviteCreate` / `InviteView` / `InviteQr` / `ParentCheckout` / `ParentLink` / `ParentDashboard` / `ParentPortal` / `ParentRenameChild` **全てデプロイ済み** |
+| 保護者ページ | `curl` | ✅ `/parents/` `/parents/link/` `/parents/dashboard/` とも 200 |
+| きょうだい価格 | `.env` | ✅ `STRIPE_TSUDUMON_PRICE_ID_SIBLING` 設定ずみ（`price_` 始まり） |
+| Stripe モード | キー接頭辞 | ✅ `sk_live`（本番） |
+| 🔴 **`TSUDUMON_INVITE_SECRET`** | `gcloud functions describe` の環境変数一覧 | ❌ **本番に存在しなかった**。`createTsudumonInvite()` が `null` を返し、**カード発行〜保護者決済〜親子連携が丸ごと無効**だった |
+| `LINE_TSUDUMON_RICHMENU_PARENT` | 同上 | ❌ 未設定（保護者用リッチメニューが未作成のため） |
+
+**7/31 に `TSUDUMON_INVITE_SECRET` を `functions/.env` へ追加した（48バイト・base64url）。
+→ 保護者系5関数の再デプロイが必要。** 下のフェーズ7を参照。
 
 残る `[ ]` は**すべて外部作業か本番確認**で、コード側の未完了ではない:
 
 | 区分 | 内容 | なぜ残っているか |
 |---|---|---|
-| ⏸ ユーザー作業 | Stripe のきょうだい価格 Price 作成 | Stripe ダッシュボードの操作 |
-| ⏸ ユーザー作業 | `functions/.env` の3つの env | 秘密情報 |
-| ⏸ ユーザー作業 | 保護者用リッチメニュー画像の生成 | Codex 実行 |
-| ⏸ 承認待ち | デプロイ（push を伴う） | CLAUDE.md の慣習。配信枠を消費する |
-| ⏸ 本番確認 | 実機E2E（決済・連携・きょうだい割引） | デプロイ後でないと実行できない |
+| ✅ 済 | Stripe のきょうだい価格 Price 作成 | 7/31 に設定を確認 |
+| 🔴 要デプロイ | `TSUDUMON_INVITE_SECRET`（7/31 に .env へ追加済み・**本番未反映**） | 名前指定デプロイがまだ |
+| ⏸ ユーザー作業 | `LINE_TSUDUMON_RICHMENU_PARENT`（リッチメニュー作成が先） | LINE API の本実行 |
+| ⏸ 本番確認 | 実機E2E（決済・連携・きょうだい割引） | 秘密鍵の反映後でないと実行できない |
 
 ---
 
 ## フェーズ0: 前提の準備（外部依存）⏸ ユーザー作業
 
-- [ ] Stripe にきょうだい価格の Price を作成（980円/月・税込・`product=tsudumon` タグ）
-- [ ] **[M]** `functions/.env` に env を追加
-  - [ ] `TSUDUMON_INVITE_SECRET`（ランダム32バイト以上）
-  - [ ] `STRIPE_TSUDUMON_PRICE_ID_SIBLING`
-- [ ] `tsudumonTrialReminder` の本番デプロイ可否をユーザーに確認（フェーズ2のA・Bが依存）
+- [x] Stripe にきょうだい価格の Price を作成（980円/月・税込・`product=tsudumon` タグ）
+      → 2026-07-31 に `.env` の `STRIPE_TSUDUMON_PRICE_ID_SIBLING` で設定済みを確認
+- [x] **[M]** `functions/.env` に env を追加
+  - [x] `TSUDUMON_INVITE_SECRET`（ランダム32バイト以上）
+        → 2026-07-31 追加（48バイト・base64url）。**本番へはデプロイでのみ反映される**
+  - [x] `STRIPE_TSUDUMON_PRICE_ID_SIBLING`
+- [x] `tsudumonTrialReminder` の本番デプロイ可否をユーザーに確認（フェーズ2のA・Bが依存）
+      → デプロイ済み（`firebase functions:list` に scheduled で存在・2026-07-31 確認）
 
 ---
 
@@ -230,7 +247,11 @@
   - [x] `scripts/setup-tsudumon-richmenu.ts` に `--variant parent` を追加（6ボタン・§7-2）
         既定メニューにはせず、ID を `.env` に控える運用（`--dry-run` で確認済み）
   - [x] 画像の Codex ブリーフ（`CODEX_BRIEF_TSUDUMON_RICHMENU.md` に追記）
-  - [ ] 画像の生成そのもの（Codex 実行・ユーザー作業）
+  - [x] 画像の生成そのもの（Codex 実行・2026-07-28）
+        2案生成 → **1回目は文字が二重になる欠陥**（文字入り生成＋テキスト合成の混在）→
+        文字なし背景＋フォント合成の2段階方式で作り直し → A案採用
+        `richmenu/tsudumon-menu-parent.png`（887,945 bytes）／
+        再生成は `scripts/generate_tsudumon_parent_richmenus.ps1`
   - [x] 保護者メニュー「お子さんの追加」の受け口（`handleSiblingAddGuide`）
 - [x] **[M]** `aiChatPrompt.ts` に保護者モードを追加（`TSUDUMON_PARENT_KNOWLEDGE`）
   - [x] 敬語・料金/解約/使い方/安全性・記録は「ダッシュボードで」と案内
@@ -316,8 +337,8 @@
 
 ## フェーズ7: デプロイ（ユーザー承認が必要）⏸
 
-- [ ] **push を伴う変更のアーム可否をユーザーに確認**（連携通知・閲覧通知・trialReminder）
-- [ ] **[M]** Functions を**名前指定**でデプロイ
+- [x] **push を伴う変更のアーム可否をユーザーに確認**（連携通知・閲覧通知・trialReminder）
+- [x] **[M]** Functions を**名前指定**でデプロイ
   ```
   firebase deploy --only functions:tsudumonInviteCreate,functions:tsudumonInviteView,\
   functions:tsudumonInviteQr,functions:tsudumonParentCheckout,functions:tsudumonParentLink,\
@@ -325,9 +346,44 @@
   functions:tsudumonStripeWebhook,functions:tsudumonCreateCheckout,functions:tsudumonWebhook,\
   functions:recordTsudumonProgress,functions:tsudumonDailyUnit
   ```
-- [ ] **[P]** Web・LP をデプロイ（`deploy_tsudumon.py` → `tsudumon.jp`）
+- [ ] 🔴 **[M]** **`TSUDUMON_INVITE_SECRET` を反映するため、保護者系5関数を再デプロイする**
+      （2026-07-31 に `.env` へ追加。反映しないと保護者導線は動かない）
+  ```
+  firebase deploy --only functions:tsudumonInviteCreate,functions:tsudumonInviteView,\
+  functions:tsudumonInviteQr,functions:tsudumonParentCheckout,functions:tsudumonParentLink
+  ```
+  - [ ] 反映後 `gcloud functions describe tsudumonInviteCreate --region=asia-northeast1 \
+        --format="yaml(environmentVariables)"` に `TSUDUMON_INVITE_SECRET` が出ることを確認
+- [x] **[P]** Web・LP をデプロイ（`deploy_tsudumon.py` → `tsudumon.jp`）
+      → 2026-07-31 に `/parents/link/` まで 200 を確認
 - [ ] **[M]** 保護者用リッチメニューを本番作成・リンク確認
+      `npx tsx scripts/setup-tsudumon-richmenu.ts --variant parent`
+      → 出力された ID を `.env` の `LINE_TSUDUMON_RICHMENU_PARENT` に入れ `tsudumonParentLink` を再デプロイ
 - [ ] Stripe 本番の webhook で `paidBy` が入ることを1件確認
+
+---
+
+## フェーズ8: 保護者導線の穴ふさぎ（2026-07-28・ユーザー指摘）
+
+実装レビューで、**連携の入口が決済完了ページ1箇所しかない**ことが判明した。
+決済しない保護者（体験中に様子を見たい）と、決済後にページを閉じた保護者が連携できなかった。
+
+- [x] **[P]** `web/parents/link/index.html` を新設し、**連携の実装を1本に集約**
+  - [x] 契約状態を問わず連携できる（体験中でも可・決済不要であることを明記）
+  - [x] `/login/` に往復して戻ったら自動で連携まで完了させる
+- [x] **[P]** `/parents/` に「学習の記録を見る」導線を**全状態で**表示（体験中・期限切れ・登録ずみ）
+- [x] **[P]** `/parents/thanks/` のインライン実装を削除し `/parents/link/` へ委譲（重複解消）
+- [x] **[M]** `followHandlers.ts` に保護者向けあいさつを追加（`tsudumonRole==='parent'` の再追加時）
+      追加read無し。**初回は role 未設定のため通らない**ので、下の push が受け皿
+- [x] **[M]** 連携成立時に**保護者へ1通 push**（`pushParentLinked`）
+      直前に届く中学生向けあいさつを上書きし、ダッシュボードURLと開示範囲を伝える
+- [x] **[M]** `tsudumonParentCheckout` に「連携ずみ＋childUid」経路を追加
+      体験中に連携 → 体験終了後にダッシュボードから登録、が行き止まりだった
+- [x] **[P]** ダッシュボードに「このお子さまを登録する」ボタン（`plan.state !== 'active'` のとき）
+- [x] **[P]** 保護者向けページの `/account/` リンクを `/parents/dashboard/` に修正
+      （`/account/` は**お子さま本人**のログインが要るページで、保護者は開けない）
+- [x] **[M]** `__tests__/tsudumonParentPrivacy.test.ts` に入口の回帰テストを追加（5件）
+- [x] **[P]** `deploy_tsudumon.py` の検査に `/parents/link/` を追加
 
 ---
 

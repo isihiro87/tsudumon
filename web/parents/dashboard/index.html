@@ -42,6 +42,7 @@
   .btn { flex:1; border:none; border-radius:12px; padding:11px; font-size:13.5px; font-weight:bold;
          cursor:pointer; font-family:inherit; text-align:center; text-decoration:none; }
   .btn-sub { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
+  .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
   .btn:disabled { opacity:.5; cursor:default; }
 
   .privacy { background:#fff; border:1.5px solid var(--line); border-radius:16px;
@@ -129,6 +130,7 @@ var FN = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net';
 var DASH_API = FN + '/tsudumonParentDashboard';
 var PORTAL_API = FN + '/tsudumonParentPortal';
 var RENAME_API = FN + '/tsudumonParentRenameChild';
+var CHECKOUT_API = FN + '/tsudumonParentCheckout';
 
 var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
 var auth = initializeAuth(app, {
@@ -181,6 +183,12 @@ function childCard(c) {
     html += '<p class="last">最後に学習したのは ' + esc(st.lastStudiedLabel) + 'です。</p>';
   } else {
     html += '<p class="last">まだ学習の記録がありません。</p>';
+  }
+  // 体験中・期限切れ・未登録の子には登録導線を出す。ここが無いと、体験中に
+  // 連携した保護者が体験終了後に登録できず行き止まりになる。
+  if (c.plan.state !== 'active') {
+    html += '<button class="btn btn-main js-subscribe" type="button" ' +
+            'style="width:100%;margin-bottom:8px">このお子さまを登録する</button>';
   }
   html += '<div class="row">';
   html += '<button class="btn btn-sub js-rename" type="button">表示名を変える</button>';
@@ -235,6 +243,28 @@ function wire(user) {
           msg.innerHTML = '<div class="msg err">通信に失敗しました。</div>';
         }
         portal.disabled = false;
+      });
+    }
+    var subscribe = el.querySelector('.js-subscribe');
+    if (subscribe) {
+      subscribe.addEventListener('click', async function () {
+        subscribe.disabled = true;
+        subscribe.textContent = '決済ページを準備しています…';
+        try {
+          var idToken = await user.getIdToken();
+          var res = await fetch(CHECKOUT_API, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ idToken: idToken, childUid: uid }),
+          });
+          var data = await res.json();
+          if (data.ok && data.url) { location.href = data.url; return; }
+          msg.innerHTML = '<div class="msg err">' +
+            (data.message || 'ただいま決済のご準備ができませんでした。') + '</div>';
+        } catch (e) {
+          msg.innerHTML = '<div class="msg err">通信に失敗しました。</div>';
+        }
+        subscribe.disabled = false;
+        subscribe.textContent = 'このお子さまを登録する';
       });
     }
     el.querySelector('.js-rename').addEventListener('click', async function () {
