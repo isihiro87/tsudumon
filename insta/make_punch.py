@@ -176,15 +176,19 @@ SETS = {
     ],
     # 公式LINE（一問一答）に添付する画像。ストーリーと違い単体で読まれるので、
     # 前の面を受ける言い回し（「そんなきみに、」など）は使わない。
-    # 出力後に 1080×1350（4:5）へ切って使う。
+    # LINE のトークに出る比率に合わせて 1080×1350（4:5）で直接描く
+    # （以前は 1080×1920 で作って手で切っていた。切り位置がぶれるのでやめた）。
+    #
+    # ⚠️ 名前は 2026-07-30 の Instagram（news-2）で公開済み。
+    #    「まだ言えません」系の煽りは使わない（両方見ている人にちぐはぐに映る）。
     "line": [
         {
-            "name": "line-0801-src", "theme": "black",
+            "name": "line-0801", "theme": "black", "size": (1080, 1350), "dir": "0801",
             "blocks": [
-                ("8月5日（水）", 128, True),
-                ("なにか始まります。", 72, False),
+                ("8月5日（水）", 118, True),
+                ("ぜんぶ見せます。", 68, False),
             ],
-            "sub": "まだ言えません。",
+            "sub": "名前は、つづもん。",
         },
     ],
 }
@@ -225,6 +229,11 @@ def esc(s: str) -> str:
     return html.escape(s)
 
 
+def size_of(item: dict) -> tuple:
+    """この面の出力サイズ。既定はストーリー（1080×1920）。"""
+    return tuple(item.get("size", (W, H)))
+
+
 def render(item: dict) -> str:
     rows = []
     for text, size, hl in item["blocks"]:
@@ -233,16 +242,23 @@ def render(item: dict) -> str:
             cls += " sm"
         rows.append(f'  <div class="{cls}" style="font-size:{size}px">{esc(text)}</div>')
     align = "top" if item.get("align") == "top" else ""
-    return PAGE % (W, H, item["theme"], align,
+    w, h = size_of(item)
+    page = PAGE
+    if h < H:
+        # ストーリー以外（LINE添付など）は Instagram のUIに隠れる余白が要らない。
+        # 上下250px前提の inset のままだと文字が窮屈になるので緩める。
+        page = page.replace("inset:280px 78px 300px", "inset:120px 78px 140px")
+    return page % (w, h, item["theme"], align,
                    "\n".join(rows), esc(item.get("sub", "")))
 
 
-def shoot(html_text: str, dest: Path) -> None:
+def shoot(html_text: str, dest: Path, size: tuple = (W, H)) -> None:
+    w, h = size
     with tempfile.TemporaryDirectory() as td:
         src = Path(td) / "s.html"
         src.write_text(html_text, encoding="utf-8")
         subprocess.run([EDGE, "--headless=new", "--disable-gpu", "--hide-scrollbars",
-                        f"--window-size={W},{H}", "--virtual-time-budget=2000",
+                        f"--window-size={w},{h}", "--virtual-time-budget=2000",
                         f"--screenshot={dest}", src.as_uri()],
                        capture_output=True, check=False)
 
@@ -255,8 +271,12 @@ def main() -> None:
     keys = [args.set] if args.set else list(SETS)
     for k in keys:
         for item in SETS[k]:
-            dest = OUT / f"{item['name']}.png"
-            shoot(render(item), dest)
+            # 投稿日フォルダが指定されていればそこへ出す（out/0801/ など）
+            sub = item.get("dir")
+            dest_dir = (OUT / sub) if sub else OUT
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            dest = dest_dir / f"{item['name']}.png"
+            shoot(render(item), dest, size_of(item))
             print(f"wrote {dest}")
 
 

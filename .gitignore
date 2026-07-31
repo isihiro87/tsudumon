@@ -57,3 +57,16 @@ dist/tts/
 # --- 画像の中間生成物（Codex の作業ファイル。採用した1枚だけを追跡する） ---
 # 52MB あり、採用画像（richmenu/*.png）が残っていれば作り直せる。
 richmenu/.pro-work/
+
+# --- insta: 投稿する面だけを追跡する ---
+# 投稿するのは insta/out/<MMDD>/（0730 / 0801 / 0802 / 0803 / 0805）と、
+# 連作の参照元 insta/out/_source/ だけ。それ以外は作業場・中間生成物なので追跡しない。
+# 画像生成AIへの指示書（insta/_p-*.txt）はテキストなので追跡する＝作り直せる。
+insta/assets/
+insta/out/_archive/
+insta/out/*/_old/
+insta/out/_prev*.png
+
+# 保護者用リッチメニューの作業場（richmenu/.pro-work/ と同じ扱い。
+# 採用画像 richmenu/parent-*.png が残っていれば作り直せる）
+richmenu/.parent-work/
