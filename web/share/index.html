@@ -1,0 +1,169 @@
+<meta charset="utf-8">
+<script>if(location.hostname==='tsudumon.web.app'){location.replace('https://tsudumon.jp'+location.pathname+location.search+location.hash);}</script>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>おうちの人に送る｜つづもん</title>
+<!--
+  おうちの人にわたすカードの「送る」導線。
+
+  LINE の シェアターゲットピッカー（liff.shareTargetPicker）を開いて、
+  友だち一覧から保護者を選んでもらう。送信は **子ども自身のアカウントから** 行われるので、
+  保護者には「知らないBotからの通知」ではなく「自分の子からのメッセージ」として届く。
+  ここが開封率を決める。
+
+  流れ:
+    Bot のカード「おうちの人に送る」
+      → https://liff.line.me/{LIFF_ID}?t={token}
+      → このページ（LIFFブラウザ）
+      → liff.init → shareTargetPicker を自動で開く
+      → 保護者を選ぶ → 案内文が届く → 閉じる
+
+  開けなかったとき（LINE外のブラウザ・ピッカー非対応・キャンセル）は
+  従来の /handoff/（QRコード＋台本）へ逃がす。ここを塞ぐと課金経路が消える。
+
+  ⚠️ LIFF_ID は LINE Developers Console（つづもんの LINE Login チャネル）で
+     LIFF アプリを作って発行する。エンドポイントURL は https://tsudumon.jp/share/、
+     サイズは Compact、**「シェアターゲットピッカー」を利用するに設定**すること。
+-->
+<style>
+  :root { --deep:#2f4858; --brand:#e0812c; --muted:#6b6b6b; --line:#e6e1d8; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:#faf7f1; color:var(--deep);
+         font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+         line-height:1.7; }
+  .wrap { max-width:420px; margin:0 auto; padding:28px 20px 40px; text-align:center; }
+  h1 { font-size:19px; margin:14px 0 8px; }
+  p { font-size:14px; margin:8px 0; }
+  .muted { color:var(--muted); font-size:13px; }
+  .spinner { width:34px; height:34px; margin:26px auto 0; border:3px solid var(--line);
+             border-top-color:var(--brand); border-radius:50%; animation:spin .9s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } }
+  .btn { display:block; margin:12px 0; padding:14px 16px; border-radius:12px;
+         font-size:15px; font-weight:700; text-decoration:none; border:0; width:100%;
+         background:var(--brand); color:#fff; }
+  .btn.sub { background:#fff; color:var(--deep); border:1px solid var(--line); }
+  .done { font-size:40px; }
+  [hidden] { display:none !important; }
+</style>
+
+<div class="wrap">
+  <div id="loading">
+    <div class="spinner"></div>
+    <p class="muted">送り先をひらいています…</p>
+  </div>
+
+  <div id="done" hidden>
+    <div class="done">✅</div>
+    <h1>送れました</h1>
+    <p class="muted">おうちの人のトークに、案内が届いています。</p>
+    <button class="btn" type="button" id="close">とじる</button>
+  </div>
+
+  <div id="fallback" hidden>
+    <h1 id="fbTitle">おうちの人に送る</h1>
+    <p class="muted" id="fbNote">下のボタンから送れます。</p>
+    <button class="btn" type="button" id="retry" hidden>送り先をえらぶ</button>
+    <a class="btn sub" id="handoff" href="/handoff/">QRコードで見せる</a>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // LINE Developers Console で発行した LIFF ID をここに入れる。
+  // 未設定のあいだは、このページは常に /handoff/（QR）へ逃がす。
+  var LIFF_ID = '';
+
+  var params = new URLSearchParams(location.search);
+  var token = params.get('t') || '';
+  var PARENT_URL = 'https://tsudumon.jp/parents/?t=' + encodeURIComponent(token);
+  var HANDOFF_URL = '/handoff/?t=' + encodeURIComponent(token);
+
+  var $ = function (id) { return document.getElementById(id); };
+  $('handoff').href = HANDOFF_URL;
+
+  function showFallback(title, note, canRetry) {
+    $('loading').hidden = true;
+    $('done').hidden = true;
+    $('fallback').hidden = false;
+    if (title) $('fbTitle').textContent = title;
+    if (note) $('fbNote').textContent = note;
+    $('retry').hidden = !canRetry;
+  }
+
+  function showDone() {
+    $('loading').hidden = true;
+    $('fallback').hidden = true;
+    $('done').hidden = false;
+  }
+
+  // 保護者のトークに届くメッセージ。
+  // ⚠️ 子の学習内容そのもの（まちがえた問題・トーク）はここに書かない。
+  //    出してよいのは「見に行くための入口」だけ。
+  function buildMessage() {
+    return {
+      type: 'flex',
+      altText: 'つづもん｜学習の記録を見てください',
+      contents: {
+        type: 'bubble',
+        body: {
+          type: 'box', layout: 'vertical', spacing: 'sm',
+          contents: [
+            { type: 'text', text: 'つづもんを使っています', weight: 'bold', size: 'lg', wrap: true, color: '#2f4858' },
+            { type: 'text', wrap: true, size: 'sm', color: '#6b6b6b',
+              text: '中学歴史の教材です。いまどれくらい進んだかを、下のページで見てもらえます。' },
+            { type: 'text', wrap: true, size: 'xs', color: '#6b6b6b',
+              text: '見えるのは勉強の記録だけです。トークの内容やまちがえた問題は表示されません。' },
+            { type: 'button', style: 'primary', color: '#e0812c', height: 'sm', margin: 'md',
+              action: { type: 'uri', label: '学習の記録を見る', uri: PARENT_URL } },
+            { type: 'text', text: 'つづもんについて  https://tsudumon.jp/', size: 'xxs', color: '#6b6b6b', align: 'center', wrap: true }
+          ]
+        }
+      }
+    };
+  }
+
+  function openPicker() {
+    $('loading').hidden = false;
+    $('fallback').hidden = true;
+    liff.shareTargetPicker([buildMessage()]).then(function (res) {
+      // res が無い＝ユーザーがキャンセルした（エラーではない）
+      if (res) { showDone(); }
+      else { showFallback('送り先をえらんでね', 'とちゅうでとじたみたいです。もう一度どうぞ。', true); }
+    }).catch(function (e) {
+      console.error('[share] shareTargetPicker failed:', e);
+      showFallback('うまく送れませんでした', 'QRコードを見せる方法でも渡せます。', true);
+    });
+  }
+
+  if (!token) {
+    showFallback('リンクが見つかりません', 'LINEのトークから、もう一度カードを出してください。', false);
+    return;
+  }
+  if (!LIFF_ID || typeof liff === 'undefined') {
+    location.replace(HANDOFF_URL);
+    return;
+  }
+
+  liff.init({ liffId: LIFF_ID }).then(function () {
+    // LINE アプリの外（普通のブラウザ）ではピッカーが使えない
+    if (!liff.isInClient() || !liff.isApiAvailable('shareTargetPicker')) {
+      location.replace(HANDOFF_URL);
+      return;
+    }
+    openPicker();
+  }).catch(function (e) {
+    console.error('[share] liff.init failed:', e);
+    location.replace(HANDOFF_URL);
+  });
+
+  $('retry').addEventListener('click', openPicker);
+  $('close').addEventListener('click', function () {
+    if (typeof liff !== 'undefined' && liff.isInClient()) liff.closeWindow();
+    else location.replace(HANDOFF_URL);
+  });
+})();
+</script>

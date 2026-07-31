@@ -13,7 +13,8 @@
   - `dist-web/{wb,ref,map}/`      … ジェネレータ生成物
   - `dist-web/_shared/img/`        … 章をまたぐ共通画像の集約先
   - `dist-web/{login,activate,account,settings}/`      … LINEログイン・コード有効化・お支払い・設定
-  - `dist-web/{parents,parents/link,parents/thanks,parents/dashboard,handoff}/` … 保護者導線
+  - `dist-web/{parents,parents/link,parents/thanks,parents/dashboard,handoff,share}/` … 保護者導線
+    （share/ は LINE のシェアターゲットピッカーを開く LIFF ページ）
   - `dist-web/_healthz.txt`                             … 上記いずれも `web/` 配下を丸ごとコピー
 
 LP（`index.html` / `privacy.html` / `tokushoho.html` と `img/`）は対象外。
@@ -238,7 +239,7 @@ def build_summary() -> None:
     # 中学生本人が決済できない以上、唯一の課金経路なので欠けたら必ず気づけるようにする。
     for name in ("login", "activate", "account", "settings",
                  "parents", "parents/link", "parents/thanks", "parents/dashboard",
-                 "handoff"):
+                 "handoff", "share"):
         if not (TSUDUMON / name / "index.html").exists():
             print(f"  ⚠ dist-web/{name}/index.html がありません（web/ の正本を確認）")
 
