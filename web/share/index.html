@@ -73,9 +73,10 @@
 (function () {
   'use strict';
 
-  // LINE Developers Console で発行した LIFF ID をここに入れる。
-  // 未設定のあいだは、このページは常に /handoff/（QR）へ逃がす。
-  var LIFF_ID = '';
+  // LIFF ID（LINE Login チャネル 2009587166 上のアプリ）。
+  // scripts/setup-tsudumon-share-liff.ts で発行・確認できる。
+  // 空にすると、このページは常に /handoff/（QR）へ逃がす。
+  var LIFF_ID = '2009587166-j28FEScS';
 
   var params = new URLSearchParams(location.search);
   var token = params.get('t') || '';
@@ -101,25 +102,29 @@
   }
 
   // 保護者のトークに届くメッセージ。
-  // ⚠️ 子の学習内容そのもの（まちがえた問題・トーク）はここに書かない。
-  //    出してよいのは「見に行くための入口」だけ。
+  //
+  // ⚠️ **短い案内文とリンクだけにする。** 学習の記録を売りにしない
+  //    （どれだけやったかは、子が自分のスマホで見せられる）。
+  //    ここでの役目は「つづもんとは何か」を保護者に届けることだけ。
+  //
+  // ⚠️ リンクは必ず **?t= 付きの保護者ページ**。裸の tsudumon.jp を送ると、
+  //    保護者が登録しても**保護者自身のアカウントに課金され、子の教材が開かない**。
+  //    このトークンが「支払いは子のアカウントに付ける」という印になっている。
+  //    リンク先は保護者向けの案内ページそのもの（料金・解約・AIの扱い・登録）。
   function buildMessage() {
     return {
       type: 'flex',
-      altText: 'つづもん｜学習の記録を見てください',
+      altText: 'つづもん（中学歴史の教材）を使っています',
       contents: {
         type: 'bubble',
         body: {
-          type: 'box', layout: 'vertical', spacing: 'sm',
+          type: 'box', layout: 'vertical', spacing: 'md',
           contents: [
-            { type: 'text', text: 'つづもんを使っています', weight: 'bold', size: 'lg', wrap: true, color: '#2f4858' },
-            { type: 'text', wrap: true, size: 'sm', color: '#6b6b6b',
-              text: '中学歴史の教材です。いまどれくらい進んだかを、下のページで見てもらえます。' },
-            { type: 'text', wrap: true, size: 'xs', color: '#6b6b6b',
-              text: '見えるのは勉強の記録だけです。トークの内容やまちがえた問題は表示されません。' },
-            { type: 'button', style: 'primary', color: '#e0812c', height: 'sm', margin: 'md',
-              action: { type: 'uri', label: '学習の記録を見る', uri: PARENT_URL } },
-            { type: 'text', text: 'つづもんについて  https://tsudumon.jp/', size: 'xxs', color: '#6b6b6b', align: 'center', wrap: true }
+            { type: 'text', text: 'つづもん', weight: 'bold', size: 'xl', color: '#2f4858' },
+            { type: 'text', wrap: true, size: 'sm', color: '#333333',
+              text: '中学歴史の教材です。つづけたいので、見てもらえますか。' },
+            { type: 'button', style: 'primary', color: '#e0812c', height: 'sm',
+              action: { type: 'uri', label: 'どんな教材か見る', uri: PARENT_URL } }
           ]
         }
       }
