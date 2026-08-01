@@ -78,13 +78,39 @@
   // 空にすると、このページは常に /handoff/（QR）へ逃がす。
   var LIFF_ID = '2009587166-j28FEScS';
 
-  var params = new URLSearchParams(location.search);
-  var token = params.get('t') || '';
-  var PARENT_URL = 'https://tsudumon.jp/parents/?t=' + encodeURIComponent(token);
-  var HANDOFF_URL = '/handoff/?t=' + encodeURIComponent(token);
+  // ⚠️ **トークンは liff.init() のあとに読む。**
+  // `https://liff.line.me/{id}?t=…` を開くと、LINE はいったん元のクエリを
+  // `?liff.state=%3Ft%3D…` に畳んでこのページを開く。`liff.init()` が
+  // それを展開して URL を書き戻すので、**初期化前に location.search を読むと空**になる。
+  // （実際これで「リンクが見つかりません」が出た）
+  function readToken() {
+    var p = new URLSearchParams(location.search);
+    var t = p.get('t');
+    if (t) return t;
+    // 展開前／展開されなかったときの保険
+    var st = p.get('liff.state');
+    if (st) {
+      try {
+        return new URLSearchParams(
+          st.charAt(0) === '?' ? st.slice(1) : st
+        ).get('t') || '';
+      } catch (e) { /* 壊れた liff.state は無視 */ }
+    }
+    return '';
+  }
+
+  var token = '';
+  var PARENT_URL = '';
+  var HANDOFF_URL = '/handoff/';
+
+  function setToken(t) {
+    token = t;
+    PARENT_URL = 'https://tsudumon.jp/parents/?t=' + encodeURIComponent(t);
+    HANDOFF_URL = '/handoff/?t=' + encodeURIComponent(t);
+    $('handoff').href = HANDOFF_URL;
+  }
 
   var $ = function (id) { return document.getElementById(id); };
-  $('handoff').href = HANDOFF_URL;
 
   function showFallback(title, note, canRetry) {
     $('loading').hidden = true;
@@ -144,16 +170,23 @@
     });
   }
 
-  if (!token) {
-    showFallback('リンクが見つかりません', 'LINEのトークから、もう一度カードを出してください。', false);
-    return;
-  }
+  // LIFF SDK が無い／未設定なら、初期化を待たずに読めるぶんだけで QR へ逃がす
   if (!LIFF_ID || typeof liff === 'undefined') {
+    var raw = readToken();
+    if (raw) setToken(raw);
     location.replace(HANDOFF_URL);
     return;
   }
 
   liff.init({ liffId: LIFF_ID }).then(function () {
+    // ここで初めてトークンが読める（liff.state が展開済み）
+    var t = readToken();
+    if (!t) {
+      showFallback('リンクが見つかりません', 'LINEのトークから、もう一度カードを出してください。', false);
+      return;
+    }
+    setToken(t);
+
     // LINE アプリの外（普通のブラウザ）ではピッカーが使えない
     if (!liff.isInClient() || !liff.isApiAvailable('shareTargetPicker')) {
       location.replace(HANDOFF_URL);
@@ -162,6 +195,9 @@
     openPicker();
   }).catch(function (e) {
     console.error('[share] liff.init failed:', e);
+    // 初期化が落ちても、読めるならトークン付きで QR ページへ送る
+    var t = readToken();
+    if (t) setToken(t);
     location.replace(HANDOFF_URL);
   });
 

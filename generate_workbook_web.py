@@ -81,7 +81,11 @@ IC = {
 
 # カテゴリアイコンは codex イラスト（assets/ui-icons/ic-*.png）があれば SVG より優先。
 # 各章の img/ に配置して参照（トピック毎に data URI を埋め込むとページが重くなるため）。
-UI_ICON_KEYS = ("star", "ana", "qa", "yon", "doc")
+# ⚠️ "star" は入れない（2026-08-01）。assets/ui-icons/ic-star.png は星に道が
+# つながった絵で、「前回のつづき」「おすすめ順で解く」に置くと何の記号か伝わらない。
+# IC["star"] の素のSVG（5角の星）をそのまま使う。画像は消していないので、
+# 星だけの絵を描き直したらここに "star" を戻せばよい。
+UI_ICON_KEYS = ("ana", "qa", "yon", "doc")
 for _k in UI_ICON_KEYS:
     if (ASSET_DIR / "ui-icons" / f"ic-{_k}.png").exists():
         IC[_k] = f'<img class="mi-img" src="img/ic-{_k}.png" alt="" aria-hidden="true">'
@@ -983,13 +987,18 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   /* codexイラストのカテゴリアイコン（丸背景は消して、アイコン自身のバッジを見せる） */
   .mode-ic .mi-img { width:52px; height:52px; object-fit:contain; display:block; }
   .mode-ic:has(.mi-img) { background:transparent; }
-  .ic-star { background:rgba(255,255,255,.22); color:#fff; }
+  /* 星アイコン。地の色が違う2箇所で使うので、それぞれ見えるように分ける
+     （オレンジのカードでは白抜き、白いカードではブランド色）。 */
+  .mode-reco .ic-star { background:rgba(255,255,255,.22); color:#fff; }
+  .mode-again .ic-star { background:#f7e8cf; color:var(--brand); }
   .mode-main { flex:1; min-width:0; }
   .mode-t { display:block; }
   .mode-btn .mode-sub { display:block; font-weight:normal; font-size:12.5px; color:var(--ink3); margin-top:3px; }
   .mode-arrow { flex:none; color:var(--brand); font-size:24px; font-weight:bold; padding-right:6px; }
   /* おすすめ順（オレンジの目立つカード） */
-  .mode-reco { background:linear-gradient(#f59e0b,#ea7a09); border:none; color:#fff; margin-top:0;
+  /* 「前回のつづき」の直下に来るので、くっつかないよう間を空ける
+     （2つは別の選択肢。詰めると1枚のカードに見える） */
+  .mode-reco { background:linear-gradient(#f59e0b,#ea7a09); border:none; color:#fff; margin-top:14px;
                box-shadow:0 4px 0 #c2620a, 0 6px 12px rgba(180,83,9,.3); border-radius:18px; padding:14px 12px; }
   .mode-reco .mode-arrow { color:#fff; }
   .mode-flow { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:7px; }
@@ -2336,13 +2345,23 @@ try {
           var LABEL = { all: 'おすすめ順', A: '穴埋め', B: '一問一答', C: '4択', D: '記述', wrong: 'まちがい直し' };
           again.hidden = !cfgPrev;
           var asub = again.querySelector('[data-again-sub]');
-          if (cfgPrev && asub) asub.textContent = (LABEL[cfgPrev.mode] || '') + 'のつづきから';
+          if (cfgPrev && asub) {
+            // どこから始まるかを出す。「つづきから」だけだと、押した先が
+            // 前回やめた場所なのか最初なのか分からない。
+            var pAg = store()['p' + t] || 0;
+            asub.textContent = (LABEL[cfgPrev.mode] || '')
+              + (pAg > 1 ? '・' + pAg + 'つめから' : 'を最初から');
+          }
         }
       }
       var st = store();
       // まちがい直し（復習ビュー）は「つづきから」や✓の対象にしない
       if (t !== REVIEW_T) {
         st.last = { t: t, s: s };
+        // 「前回のつづき」用に、単元ごとの**中身のステップ**を控える。
+        // st.last は単元を開くたび s=0（やり方をえらぶ画面）で上書きされるので、
+        // これだけを見ていると再開位置が毎回消えてしまう（実際そうなっていた）。
+        if (s > 0) st['p' + t] = s;
         st['ts' + t] = Date.now();      // 復習おすすめ（最終学習日）に使う
         if (steps.length > 1 && s === steps.length - 1) st['d' + t] = 1;
         save(st);
@@ -2646,9 +2665,18 @@ try {
     // 結果画面の主導線（次の単元へ）
     var pnext = e.target.closest('[data-primary]');
     if (pnext) { if (state.t < N) go(state.t + 1, 0, 1); return; }
-    // 「前回のつづき」= 保存済みの解き方でそのまま再開
+    // 「前回のつづき」= 保存済みの解き方で、**やめたところから**再開
     var again = e.target.closest('[data-again]');
-    if (again) { go(state.t, 1, 1); return; }
+    if (again) {
+      var stAg = store();
+      var plAg = stepsOf(state.t);
+      // 控えた位置に戻す。無ければ先頭（1）。playlist が短くなっていても外さない
+      var sAg = stAg['p' + state.t] || 1;
+      if (sAg > plAg.length - 1) sAg = plAg.length - 1;
+      if (sAg < 1) sAg = 1;
+      go(state.t, sAg, 1);
+      return;
+    }
 
     // 結果画面: 「ほかの解き方」チップ /「まちがえた問題だけやり直す」
     var rchip = e.target.closest('.chip-mode, .wrong-btn');
