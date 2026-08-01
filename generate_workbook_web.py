@@ -81,11 +81,11 @@ IC = {
 
 # カテゴリアイコンは codex イラスト（assets/ui-icons/ic-*.png）があれば SVG より優先。
 # 各章の img/ に配置して参照（トピック毎に data URI を埋め込むとページが重くなるため）。
-# ⚠️ "star" は入れない（2026-08-01）。assets/ui-icons/ic-star.png は星に道が
-# つながった絵で、「前回のつづき」「おすすめ順で解く」に置くと何の記号か伝わらない。
-# IC["star"] の素のSVG（5角の星）をそのまま使う。画像は消していないので、
-# 星だけの絵を描き直したらここに "star" を戻せばよい。
-UI_ICON_KEYS = ("ana", "qa", "yon", "doc")
+# ic-star.png は 2026-08-01 に描き直した。以前は星に曲がりくねった道がつながっていて
+# （試作の指示書が「星、または旗の立った小道」と2案を並べたため codex が両方描いた）、
+# 52px では何の記号か伝わらなかった。いまは星ひとつだけ。
+# 指示書は assets/ui-icons/CODEX_BRIEF_ICON_STAR.md。
+UI_ICON_KEYS = ("star", "ana", "qa", "yon", "doc")
 for _k in UI_ICON_KEYS:
     if (ASSET_DIR / "ui-icons" / f"ic-{_k}.png").exists():
         IC[_k] = f'<img class="mi-img" src="img/ic-{_k}.png" alt="" aria-hidden="true">'
