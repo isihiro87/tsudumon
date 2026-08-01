@@ -12,7 +12,9 @@
  *
  * キャッシュ名の版を上げると、古い控えは activate で消える。
  */
-const VERSION = 'tzm-v1';
+// 版を上げると activate で古い控えが消える。
+// v2: clone のタイミング修正＋問題ページの「前回のつづき」修正を確実に配るため（2026-08-01）
+const VERSION = 'tzm-v2';
 const PAGES = 'tzm-pages-' + VERSION;
 const ASSETS = 'tzm-assets-' + VERSION;
 const OFFLINE_URL = '/offline.html';
@@ -77,8 +79,13 @@ self.addEventListener('fetch', (event) => {
       const cached = await caches.match(req);
       const network = fetch(req).then((res) => {
         if (res && res.ok) {
+          // ⚠️ clone() は **return より前・同期的に** 呼ぶ。
+          // caches.open(...).then(...) の中で clone すると、そのときには
+          // すでに res の body がページ側で読まれていて
+          // 「Response body is already used」で落ちる（実際に出ていた）。
+          const copy = res.clone();
           caches.open(ASSETS).then((c) => {
-            c.put(req, res.clone());
+            c.put(req, copy);
             trim(ASSETS, ASSET_LIMIT);
           });
         }

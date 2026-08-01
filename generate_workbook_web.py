@@ -976,6 +976,11 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .mode-card { background:#fff; border:1.5px solid #f0e2c3; border-radius:16px; margin-top:12px;
                padding:6px 6px 10px; box-shadow:0 2px 0 #ecdcbb; }
   .mode-card .mode-btn { margin-top:0; border:none; box-shadow:none; background:none; padding:8px 6px; }
+  /* ⚠️ display を指定する要素には [hidden] の打ち消しを必ず添える。
+     UA の [hidden]{display:none} は .mode-btn の display:flex に負けるので、
+     これが無いと「前回のつづき」が**解き方を保存していない人にも出てしまい**、
+     押しても行き先が無い（＝押しても何も起きない）状態になる。 */
+  .mode-btn[hidden] { display:none; }
   .mode-btn { display:flex; align-items:center; gap:12px; width:100%; text-align:left; margin-top:12px;
               border:none; border-radius:16px; padding:12px 10px; font-size:16px; font-weight:bold;
               color:#44403c; background:#fff; cursor:pointer; font-family:inherit; line-height:1.35;
@@ -2343,12 +2348,21 @@ try {
         var cfgPrev = modeCfg(t);
         if (again) {
           var LABEL = { all: 'おすすめ順', A: '穴埋め', B: '一問一答', C: '4択', D: '記述', wrong: 'まちがい直し' };
-          again.hidden = !cfgPrev;
+          // 「解き方が保存されているか」だけで出してはいけない（ユーザー指摘 2026-08-01）。
+          // それだと次の2つで**押しても何も起きないボタン**が出る:
+          //   ① 保存された解き方に該当する問題がこの単元に無い（例: 記述を選んだ
+          //      あと、記述の無い単元を開く）→ playlist が「やり方をえらぶ」1枚だけ
+          //      になり、飛び先の step が存在しない
+          //   ② まだ1問も進んでいない（p{t} が無い）→ 「つづき」が実在しない
+          // 反応しないボタンは、壊れているのか自分の操作が悪いのか判断できないので、
+          // **出さない**のが正しい。押せるときだけ出す。
+          var pAg = store()['p' + t] || 0;
+          var canResume = !!cfgPrev && pAg >= 1 && stepsOf(t).length > 1;
+          again.hidden = !canResume;
           var asub = again.querySelector('[data-again-sub]');
-          if (cfgPrev && asub) {
+          if (canResume && asub) {
             // どこから始まるかを出す。「つづきから」だけだと、押した先が
             // 前回やめた場所なのか最初なのか分からない。
-            var pAg = store()['p' + t] || 0;
             asub.textContent = (LABEL[cfgPrev.mode] || '')
               + (pAg > 1 ? '・' + pAg + 'つめから' : 'を最初から');
           }
@@ -2670,6 +2684,10 @@ try {
     if (again) {
       var stAg = store();
       var plAg = stepsOf(state.t);
+      // 保存された解き方に該当する問題がこの単元に無いと、飛び先の step が
+      // 存在せず「押しても何も起きない」ボタンになる。表示側でも弾いているが、
+      // ここでも塞ぐ（無反応は、壊れているのか操作ミスなのか本人に区別できない）。
+      if (plAg.length <= 1) { again.hidden = true; return; }
       // 控えた位置に戻す。無ければ先頭（1）。playlist が短くなっていても外さない
       var sAg = stAg['p' + state.t] || 1;
       if (sAg > plAg.length - 1) sAg = plAg.length - 1;
