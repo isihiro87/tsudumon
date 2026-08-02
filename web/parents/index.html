@@ -26,211 +26,350 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap" media="print" onload="this.media='all'">
 <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Zen+Maru+Gothic:wght@700;900&display=swap"></noscript>
 <style>
+/* ============================================================
+   保護者ページ。LP（lp/index.html）と同じデザイン言語で組む。
+   ・地はクリーム、白は「大事なものを載せる紙」として使う
+   ・見出しは Zen Maru Gothic、本文は Noto Sans JP
+   ・ボタンはピル型、影はやわらかく（--shadow）
+   ・セクションの頭に短い横棒＋ラベル（.sec-label）を置いて流れを作る
+   長い説明ページなので、**1画面に情報を詰めない**ことを最優先にしている。
+   ============================================================ */
 :root{
-  --cream:#fdf9f2; --ink:#33291f; --brand:#b45309; --brand-deep:#8a3d05;
-  --border:#ecdfc9; --muted:#8a7a63; --ok:#15803d; --ng:#b91c1c;
+  --cream:#fdf9f2; --paper:#ffffff; --ink:#33291f; --muted:#786550;
+  --brand:#b45309; --brand-deep:#8a3d05; --brand-pale:#fdf0dd;
+  --border:#ecdfc9; --ok:#15803d; --ng:#b91c1c;
+  --shadow:0 10px 30px rgba(80,54,20,.08);
+  --radius:18px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:"Noto Sans JP",sans-serif;background:var(--cream);color:var(--ink);line-height:1.95;font-size:15px}
+html{scroll-behavior:smooth}
+body{font-family:"Noto Sans JP",sans-serif;background:var(--cream);color:var(--ink);
+     line-height:1.9;font-size:15.5px;-webkit-font-smoothing:antialiased}
 a{color:var(--brand-deep)}
-.header{background:#fffdf9;border-bottom:1px solid var(--border)}
-.header .inner{max-width:860px;margin:0 auto;padding:16px 22px}
-.logo{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:20px;color:var(--brand-deep);text-decoration:none}
-main{max-width:860px;margin:0 auto;padding:26px 22px 72px}
-h1{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:24px;margin-bottom:12px;line-height:1.5}
-.lead{font-size:14.5px;color:#5d4f3d;margin-bottom:26px}
-h2{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:18px;color:var(--brand-deep);margin:36px 0 10px;padding-left:12px;border-left:4px solid var(--brand)}
-h3{font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:15.5px;margin:20px 0 6px}
-p,ul{font-size:14.5px;margin-bottom:10px}
-ul{padding-left:22px}
-li{margin-bottom:4px}
-table{width:100%;border-collapse:collapse;font-size:14px;margin:12px 0 16px}
-th,td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:top}
-th{background:#fffdf9;width:34%;font-weight:700}
-.card{background:#fffdf9;border:1px solid var(--border);border-radius:12px;padding:16px 18px;margin:16px 0}
-.cta{display:block;width:100%;background:var(--brand);color:#fff;font-weight:700;text-decoration:none;
-     padding:16px 26px;border-radius:14px;margin:10px 0 6px;border:none;font-size:16.5px;
-     font-family:inherit;cursor:pointer;text-align:center;box-shadow:0 3px 10px rgba(180,83,9,.28)}
-.cta:disabled{opacity:.6;cursor:default}
-.cta-sub{display:block;width:100%;background:#fff;color:var(--brand);border:1.5px solid var(--border);
-     font-weight:700;text-decoration:none;padding:13px 20px;border-radius:14px;margin:8px 0;
-     font-size:14.5px;font-family:inherit;cursor:pointer;text-align:center}
-.note{font-size:13px;color:var(--muted);margin-top:30px}
-footer{border-top:1px solid var(--border);padding:28px 22px;text-align:center;font-size:13px;color:var(--muted)}
-footer a{margin:0 10px}
+h1,h2,h3,.maru{font-family:"Zen Maru Gothic","Noto Sans JP",sans-serif}
+strong{font-weight:700}
 .hidden{display:none}
+.inner{max-width:760px;margin:0 auto;padding:0 22px}
 
-/* --- 冒頭（結論までスクロールなしで見せる） --- */
-.from-child{background:#fffbeb;border:1.5px solid #fcd34d;border-radius:14px;padding:14px 16px;margin-bottom:16px;
-            font-size:14.5px;line-height:1.8}
-.from-child b{color:var(--brand-deep)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px}
-.stat{background:#fffdf9;border:1px solid var(--border);border-radius:12px;padding:12px 8px;text-align:center}
-.stat .v{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:21px;color:var(--brand-deep);line-height:1.3}
-.stat .k{font-size:11.5px;color:var(--muted);line-height:1.6}
-.headline{background:#fff;border:2px solid var(--brand);border-radius:16px;padding:18px 18px 14px;margin:18px 0}
-.headline ul{list-style:none;padding:0;margin:0 0 12px}
-.headline li{font-size:15.5px;font-weight:700;margin-bottom:6px;padding-left:26px;position:relative}
-.headline li::before{content:"✓";position:absolute;left:4px;color:var(--ok);font-weight:900}
-.headline .price{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:26px;color:var(--brand-deep)}
-.msg{font-size:13.5px;border-radius:10px;padding:10px 14px;margin:10px 0;line-height:1.8}
+/* ---------- header ---------- */
+.header{position:sticky;top:0;z-index:50;background:rgba(253,249,242,.92);
+        backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+.header .inner{display:flex;align-items:center;gap:14px;height:62px}
+.logo{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:21px;
+      color:var(--brand-deep);letter-spacing:.04em;text-decoration:none;line-height:1.1}
+.logo small{display:block;font-size:10.5px;font-weight:700;color:var(--muted);
+            letter-spacing:.08em;margin-top:2px}
+.header .to-top{margin-left:auto;font-size:13.5px;color:#5d4f3d;text-decoration:none;white-space:nowrap}
+.header .to-top:hover{color:var(--brand)}
+
+/* ---------- 冒頭 ---------- */
+.top{background:linear-gradient(180deg,#fdf9f2 0%,#fbf2e2 100%);
+     border-bottom:1px solid var(--border);padding:34px 0 30px}
+/* ⚠️ inline-flex にしない。中の「呼び名」「（空の学年欄）」「から届いています」が
+   それぞれ flex アイテムになり、gap のぶん不自然な空きが入る（実際に空いていた）。 */
+.from-child{display:inline-block;background:#fff;
+            border:1px solid var(--border);border-radius:999px;padding:7px 18px;
+            font-size:13.5px;font-weight:700;color:var(--brand-deep);
+            box-shadow:var(--shadow);margin-bottom:16px;line-height:1.5}
+.from-child::before{content:"✉ ";font-size:14px}
+h1{font-weight:900;font-size:clamp(23px,4.4vw,31px);line-height:1.5;letter-spacing:.02em;margin-bottom:10px}
+/* 変な位置で折り返さない（LPと同じ扱い） */
+@media(max-width:760px){h1,h2,h3,.lead{word-break:auto-phrase}}
+.lead{color:#5d4f3d;font-size:14.5px;margin-bottom:4px}
+
+/* 学習の記録タイル */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:20px 0 8px}
+@media(max-width:430px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:#fff;border:1px solid var(--border);border-radius:14px;
+      padding:13px 8px;text-align:center;box-shadow:0 2px 8px rgba(80,54,20,.05)}
+.stat .v{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;font-size:22px;
+         color:var(--brand-deep);line-height:1.3}
+.stat .k{font-size:11px;color:var(--muted);line-height:1.55;margin-top:2px}
+#lastStudied{font-size:12.5px;color:var(--muted)}
+.spinner{width:32px;height:32px;margin:26px auto;border:4px solid #f1e6cf;
+         border-top-color:var(--brand);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+
+/* ---------- 料金とボタン（いちばん見せたい塊） ---------- */
+.offer{background:#fff;border:2px solid var(--brand);border-radius:var(--radius);
+       box-shadow:var(--shadow);overflow:hidden;margin:-22px auto 0;position:relative;z-index:1}
+.offer-head{background:var(--brand);color:#fff;text-align:center;padding:9px 16px;
+            font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:13.5px;letter-spacing:.08em}
+.offer-body{padding:22px 22px 24px}
+.price{text-align:center;margin-bottom:16px}
+.price .yen{font-family:"Zen Maru Gothic",sans-serif;font-weight:900;
+            font-size:44px;color:var(--brand-deep);line-height:1.1}
+.price .yen small{font-size:19px;font-weight:700}
+.price .tax{font-size:12.5px;color:var(--muted)}
+.checks{list-style:none;display:grid;gap:7px;margin-bottom:18px}
+.checks li{font-size:14.5px;font-weight:700;padding-left:26px;position:relative}
+.checks li::before{content:"✓";position:absolute;left:4px;color:var(--ok);font-weight:900}
+.checks li span{font-weight:400;color:var(--muted);font-size:13px}
+
+/* ボタン（JSからも同じclass名で差し込まれる） */
+.cta{display:flex;align-items:center;justify-content:center;width:100%;
+     background:var(--brand);color:#fff;font-family:"Zen Maru Gothic",sans-serif;
+     font-weight:700;text-decoration:none;padding:15px 24px;border-radius:999px;
+     margin:0 0 8px;border:none;font-size:16px;cursor:pointer;text-align:center;
+     box-shadow:0 6px 18px rgba(180,83,9,.28);transition:transform .15s ease}
+.cta:hover{transform:translateY(-2px)}
+.cta:disabled{opacity:.6;cursor:default;transform:none}
+.cta-sub{display:flex;align-items:center;justify-content:center;width:100%;
+         background:#fff;color:var(--brand-deep);border:2px solid var(--brand);
+         font-family:"Zen Maru Gothic",sans-serif;font-weight:700;text-decoration:none;
+         padding:12px 20px;border-radius:999px;margin:10px 0 0;font-size:14.5px;
+         cursor:pointer;text-align:center;transition:background .15s ease}
+.cta-sub:hover{background:var(--brand-pale)}
+.fine{font-size:12.5px;color:var(--muted);text-align:center;margin:0}
+.msg{font-size:13.5px;border-radius:12px;padding:11px 15px;margin:12px 0 0;line-height:1.8}
 .msg.err{background:#fef2f2;color:var(--ng);border:1px solid #fecaca}
 .msg.warn{background:#fffbeb;color:var(--brand);border:1px solid #fde68a}
-.spinner{width:32px;height:32px;margin:22px auto;border:4px solid #f1e6cf;border-top-color:var(--brand);
-         border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
 
-/* --- 見える／見えない --- */
-.privacy{display:grid;grid-template-columns:1fr;gap:10px;margin:14px 0}
-@media(min-width:620px){.privacy{grid-template-columns:1fr 1fr}}
-.privacy .box{border-radius:12px;padding:14px 16px;font-size:14px}
+/* ---------- セクション ---------- */
+section{padding:44px 0 0}
+.sec-label{display:flex;align-items:center;gap:11px;font-family:"Zen Maru Gothic",sans-serif;
+           font-weight:700;color:var(--brand);font-size:12.5px;letter-spacing:.14em;margin-bottom:10px}
+.sec-label::before{content:"";width:28px;height:3px;border-radius:2px;background:var(--brand);flex:none}
+h2{font-weight:900;font-size:clamp(19px,3vw,23px);line-height:1.55;margin-bottom:12px}
+h3{font-weight:700;font-size:15.5px;margin:22px 0 5px;color:var(--brand-deep)}
+p{margin-bottom:11px}
+ul{padding-left:21px;margin-bottom:11px}
+li{margin-bottom:4px}
+
+/* 白い紙（大事な補足） */
+.card{background:#fff;border:1px solid var(--border);border-radius:16px;
+      padding:16px 18px;margin:14px 0;box-shadow:0 2px 10px rgba(80,54,20,.05)}
+.card strong:first-child{display:block;margin-bottom:4px;color:var(--brand-deep)}
+
+/* 見える／見えない */
+.privacy{display:grid;grid-template-columns:1fr;gap:11px;margin:14px 0}
+@media(min-width:600px){.privacy{grid-template-columns:1fr 1fr}}
+.privacy .box{border-radius:16px;padding:16px 18px;font-size:14px}
 .privacy .see{background:#f0fdf4;border:1.5px solid #bbf7d0}
 .privacy .hide{background:#fff;border:1.5px solid var(--border)}
 .privacy h3{margin:0 0 8px;font-size:15px}
 .privacy .see h3{color:var(--ok)}
 .privacy .hide h3{color:#57534e}
-.privacy ul{margin:0;padding-left:20px}
+.privacy ul{margin:0;padding-left:19px}
 .privacy li{margin-bottom:3px;line-height:1.8}
+
+/* 定義リスト（料金表のかわり。狭い画面でも折れない） */
+.dl{background:#fff;border:1px solid var(--border);border-radius:16px;
+    overflow:hidden;margin:12px 0 14px;box-shadow:0 2px 10px rgba(80,54,20,.05)}
+.dl div{display:grid;grid-template-columns:9.5em 1fr;gap:0;border-top:1px solid var(--border)}
+.dl div:first-child{border-top:0}
+.dl dt{background:#fffdf9;padding:12px 14px;font-weight:700;font-size:13.5px;line-height:1.75}
+.dl dd{padding:12px 15px;font-size:14px;line-height:1.85}
+@media(max-width:520px){
+  .dl div{grid-template-columns:1fr}
+  .dl dt{padding-bottom:2px;background:#fff;color:var(--brand-deep)}
+  .dl dd{padding-top:2px}
+}
+
+.note{font-size:12.5px;color:var(--muted);margin:36px 0 0;padding-top:18px;border-top:1px solid var(--border)}
+footer{margin-top:44px;border-top:1px solid var(--border);background:#fffdf9;
+       padding:26px 22px;text-align:center;font-size:12.5px;color:var(--muted)}
+footer .links{margin-top:6px}
+footer a{margin:0 9px;white-space:nowrap;display:inline-block}
 </style>
 </head>
 <body>
-<header class="header"><div class="inner"><a class="logo" href="/">つづもん</a></div></header>
+<header class="header"><div class="inner">
+  <a class="logo" href="/">つづもん<small>中学歴史・全19単元</small></a>
+  <a class="to-top" href="/">つづもんとは →</a>
+</div></header>
+
+<div class="top"><div class="inner">
+  <!-- ===== 読み込み中（カード経由のときだけ出る） ===== -->
+  <section id="stLoading" class="hidden" style="padding:0">
+    <div class="spinner"></div>
+    <p style="text-align:center;color:var(--muted);font-size:13.5px">お子さんの記録を読み込んでいます…</p>
+  </section>
+
+  <!-- ===== カード経由（?t=…）のときの冒頭 ===== -->
+  <section id="stChild" class="hidden" style="padding:0">
+    <div class="from-child"><b id="childName">お子さん</b><span id="childGrade"></span>から届いています</div>
+    <h1>お子さんが「つづもんを続けたい」と思っています</h1>
+    <p class="lead" id="trialLead">まずは、3日間の無料体験でどれくらい取り組んだかをご覧ください。</p>
+    <div class="stats" id="stats"></div>
+    <p id="lastStudied"></p>
+  </section>
+
+  <!-- ===== カード無しのときの冒頭 ===== -->
+  <section id="stGeneric" class="hidden" style="padding:0">
+    <h1>保護者の方へ</h1>
+    <p class="lead">つづもんは、中学歴史の「問題集」と「参考書」に、公式LINEのAI先生がついた月額サービスです。お子さまが使うものなので、料金・解約・AIの扱い・通知について、包み隠さずお伝えします。</p>
+  </section>
+</div></div>
+
 <main>
+<div class="inner">
 
-<!-- ===== 読み込み中（カード経由のときだけ出る） ===== -->
-<section id="stLoading" class="hidden">
-  <div class="spinner"></div>
-  <p style="text-align:center;color:var(--muted);font-size:14px">お子さんの記録を読み込んでいます…</p>
-</section>
-
-<!-- ===== カード経由（?t=…）のときの冒頭 ===== -->
-<section id="stChild" class="hidden">
-  <div class="from-child">
-    <b id="childName">お子さん</b><span id="childGrade"></span>から、このページが届いています。
+  <!-- ===== 結論とボタン ===== -->
+  <div class="offer">
+    <div class="offer-head">中学歴史 全19単元</div>
+    <div class="offer-body">
+      <div class="price">
+        <div class="yen">1,280<small>円</small><small style="font-size:15px">／月</small></div>
+        <div class="tax">税込・いつでも解約できます</div>
+      </div>
+      <ul class="checks">
+        <li>3日間 無料でためせます <span>お支払いの登録は不要</span></li>
+        <li>いつでも解約できます <span>保護者の方だけで手続きできます</span></li>
+        <li>LINEに届くのは1日 最大2通まで</li>
+      </ul>
+      <div id="ctaArea">
+        <a class="cta" id="genericCta" href="/account/?do=trial">3日間 無料でためす</a>
+        <p class="fine">クレジットカードの登録は不要です</p>
+      </div>
+      <div id="msgArea"></div>
+    </div>
   </div>
-  <h1>お子さんが「つづもんを続けたい」と思っています</h1>
-  <p class="lead" id="trialLead">まずは、3日間の無料体験でどれくらい取り組んだかをご覧ください。</p>
 
-  <div class="stats" id="stats"></div>
-  <p style="font-size:12.5px;color:var(--muted);margin-bottom:4px" id="lastStudied"></p>
-</section>
+  <!-- ===== 見えるもの／見えないもの ===== -->
+  <section>
+    <div class="sec-label">やくそく</div>
+    <h2>保護者の方に見えるもの・見えないもの</h2>
+    <p>お子さまが安心して使えることを何より優先しています。学習の記録はお見せしますが、<strong>お子さまが書いた言葉は保護者の方にもお見せしません</strong>（安全に関わる場合だけは例外です。<a href="#safety">下でご説明します</a>）。</p>
+    <div class="privacy">
+      <div class="box see">
+        <h3>✅ 見えるもの</h3>
+        <ul>
+          <li>学習した日と時間</li>
+          <li>進んだ単元の数</li>
+          <li>解いた問題の数と正答率</li>
+          <li>ご契約の状態・次回のお支払い日</li>
+        </ul>
+      </div>
+      <div class="box hide">
+        <h3>🔒 見えないもの</h3>
+        <ul>
+          <li>AI（つづ先生）とのトークの内容</li>
+          <li>質問した文章・悩みの相談</li>
+          <li>記述問題に書いた答えの本文</li>
+          <li><strong>まちがえた問題</strong>（件数も出しません）</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card">
+      <strong>まちがいを保護者の方にお見せしない理由</strong>
+      「間違えると親に見られる」と分かると、子どもは<strong>わざと簡単な問題だけを解く</strong>ようになります。それでは学習になりません。つまずきは、お子さま本人とAIの間で解決できるようにしています。
+    </div>
+    <!-- 安全のための見守り。
+         ⚠️ ここに書く内容は実装と1対1で対応させること（誇張も過小もしない）:
+           ・危険な言葉の検知 … functions/src/aiSafetyCore.ts（正規表現で分類）
+           ・本人への固定文    … CRISIS_REPLY_TEXT（公的窓口つき・AIは呼ばない）
+           ・運営への即時通知  … functions/src/aiCrisisHandler.ts（**冒頭の要約のみ**・全文は載せない）
+         「全文が運営に届く」と書くと嘘になる。実装を変えたらこの文面も直す。 -->
+    <div class="card" id="safety">
+      <strong>安全のための見守りについて</strong>
+      お子さまの言葉を保護者の方にお見せしないのは上のとおりですが、<strong>安全に関わることだけは例外</strong>とさせていただいています。
+      <p>自分を傷つけることや、いじめ・暴力をうかがわせる言葉が送られた場合、AIの返答とは別に<strong>運営スタッフへ即時に通知が届く仕組み</strong>にしています。このときお子さまには、AIの回答ではなく<strong>公的な相談窓口をご案内する決まった文面</strong>をお返しします。通知に載るのは<strong>本文の全文ではなく、冒頭の一部だけ</strong>です。</p>
+      <p>また、サービスの品質と安全を保つため、運営スタッフがやりとりを確認させていただくことがあります。</p>
+      <p>そのうえで、<strong>お子さまの安全のために必要だと判断した場合には、保護者の方へご相談させていただくことがあります</strong>。ふだんの学習のつまずきや、まちがえた問題、勉強の愚痴といった内容をお伝えすることはありません。</p>
+    </div>
+  </section>
 
-<!-- ===== カード無しのときの冒頭 ===== -->
-<section id="stGeneric" class="hidden">
-  <h1>保護者の方へ</h1>
-  <p class="lead">つづもんは、中学歴史の「問題集」と「参考書」に、公式LINEのAI先生がついた月額サービスです。お子さまが使うものなので、料金・解約・AIの扱い・通知について、包み隠さずお伝えします。</p>
-</section>
+  <section>
+    <div class="sec-label">01　サービス</div>
+    <h2>どんなサービスですか</h2>
+    <p>中学3年分の日本史・世界史を<strong>19の単元</strong>に分け、単元ごとに「参考書（読む）」と「問題集（解く）」をWebページで用意しています。</p>
+    <p>そして<strong>公式LINEに「きょうの1単元」が届きます</strong>。お子さまはそのリンクを開くだけで、今日やるところが分かります。わからないところは、そのままLINEのトークで質問できます。</p>
+    <div class="card">
+      <strong>いちばんの狙いは「何をやればいいか分からない」をなくすことです。</strong>
+      教材があっても、どこから手をつけるか決められずに終わる——これがいちばん多いつまずきです。だから毎日1単元だけを名指しで届けます。
+    </div>
+  </section>
 
-<!-- ===== 結論とボタン（常に出す・ここまでがファーストビュー） ===== -->
-<section class="headline">
-  <ul>
-    <li>月額 <span class="price">1,280円</span>（税込）</li>
-    <li>いつでも解約できます</li>
-    <li>LINEに届くのは1日 最大2通まで</li>
-  </ul>
-  <div id="ctaArea">
-    <a class="cta" id="genericCta" href="/account/?do=trial">3日間 無料でためす</a>
-    <p style="font-size:12.5px;color:var(--muted);text-align:center;margin:0">クレジットカードの登録は不要です</p>
-  </div>
-  <div id="msgArea"></div>
-</section>
+  <section>
+    <div class="sec-label">02　料金</div>
+    <h2>料金・お支払い・解約</h2>
+    <dl class="dl">
+      <div><dt>料金</dt><dd>月額 1,280円（税込）<br><span style="font-size:12.5px;color:var(--muted)">きょうだいでお使いの場合、2人目以降は月額 980円（税込）になります（下記06）</span></dd></div>
+      <div><dt>お支払い方法</dt><dd>クレジットカード（決済代行：Stripe, Inc.）<br><span style="font-size:12.5px;color:var(--muted)">カード番号は決済代行会社が取り扱い、当方では保持しません</span></dd></div>
+      <div><dt>無料でためせる範囲</dt><dd>お申し込み前に<strong>3日間、全19単元を無料</strong>でお試しいただけます（お支払い情報のご登録は不要です）。また、第4章の中の1節「律令国家と奈良時代」は<strong>いつでも無料</strong>で読めます</dd></div>
+      <div><dt>解約</dt><dd><strong>いつでも解約できます。</strong><a href="/account/">アカウント・お支払い管理</a>ページから、お子さまを介さずに手続きできます</dd></div>
+      <div><dt>解約したあと</dt><dd>次回請求日より前に手続きいただければ、以降の課金は発生しません。お支払い済みの期間の終了日までは、そのままご利用いただけます（日割りでの返金はありません）</dd></div>
+    </dl>
+    <p style="font-size:13.5px;color:var(--muted)">デジタルサービスのため、決済完了後の返品・返金には応じられません。無料体験と常時無料の1節で、中身をお確かめのうえお申し込みください。詳細は<a href="/tokushoho.html">特定商取引法に基づく表記</a>をご覧ください。</p>
+  </section>
 
-<!-- ===== 見えるもの／見えないもの ===== -->
-<h2>保護者の方に見えるもの・見えないもの</h2>
-<p>お子さまが安心して使えることを何より優先しています。学習の記録はお見せしますが、<strong>お子さまが書いた言葉は保護者の方にもお見せしません</strong>。</p>
-<div class="privacy">
-  <div class="box see">
-    <h3>✅ 見えるもの</h3>
+  <section>
+    <div class="sec-label">03　通知</div>
+    <h2>1日の流れと、通知の量</h2>
+    <p>LINEに届くメッセージは<strong>1日に最大2通</strong>です。それ以上は送りません。</p>
     <ul>
-      <li>学習した日と時間</li>
-      <li>進んだ単元の数</li>
-      <li>解いた問題の数と正答率</li>
-      <li>ご契約の状態・次回のお支払い日</li>
+      <li><strong>きょうの1単元</strong>（学習前）… 今日やるところと、教材へのリンク</li>
+      <li><strong>おつかれさまメッセージ</strong>（学習後）… その日やったことの振り返りと、まちがえた問題の復習のお誘い</li>
     </ul>
-  </div>
-  <div class="box hide">
-    <h3>🔒 見えないもの</h3>
+    <p>どちらも<strong>届く曜日と時刻を設定できます</strong>（例：平日は17時、土日は8時）。<a href="/settings/">設定ページ</a>から変更できますし、LINEのトークで「平日だけにして」「朝に変えて」と伝えるだけでも変わります。</p>
+    <div class="card">
+      <strong>すでに勉強した日は、催促を送りません。</strong>
+      終わったあとに「やろう」と届くのは、気持ちのいいものではないからです。
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">04　AI</div>
+    <h2>AIの利用について</h2>
+    <p>いちばん気になるところだと思います。包み隠さずお伝えします。</p>
+    <p>質問への回答・記述問題の採点・学習アドバイスの生成に、生成AI（OpenAI および Google の Gemini）を利用しています。お子さまが入力した内容は、これらの事業者に送信されます。</p>
+
+    <h3>AIの学習には使わせていません</h3>
+    <p>送信した内容を<strong>AIモデルの訓練に利用しない設定</strong>で利用しています。あわせて<strong>事業者側に会話を保存させない設定</strong>を用いています。詳細は<a href="/privacy.html">プライバシーポリシー</a>の第4項に記載しています。</p>
+
+    <h3>個人情報は入力しない設計にしています</h3>
+    <p>AIが「覚えておく」情報は、テストの日・目標・部活などの忙しさ・呼ばれ方の好みに限っています。本名・住所・学校名・電話番号などが送られてきても、<strong>システム側で弾いて保存しません</strong>。お子さまにも「個人情報は書かないでね」と伝えていますが、うっかり書いても残らないようにしています。</p>
+
+    <h3>深刻な悩みには、AIに答えさせません</h3>
+    <p>お子さまが自分を傷つけることに関わる相談を書いた場合、<strong>AIを呼ばずに</strong>、受け止める言葉と公的な相談窓口をお伝えします。あわせて運営に記録が残り、必要に応じて人が確認します。勉強のAIが、いのちに関わる話に一人で答えることはありません。</p>
+
+    <h3>AIは間違えます</h3>
+    <p>生成AIの回答には誤りが含まれることがあります。学習の参考としてご利用ください。教科書や学校の授業と食い違うときは、学校の内容を優先してください。</p>
+  </section>
+
+  <section>
+    <div class="sec-label">05　記録</div>
+    <h2>お子さまの「がんばり」を見る方法</h2>
+    <p>公式LINEで<strong>つづもんと友だちになり、お子さまとつながる</strong>と、学習の記録をご自身のスマートフォンからいつでもご覧いただけます。進んだ単元・学習時間・正答率がまとまって表示されます。</p>
+    <p>つながる方法は、<strong>お子さまがこのページを送った操作そのもの</strong>です。お支払いのあとに表示される画面から、そのまま公式LINEでおつなぎいただけます。お子さま側にも「つながりました」とお知らせが届きます（勝手につながることはありません）。</p>
+    <div class="card">
+      数字を細かく管理するよりも、<strong>「先週より進んだね」の一言</strong>のほうが続きます。そのためのデータです。
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-label">06　対象</div>
+    <h2>対象と、きょうだいでのご利用</h2>
     <ul>
-      <li>AI（つづ先生）とのトークの内容</li>
-      <li>質問した文章・悩みの相談</li>
-      <li>記述問題に書いた答えの本文</li>
-      <li><strong>まちがえた問題</strong>（件数も出しません）</li>
+      <li><strong>対象</strong>：中学1年〜3年（歴史）。高校受験の対策にも使えます</li>
+      <li>どの教科書会社でも使えます（歴史の内容は共通の流れで並べています）</li>
+      <li>スマートフォンだけでも使えます。プリンタは無くてもかまいません</li>
+      <li><strong>向いていないケース</strong>：歴史以外の教科をお探しの場合。現在は歴史のみです</li>
     </ul>
-  </div>
+    <h3>きょうだいでお使いの場合</h3>
+    <p>学習の記録・毎日届く単元・テスト範囲はお子さまごとに違うため、<strong>お一人ずつのアカウント</strong>でお使いいただきます。ご契約もお一人ずつですが、<strong>2人目以降は月額980円（税込）</strong>になります。</p>
+    <p>割引は、<strong>公式LINEでお子さまとつながっている保護者の方</strong>に自動で適用されます（同じご家庭であることを確認するためです）。1人目のお子さまを登録したあと、決済完了の画面から公式LINEでおつなぎいただき、2人目のお子さまのページを開いてください。</p>
+  </section>
+
+  <section>
+    <div class="sec-label">07　お問い合わせ</div>
+    <h2>ご質問・ご相談</h2>
+    <p>メールでお受けしています。お返事まで2〜3日いただく場合があります。</p>
+    <p><a href="mailto:guttoschool.okazaki@gmail.com">guttoschool.okazaki@gmail.com</a></p>
+    <p>公式LINEのトークで「運営に伝えたい」とお書きいただいても届きます（その間、AIは返信を止めて人の対応をお待ちします）。</p>
+  </section>
+
+  <p class="note">最終更新：2026年8月2日 ／ 事業者名：ぐっとスクール（運営責任者：石本 大貴）</p>
 </div>
-<div class="card">
-  <strong>まちがいを保護者の方にお見せしない理由</strong><br>
-  「間違えると親に見られる」と分かると、子どもは<strong>わざと簡単な問題だけを解く</strong>ようになります。それでは学習になりません。つまずきは、お子さま本人とAIの間で解決できるようにしています。
-</div>
-
-<h2>1. どんなサービスですか</h2>
-<p>中学3年分の日本史・世界史を<strong>19の単元</strong>に分け、単元ごとに「参考書（読む）」と「問題集（解く）」をWebページで用意しています。紙に印刷して使うこともできます。</p>
-<p>そして<strong>公式LINEに「きょうの1単元」が届きます</strong>。お子さまはそのリンクを開くだけで、今日やるところが分かります。わからないところは、そのままLINEのトークで質問できます。</p>
-<div class="card">
-  <strong>いちばんの狙いは「何をやればいいか分からない」をなくすことです。</strong><br>
-  教材があっても、どこから手をつけるか決められずに終わる——これがいちばん多いつまずきです。だから毎日1単元だけを名指しで届けます。
-</div>
-
-<h2>2. 料金・お支払い・解約</h2>
-<table>
-  <tr><th>料金</th><td>月額 1,280円（税込）<br><span style="font-size:13px;color:var(--muted)">きょうだいでお使いの場合、2人目以降は月額 980円（税込）になります（下記6項）</span></td></tr>
-  <tr><th>お支払い方法</th><td>クレジットカード（決済代行：Stripe, Inc.）<br>カード番号は決済代行会社が取り扱い、当方では保持しません</td></tr>
-  <tr><th>無料でためせる範囲</th><td>お申し込み前に<strong>3日間、全19単元を無料</strong>でお試しいただけます（お支払い情報のご登録は不要です）。また、第4章の中の1節「律令国家と奈良時代」は<strong>いつでも無料</strong>で読めます</td></tr>
-  <tr><th>解約</th><td><strong>いつでも解約できます。</strong><a href="/account/">アカウント・お支払い管理</a>ページから、お子さまを介さずに手続きできます</td></tr>
-  <tr><th>解約したあと</th><td>次回請求日より前に手続きいただければ、以降の課金は発生しません。お支払い済みの期間の終了日までは、そのままご利用いただけます（日割りでの返金はありません）</td></tr>
-</table>
-<p>デジタルサービスのため、決済完了後の返品・返金には応じられません。無料体験と常時無料の1節で、中身をお確かめのうえお申し込みください。詳細は<a href="/tokushoho.html">特定商取引法に基づく表記</a>をご覧ください。</p>
-
-<h2>3. 1日の流れと、通知の量</h2>
-<p>LINEに届くメッセージは<strong>1日に最大2通</strong>です。それ以上は送りません。</p>
-<ul>
-  <li><strong>きょうの1単元</strong>（学習前）… 今日やるところと、教材へのリンク</li>
-  <li><strong>おつかれさまメッセージ</strong>（学習後）… その日やったことの振り返りと、まちがえた問題の復習のお誘い</li>
-</ul>
-<p>どちらも<strong>届く曜日と時刻を設定できます</strong>（例：平日は17時、土日は8時）。<a href="/settings/">設定ページ</a>から変更できますし、LINEのトークで「平日だけにして」「朝に変えて」と伝えるだけでも変わります。</p>
-<p>また、<strong>その日すでに勉強したお子さまには「きょうの1単元」を送りません</strong>。終わったあとに催促が届くのは、気持ちのいいものではないからです。</p>
-
-<h2>4. AIの利用について（いちばん気になるところだと思います）</h2>
-<p>質問への回答・記述問題の採点・学習アドバイスの生成に、生成AI（OpenAI および Google の Gemini）を利用しています。お子さまが入力した内容は、これらの事業者に送信されます。</p>
-
-<h3>AIの学習には使わせていません</h3>
-<p>送信した内容を<strong>AIモデルの訓練に利用しない設定</strong>で利用しています。あわせて<strong>事業者側に会話を保存させない設定</strong>を用いています。詳細は<a href="/privacy.html">プライバシーポリシー</a>の第4項に記載しています。</p>
-
-<h3>個人情報は入力しない設計にしています</h3>
-<p>AIが「覚えておく」情報は、テストの日・目標・部活などの忙しさ・呼ばれ方の好みに限っています。本名・住所・学校名・電話番号などが送られてきても、<strong>システム側で弾いて保存しません</strong>。お子さまにも「個人情報は書かないでね」と伝えていますが、うっかり書いても残らないようにしています。</p>
-
-<h3>深刻な悩みには、AIに答えさせません</h3>
-<p>お子さまが自分を傷つけることに関わる相談を書いた場合、<strong>AIを呼ばずに</strong>、受け止める言葉と公的な相談窓口をお伝えします。あわせて運営に記録が残り、必要に応じて人が確認します。勉強のAIが、いのちに関わる話に一人で答えることはありません。</p>
-
-<h3>AIは間違えます</h3>
-<p>生成AIの回答には誤りが含まれることがあります。学習の参考としてご利用ください。教科書や学校の授業と食い違うときは、学校の内容を優先してください。</p>
-
-<h2>5. お子さまの「がんばり」を見る方法</h2>
-<p>公式LINEで<strong>つづもんと友だちになり、お子さまとつながる</strong>と、学習の記録をご自身のスマートフォンからいつでもご覧いただけます。進んだ単元・学習時間・正答率がまとまって表示されます。</p>
-<p>つながる方法は、<strong>お子さまがこのページを送った操作そのもの</strong>です。お支払いのあとに表示される画面から、そのまま公式LINEでおつなぎいただけます。お子さま側にも「つながりました」とお知らせが届きます（勝手につながることはありません）。</p>
-<p>数字を細かく管理するよりも、「先週より進んだね」の一言のほうが続きます。そのためのデータです。</p>
-
-<h2>6. 対象と、きょうだいでのご利用</h2>
-<ul>
-  <li><strong>対象</strong>：中学1年〜3年（歴史）。高校受験の対策にも使えます</li>
-  <li>どの教科書会社でも使えます（歴史の内容は共通の流れで並べています）</li>
-  <li>スマートフォンだけでも使えます。プリンタは無くてもかまいません</li>
-  <li><strong>向いていないケース</strong>：歴史以外の教科をお探しの場合。現在は歴史のみです</li>
-</ul>
-<h3>きょうだいでお使いの場合</h3>
-<p>学習の記録・毎日届く単元・テスト範囲はお子さまごとに違うため、<strong>お一人ずつのアカウント</strong>でお使いいただきます。ご契約もお一人ずつですが、<strong>2人目以降は月額980円（税込）</strong>になります。</p>
-<p>割引は、<strong>公式LINEでお子さまとつながっている保護者の方</strong>に自動で適用されます（同じご家庭であることを確認するためです）。1人目のお子さまを登録したあと、決済完了の画面から公式LINEでおつなぎいただき、2人目のお子さまのページを開いてください。</p>
-
-<h2>7. ご質問・ご相談</h2>
-<p>メールでお受けしています。お返事まで2〜3日いただく場合があります。</p>
-<p><a href="mailto:guttoschool.okazaki@gmail.com">guttoschool.okazaki@gmail.com</a></p>
-<p>公式LINEのトークで「運営に伝えたい」とお書きいただいても届きます（その間、AIは返信を止めて人の対応をお待ちします）。</p>
-
-<p class="note">最終更新：2026年7月27日 ／ 事業者名：ぐっとスクール（運営責任者：石本 大貴）</p>
 </main>
+
 <footer>
   <div>© 2026 ぐっとスクール</div>
-  <div><a href="/">つづもんトップ</a><a href="/terms.html">利用規約</a><a href="/privacy.html">プライバシーポリシー</a><a href="/tokushoho.html">特定商取引法に基づく表記</a></div>
+  <div class="links">
+    <a href="/">つづもんトップ</a><a href="/terms.html">利用規約</a><a href="/privacy.html">プライバシーポリシー</a><a href="/tokushoho.html">特定商取引法に基づく表記</a>
+  </div>
 </footer>
 
 <script>
@@ -265,7 +404,9 @@ footer a{margin:0 10px}
 
   function renderSummary(s) {
     $('childName').textContent = s.name;
-    $('childGrade').textContent = s.grade ? '（' + s.grade + '）' : '';
+    // 学年は出さない（2026-08-02）。保護者は自分の子の学年を知っているので
+    // 情報が増えず、users.grade が古いと嘘になる。呼び名だけで足りる。
+    $('childGrade').textContent = '';
 
     var st = s.study;
     var tiles = '';
@@ -300,7 +441,7 @@ footer a{margin:0 10px}
     var seeRecord =
       '<a class="cta-sub" href="' + linkUrl + '">' +
       '公式LINEでお子さまの学習の記録を見る</a>' +
-      '<p style="font-size:12.5px;color:var(--muted);text-align:center;margin:0">' +
+      '<p class="fine" style="margin-top:6px">' +
       '見えるのは学習の記録だけです（トークの内容は表示されません）</p>';
 
     if (s.plan.state === 'active') {
@@ -314,8 +455,7 @@ footer a{margin:0 10px}
     }
     $('ctaArea').innerHTML =
       '<button class="cta" id="payBtn" type="button">このまま登録する（月1,280円）</button>' +
-      '<p style="font-size:12.5px;color:var(--muted);text-align:center;margin:0 0 10px">' +
-      'カード情報はStripe社が扱い、当方では保持しません</p>' +
+      '<p class="fine">カード情報はStripe社が扱い、当方では保持しません</p>' +
       seeRecord +
       '<a class="cta-sub" href="/ref/04/">まず中身を見る（無料の1単元）</a>';
     $('payBtn').addEventListener('click', startCheckout);
