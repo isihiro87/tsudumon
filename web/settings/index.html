@@ -61,6 +61,17 @@
   .units label:active { background:#fffbeb; }
   .units input { accent-color:var(--brand); margin-top:3px; flex:none; }
   .units .u-sub { display:block; font-size:11.5px; color:#a8a29e; }
+  /* 節（くわしく）。章の下に一段下げて置く。既定は畳んでおき、
+     「もっと細かく決めたい人だけ」開く。 */
+  .units details.topics { margin:0 0 6px 26px; }
+  .units details.topics > summary { font-size:11.5px; color:var(--brand);
+    cursor:pointer; padding:3px 0; list-style:none; }
+  .units details.topics > summary::-webkit-details-marker { display:none; }
+  .units details.topics > summary::before { content:'▸ '; }
+  .units details.topics[open] > summary::before { content:'▾ '; }
+  .units details.topics label { font-size:12.5px; color:#57534e; padding:3px 0; }
+  /* 自分の学年以外は薄く畳んで、探す対象を減らす（消しはしない） */
+  .units.other-grade { opacity:.62; }
   .grade-pick { display:flex; gap:6px; margin:4px 0 2px; flex-wrap:wrap; }
   .grade-pick button { font-family:inherit; font-size:12px; padding:5px 10px; border-radius:999px;
                  border:1.5px solid var(--line); background:#fffdf8; color:var(--brand); cursor:pointer; }
@@ -92,7 +103,8 @@
     <section class="sched" id="schedBox">
       <h2>「今日の1単元」が届く時刻</h2>
       <p class="sched-lead">選んだ曜日・時刻で、公式LINEへ1単元お届けします。<br>
-        つづもんからのお知らせは<b>1日2通まで</b>です（下の「おつかれさま」を含めて）。</p>
+        つづもんからのお知らせは<b>ふだん1日2通</b>です（下の「おつかれさま」を含めて）。<br>
+        <span style="font-size:12.5px;color:#8a7a63">無料体験の終わりなど、お知らせが重なる日だけ、もう1通届くことがあります。</span></p>
       <div class="sched-row sched-days">
         <label>届く曜日</label>
         <div class="days" id="schedDays"></div>
@@ -152,17 +164,10 @@
         <input type="date" id="examDate">
       </div>
       <h2 style="margin-top:14px">出る範囲（あてはまる単元にチェック）</h2>
-      <p class="sched-lead">はっきり分からなくても大丈夫です。「たぶんこのへん」で登録しておけば、
-        あとから公式LINEのトークで直せます。</p>
+      <p class="sched-lead">はっきり分からなくても大丈夫です。だいたいで登録しておけば、
+        あとから公式LINEのトークでいつでも直せます。</p>
       <div class="grade-pick" id="examGradePick"></div>
       <div id="examUnits"></div>
-      <div class="sched-row" style="margin-top:12px">
-        <label for="examConfidence">範囲の確かさ</label>
-        <select id="examConfidence">
-          <option value="estimated">たぶんこのへん</option>
-          <option value="confirmed">学校で確認した</option>
-        </select>
-      </div>
       <button class="big-btn btn-main" id="examSave" type="button">この予定で保存する</button>
       <button class="big-btn btn-ghost hidden" id="examClear" type="button">テストの予定を消す</button>
       <div class="msg hidden" id="examMsg"></div>
@@ -306,34 +311,105 @@ async function saveSchedule(u) {
 
 // ── ② テストの予定 ────────────────────────────────
 var GRADES = ['中1', '中2', '中3'];
-function renderUnits(units, selected) {
+
+/** 章だけ持っている旧データを、その章の全節に展開する（サーバ側の規則と同じ）。 */
+function expandUnits(units, unitNos) {
+  if (!unitNos || !unitNos.length) return [];
+  var out = [];
+  units.forEach(function (u) {
+    if (unitNos.indexOf(u.no) < 0) return;
+    (u.topics || []).forEach(function (t) { out.push(t.id); });
+  });
+  return out;
+}
+function renderUnits(units, selectedTopics) {
+  // 章に節をぶら下げて描く。
+  //  ・章のチェック   = その章ぜんぶ（従来どおり1タップで済む）
+  //  ・「くわしく」   = 節のチェックが開く（**細かくしたい人だけ深く入る**）
+  //  ・自分の学年     = 最初から開いて見せる。他学年は畳む
+  //    （中2の子が中1・中3の13章をスクロールして探すのが二度手間だった）
   var host = document.getElementById('examUnits');
   host.innerHTML = '';
+  var myGrade = document.getElementById('gradeSel').value;
+  var sel = selectedTopics || [];
   GRADES.forEach(function (g) {
     var inGrade = units.filter(function (u) { return u.grade === g; });
     if (!inGrade.length) return;
     var h = document.createElement('div');
-    h.className = 'grade-h'; h.textContent = g;
+    h.className = 'grade-h';
+    h.textContent = g + (g === myGrade ? '（あなたの学年）' : '');
     host.appendChild(h);
     var box = document.createElement('div');
     box.className = 'units';
+    if (myGrade && g !== myGrade) box.classList.add('other-grade');
     inGrade.forEach(function (u) {
+      var topics = u.topics || [];
+      var chosen = topics.filter(function (t) { return sel.indexOf(t.id) >= 0; });
+
       var wrap = document.createElement('label');
       var cb = document.createElement('input');
-      cb.type = 'checkbox'; cb.value = u.no; cb.dataset.grade = u.grade;
-      cb.checked = !!selected && selected.indexOf(u.no) >= 0;
+      cb.type = 'checkbox';
+      cb.value = u.no;
+      cb.dataset.grade = u.grade;
+      cb.dataset.unit = u.no;
+      // 一部だけ選ばれている章は中間状態にする（全選択と区別がつかないと誤解を生む）
+      cb.checked = chosen.length > 0;
+      cb.indeterminate = chosen.length > 0 && chosen.length < topics.length;
       var txt = document.createElement('span');
-      txt.innerHTML = '';
       txt.appendChild(document.createTextNode(u.no + '. ' + u.title));
       var sub = document.createElement('span');
-      sub.className = 'u-sub'; sub.textContent = u.subtitle;
+      sub.className = 'u-sub';
+      sub.textContent = u.subtitle;
       txt.appendChild(sub);
       wrap.appendChild(cb); wrap.appendChild(txt);
       box.appendChild(wrap);
+
+      if (!topics.length) return;
+      var det = document.createElement('details');
+      det.className = 'topics';
+      // 一部だけ選ばれているなら開いておく（畳むと何を選んだか見えない）
+      det.open = chosen.length > 0 && chosen.length < topics.length;
+      var sum = document.createElement('summary');
+      sum.textContent = 'くわしく（' + topics.length + '節）';
+      det.appendChild(sum);
+      topics.forEach(function (t) {
+        var tl = document.createElement('label');
+        var tcb = document.createElement('input');
+        tcb.type = 'checkbox';
+        tcb.value = t.id;
+        tcb.dataset.topicOf = u.no;
+        tcb.checked = sel.indexOf(t.id) >= 0;
+        tcb.onchange = function () { syncUnitFromTopics(u.no); };
+        var tn = document.createElement('span');
+        tn.textContent = t.index + '. ' + t.name;
+        tl.appendChild(tcb); tl.appendChild(tn);
+        det.appendChild(tl);
+      });
+      box.appendChild(det);
+
+      // 章のチェック = その章の節をまとめて入り切り
+      cb.onchange = function () {
+        var on = cb.checked;
+        cb.indeterminate = false;
+        var boxes = det.querySelectorAll('input');
+        for (var i = 0; i < boxes.length; i++) boxes[i].checked = on;
+      };
     });
     host.appendChild(box);
   });
 }
+
+/** 節のチェック状況から、親の章のチェック（と中間状態）をそろえる。 */
+function syncUnitFromTopics(no) {
+  var parent = document.querySelector('#examUnits input[data-unit="' + no + '"]');
+  var boxes = document.querySelectorAll('#examUnits input[data-topic-of="' + no + '"]');
+  if (!parent) return;
+  var on = 0;
+  for (var i = 0; i < boxes.length; i++) if (boxes[i].checked) on++;
+  parent.checked = on > 0;
+  parent.indeterminate = on > 0 && on < boxes.length;
+}
+
 function renderGradePick() {
   var host = document.getElementById('examGradePick');
   host.innerHTML = '';
@@ -347,7 +423,10 @@ function renderGradePick() {
   clear.type = 'button'; clear.textContent = 'ぜんぶ外す';
   clear.onclick = function () {
     var boxes = document.querySelectorAll('#examUnits input');
-    for (var i = 0; i < boxes.length; i++) boxes[i].checked = false;
+    for (var i = 0; i < boxes.length; i++) {
+      boxes[i].checked = false;
+      boxes[i].indeterminate = false;
+    }
   };
   host.appendChild(clear);
 }
@@ -356,23 +435,38 @@ function toggleGrade(g) {
   // 1つでも未チェックがあれば全部つける。全部ついていれば全部外す。
   var allOn = true;
   for (var i = 0; i < boxes.length; i++) if (!boxes[i].checked) allOn = false;
-  for (var j = 0; j < boxes.length; j++) boxes[j].checked = !allOn;
+  for (var j = 0; j < boxes.length; j++) {
+    boxes[j].checked = !allOn;
+    boxes[j].indeterminate = false;
+    // 章だけ切り替えても保存されるのは節なので、配下の節までそろえる
+    setTopicsOfUnit(boxes[j].dataset.unit, !allOn);
+  }
 }
-function readUnits() {
+
+/** その章の節をまとめて入り切りする。 */
+function setTopicsOfUnit(no, on) {
+  if (!no) return;
+  var t = document.querySelectorAll('#examUnits input[data-topic-of="' + no + '"]');
+  for (var i = 0; i < t.length; i++) t[i].checked = on;
+}
+/** 選ばれた節ID。章だけチェックした場合も、その章の全節が入る。 */
+function readTopicIds() {
   var out = [];
-  var boxes = document.querySelectorAll('#examUnits input:checked');
+  var boxes = document.querySelectorAll('#examUnits input[data-topic-of]:checked');
   for (var i = 0; i < boxes.length; i++) out.push(boxes[i].value);
   return out;
 }
 function applyExam(data) {
   var units = (data && data.units) || [];
+  window.__tzmUnits = units;   // 学年を変えたときに描き直すため
   var exam = data && data.exam;
-  renderUnits(units, exam && exam.unitNos);
+  // 節指定が無い古いデータは「章ぜんぶ」なので、章から節へ展開して見せる
+  var selTopics = (exam && exam.topicIds) || expandUnits(units, exam && exam.unitNos);
+  renderUnits(units, selTopics);
   renderGradePick();
   document.getElementById('examClear').classList.toggle('hidden', !exam);
   if (exam) {
     document.getElementById('examDate').value = exam.date;
-    document.getElementById('examConfidence').value = exam.confidence || 'estimated';
   }
   applyMode(data);
 }
@@ -440,16 +534,21 @@ async function loadExam(u) {
 }
 async function saveExam(u) {
   var date = document.getElementById('examDate').value;
-  var unitNos = readUnits();
+  var topicIds = readTopicIds();
   if (!date) { setMsg('examMsg', 'テストの日をえらんでください。', 'warn'); return; }
-  if (!unitNos.length) { setMsg('examMsg', '出る範囲の単元を1つ以上えらんでください。', 'warn'); return; }
+  if (!topicIds.length) { setMsg('examMsg', '出る範囲を1つ以上えらんでください。', 'warn'); return; }
   var btn = document.getElementById('examSave');
   btn.disabled = true; btn.textContent = '保存しています…';
   try {
     var r = await postWithToken(EXAM_API, u, {
       testDate: date,
-      unitNos: unitNos,
-      confidence: document.getElementById('examConfidence').value,
+      topicIds: topicIds,
+      // このページで単元をチェックした＝本人が選んだ範囲なので confirmed。
+      // 「範囲の確かさ」を本人に選ばせるのはやめた（ユーザー指摘 2026-08-02）。
+      // 中学生にとってはどちらを選ぶべきか判断しづらく、迷うだけの軸だった。
+      // 会話でAIが目星をつけた場合の estimated は従来どおり残る
+      // （setExamScope 側。AIは自分の推測を confirmed と言い切らない）。
+      confidence: 'confirmed',
     });
     if (r.res.ok && r.data.ok) {
       applyExam(r.data);
@@ -491,6 +590,14 @@ document.getElementById('schedSave').onclick = function () {
   saveSchedule(u);
 };
 document.getElementById('gradeSel').onchange = function () {
+  // 学年を変えたら「あなたの学年」の位置も変わる。選択は保ったまま描き直す。
+  try {
+    var keep = readTopicIds();
+    var host = document.getElementById('examUnits');
+    if (host && host.children.length && window.__tzmUnits) {
+      renderUnits(window.__tzmUnits, keep);
+    }
+  } catch (e) {}
   var u = auth.currentUser;
   if (!u) { gotoLogin(); return; }
   saveGrade(u);

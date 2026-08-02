@@ -193,6 +193,10 @@ function portalBtnState(disabled, label) {
 }
 
 var PORTAL_MESSAGES = {
+  // おうちの人が保護者ページから払った契約。customerId は子のuidに付くので、
+  // ここを素通しすると Billing Portal が開いて保護者のカード情報が見えてしまう。
+  // サーバ（tsudumonCreatePortal）が paid_by_parent で断るので、その理由を伝える。
+  paid_by_parent: 'このお支払いは、おうちの人の画面から手続きされています。お支払いの確認や解約は、おうちの人にお願いしてください。',
   no_subscription: 'このアカウントはクレジットカードでのお支払い登録がないため、こちらからの解約・変更はできません。紙の問題集についてきたコードでご利用中の方・3日間無料体験中の方は、有効期限が来ると自動的に終了しますので、特別な手続きは不要です（追加の請求も発生しません）。ご不明な点は公式LINEでお問い合わせください。',
   not_configured: '現在、お支払い管理ページのご案内を準備中です。時間をおいてもう一度お試しいただくか、公式LINEでお問い合わせください。',
   stripe_error: 'お支払い管理ページの準備に失敗しました。時間をおいてもう一度お試しください。',
@@ -219,7 +223,9 @@ async function doPortal() {
       return;
     }
     var reason = data.reason || data.error;
-    showPortalMsg(PORTAL_MESSAGES[reason] || '通信エラーが発生しました。電波の良いところでもう一度お試しください。', 'warn');
+    // サーバが message を返してきたら、それを優先して出す。ここで拾わないと、
+    // 用意した説明文があるのに「通信エラー」と表示してしまう（実際そうなっていた）。
+    showPortalMsg(PORTAL_MESSAGES[reason] || data.message || '通信エラーが発生しました。電波の良いところでもう一度お試しください。', 'warn');
     portalBtnState(false, PORTAL_LABEL);
   } catch (e) {
     showPortalMsg('通信エラーが発生しました。電波の良いところでもう一度お試しください。', 'warn');
