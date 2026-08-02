@@ -342,7 +342,10 @@ async function doCheckout(u) {
       actToggle('actGoMap', true);
       return true;
     }
-    var msg = CHECKOUT_MESSAGES[r.data.reason];
+    // サーバが message を返してきたら優先して出す。ここで拾わないと、
+    // 用意した説明（保護者が自分のアカウントで登録しようとした等）が
+    // 「通信エラー」に化ける。ポータル側と同じ扱いに揃えている。
+    var msg = CHECKOUT_MESSAGES[r.data.reason] || r.data.message;
     if (!msg && (r.res.status === 401 || r.res.status === 403)) msg = RELOGIN_MSG;
     actMsg(msg || NET_MSG, 'warn');
     subBtnState(false, SUB_LABEL);

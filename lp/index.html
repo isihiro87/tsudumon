@@ -1034,7 +1034,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{
        screen_tab    ... 教材画面タブの切り替え
        solve_toggle  ... Webで解く／LINEで解く の切り替え
      ============================================================ -->
-<script>window.TZM_GA_ID = '';</script>
+<script>window.TZM_GA_ID = 'G-3WX3NVZCYJ';</script>
 <script>
 (function(){
   var id = window.TZM_GA_ID;
@@ -1559,8 +1559,13 @@ a:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{
         <ul>
           <li><b>時間×量の見える化と負荷調整</b>：解いた問題数と使った時間を記録し、まとまった時間が取れない日は「今日は5分だけ」に下げて提案します。</li>
           <li><b>状況で変わるAIの声かけ</b>：がんばった日は具体的にほめて、間隔があいた日はやさしく。記録に合わせてメッセージが変わります。</li>
-          <li><b>テスト日から逆算プラン</b>：テスト日を伝えておくと、そこから逆算して今日ちょうどいい範囲に調整します。</li>
-          <li><b>学習記録に合わせた出し分け</b>：いまは教科書の流れどおりに順番でお届けしていますが、ニガテに応じた出題順に対応します。</li>
+          <!-- ⚠️ 「テスト日から逆算」「学習記録に合わせた出し分け」はここに置かない（2026-08-02）。
+               どちらも実装済みで、FAQ（「毎日届く1単元とは？」）に動くものとして書いてある。
+               ここへ残すと同じページで逆のことを言うことになる。
+               実装: tsudumonDailyUnit が resolveEffectiveMode / pickDailyUnit(テスト範囲) /
+               pickEntranceUnit(弱点周回) / dueReviewUnits(間隔反復) を呼んでいる。
+               まだ無いのは「その日の**量**を調整する」ところで、それは下の
+               「時間×量の見える化と負荷調整」が受け持っている。 -->
           <li><b>保護者へ週1のがんばり通知</b>：お子さまのがんばりを週1回まとめてお知らせし、「ほめる材料」をお届けします。</li>
           <li><b>保護者向けAI診断レポート</b>：どこでつまずいているかをAIがまとめ、保護者の方にわかる言葉でお伝えします。</li>
         </ul>
