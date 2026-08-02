@@ -242,8 +242,15 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
         <li>LINEに届くのは1日 最大2通まで</li>
       </ul>
       <div id="ctaArea">
-        <a class="cta" id="genericCta" href="/account/?do=trial">3日間 無料でためす</a>
-        <p class="fine">クレジットカードの登録は不要です</p>
+        <!-- ⚠️ ここを /account/?do=trial にしない（2026-08-02）。
+             体験は「開いた人のLINEアカウント」に付くので、保護者が押すと
+             **保護者自身に3日間体験が付き**、中学生向けのあいさつと「今日の1単元」が
+             保護者に届きはじめる（体験は1人1回なので、お子さまの分も消費してしまう）。
+             このページはカード無しでも開かれる（Instagram の保護者向け投稿の着地点）ので、
+             保護者が押して困らない導線だけを置く。 -->
+        <a class="cta" id="genericCta" href="/ref/04/">まず中身を見る（無料の1単元）</a>
+        <p class="fine">お申し込みは<strong>お子さまのスマートフォン</strong>から。<br>
+          お子さまが公式LINEで「おうちの人に見せたい」と送ると、ご案内がこのページとして届きます。</p>
       </div>
       <div id="msgArea"></div>
     </div>
@@ -311,7 +318,12 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
       <div><dt>料金</dt><dd>月額 1,280円（税込）<br><span style="font-size:12.5px;color:var(--muted)">きょうだいでお使いの場合、2人目以降は月額 980円（税込）になります（下記06）</span></dd></div>
       <div><dt>お支払い方法</dt><dd>クレジットカード（決済代行：Stripe, Inc.）<br><span style="font-size:12.5px;color:var(--muted)">カード番号は決済代行会社が取り扱い、当方では保持しません</span></dd></div>
       <div><dt>無料でためせる範囲</dt><dd>お申し込み前に<strong>3日間、全19単元を無料</strong>でお試しいただけます（お支払い情報のご登録は不要です）。また、第4章の中の1節「律令国家と奈良時代」は<strong>いつでも無料</strong>で読めます</dd></div>
-      <div><dt>解約</dt><dd><strong>いつでも解約できます。</strong><a href="/account/">アカウント・お支払い管理</a>ページから、お子さまを介さずに手続きできます</dd></div>
+      <!-- ⚠️ /account/ を案内しない（2026-08-02）。あれは**お子さま本人**がLINEログインして
+           使うページで、tsudumonCreatePortal は開いた本人の customerId を見る。
+           保護者ペイリンクで払った場合 customerId はお子さまのuidに付くため、
+           保護者が /account/ を開いても no_subscription で行き止まりになる。
+           保護者の窓口は /parents/dashboard/（tsudumonParentPortal を使う）。 -->
+      <div><dt>解約</dt><dd><strong>いつでも解約できます。</strong><a href="/parents/dashboard/">学習の記録のページ</a>から、お子さまを介さずに手続きできます（公式LINEでつながっている必要があります）</dd></div>
       <div><dt>解約したあと</dt><dd>次回請求日より前に手続きいただければ、以降の課金は発生しません。お支払い済みの期間の終了日までは、そのままご利用いただけます（日割りでの返金はありません）</dd></div>
     </dl>
     <p style="font-size:13.5px;color:var(--muted)">デジタルサービスのため、決済完了後の返品・返金には応じられません。無料体験と常時無料の1節で、中身をお確かめのうえお申し込みください。詳細は<a href="/tokushoho.html">特定商取引法に基づく表記</a>をご覧ください。</p>
