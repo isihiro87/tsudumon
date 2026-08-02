@@ -519,7 +519,7 @@ def build(folder: str) -> tuple[str, list[str]]:
         <span class="mode-arrow">›</span></button></div>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="B">
         <span class="mode-ic">{IC['qa']}</span>
-        <span class="mode-main"><span class="mode-t">一問一答（短答）</span>
+        <span class="mode-main"><span class="mode-t">一問一答（入力）</span>
           <span class="mode-sub">{len(cards)}問・入力して自動で正誤判定</span></span>
         <span class="mode-arrow">›</span></button>
         <details class="mode-opts-wrap"><summary>解き方をこまかく決める</summary>
@@ -530,7 +530,7 @@ def build(folder: str) -> tuple[str, list[str]]:
       </div>
       <div class="mode-card"><button class="mode-btn" type="button" data-mode="C">
         <span class="mode-ic">{IC['yon']}</span>
-        <span class="mode-main"><span class="mode-t">4択（選択）</span>
+        <span class="mode-main"><span class="mode-t">選択</span>
           <span class="mode-sub">{len(quiz)}問・タップで即判定</span></span>
         <span class="mode-arrow">›</span></button>
         <details class="mode-opts-wrap"><summary>解き方をこまかく決める</summary>
