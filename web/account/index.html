@@ -29,6 +29,17 @@
   .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
   .btn-sub  { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
   .hidden { display:none; }
+  /* いま誰としてログインしているか。体験も課金もこのアカウントに付く。 */
+  .whoami { text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:14px;
+            padding:11px 15px; margin-bottom:10px; font-size:13.5px; line-height:1.75; }
+  .whoami b { color:var(--deep); }
+  .whoami .sub { display:block; font-size:12px; color:#8a7a63; }
+  /* 課金前の確認。ここを通らないと Checkout へ行けない。 */
+  .confirm { text-align:left; background:#fffbeb; border:2px solid var(--brand,#b45309);
+             border-radius:14px; padding:16px 18px; margin-bottom:12px; }
+  .confirm-lead { font-size:14.5px; line-height:1.8; margin:0 0 8px; }
+  .confirm-who { font-size:15px; font-weight:bold; margin:0 0 8px; }
+  .confirm-note { font-size:12.5px; color:#6b6b6b; line-height:1.8; margin:0 0 12px; }
   .ent-box { text-align:left; background:#fffbeb; border:1.5px solid var(--line); border-radius:14px;
              padding:16px 18px; margin-bottom:6px; font-size:14px; line-height:1.8; }
   .ent-ok .ent-grades, .ent-ok .ent-exp { color:#44403c; }
@@ -81,8 +92,25 @@
 
   <!-- 状態3: ログイン後 -->
   <section id="stMain" class="hidden">
+    <!-- ⚠️ 「誰のアカウントか」を必ず先に見せる（2026-08-02）。
+         体験も課金も**ログインした本人**に付くので、保護者が自分のLINEで
+         ここまで来ると、保護者に課金されてお子さまの教材は開かない。
+         しかも決済は成功して領収書も届くので、あとから気づけない。
+         だから「気づける」ではなく「確認しないと進めない」形にする。 -->
+    <div class="whoami hidden" id="whoami"></div>
+
     <!-- LP からの ?do=trial / ?do=subscribe の結果表示（通常アクセス時は非表示） -->
     <div class="msg hidden" id="actMsg"></div>
+
+    <!-- ?do=subscribe の確認。自動で決済へ飛ばさず、ここで一度止める。 -->
+    <div class="confirm hidden" id="confirmBox">
+      <p class="confirm-lead">このアカウントに<b>月額プラン（1,280円／月・税込）</b>を登録します。</p>
+      <p class="confirm-who" id="confirmWho"></p>
+      <p class="confirm-note">教材が使えるようになるのは、<b>いまログインしているこのアカウント</b>です。<br>
+        おうちの方が代わりにお支払いする場合は、<b>お子さまのLINEでログイン</b>してください。</p>
+      <button class="big-btn btn-main" id="confirmGo" type="button">このアカウントで登録する</button>
+      <button class="big-btn btn-sub" id="confirmSwitch" type="button">ちがう場合：ログアウトして切り替える</button>
+    </div>
     <a class="big-btn btn-main hidden" id="actGoMap" href="../map/">教材をひらく →</a>
     <button class="big-btn btn-main hidden" id="actSub" type="button">月額プランに登録（1,280円／月）</button>
 
@@ -113,7 +141,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {
   initializeAuth, browserLocalPersistence, browserSessionPersistence,
-  inMemoryPersistence, onAuthStateChanged,
+  inMemoryPersistence, onAuthStateChanged, signOut,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 var ENTITLEMENT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonEntitlement';
@@ -142,6 +170,8 @@ function gradeLabel(grades) {
 }
 
 function renderEntitlement(data) {
+  // 利用状況を出すたびに「誰としてログイン中か」も更新する（同じ応答に入っている）。
+  renderWhoami(data.displayName, data.isParent);
   var entBox = document.getElementById('entBox');
   if (data && data.ok && data.result === 'ok') {
     entBox.innerHTML =
@@ -363,9 +393,71 @@ document.getElementById('actSub').onclick = function () {
   doCheckout(u).then(function (refresh) { if (refresh) refreshEntitlement(u); });
 };
 
+/**
+ * いま誰としてログインしているかを常に出す。
+ * 体験も課金も**このアカウント**に付くので、ここが違うと事故になる。
+ */
+function renderWhoami(name, isParent) {
+  var el = document.getElementById('whoami');
+  if (!name && !isParent) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.innerHTML = '';
+  var p = document.createElement('div');
+  if (isParent) {
+    p.innerHTML = '<b></b> さんとしてログイン中（保護者）' +
+      '<span class="sub">お子さまのご登録は「学習の記録」のページからどうぞ。</span>';
+  } else {
+    p.innerHTML = '<b></b> さんとしてログイン中' +
+      '<span class="sub">体験・お支払いは、このアカウントに登録されます。</span>';
+  }
+  p.querySelector('b').textContent = name || 'このLINE';
+  el.appendChild(p);
+}
+
+/** 確認カードを出す（?do=subscribe のとき）。ここを通らないと決済へ行かせない。 */
+function askConfirmSubscribe(u, name) {
+  var box = document.getElementById('confirmBox');
+  var who = document.getElementById('confirmWho');
+  who.textContent = (name || 'このLINE') + ' さんのアカウント';
+  box.classList.remove('hidden');
+  document.getElementById('confirmGo').onclick = function () {
+    box.classList.add('hidden');
+    doCheckout(u).then(function (refresh) { if (refresh) refreshEntitlement(u); });
+  };
+  document.getElementById('confirmSwitch').onclick = async function () {
+    // 別のアカウント（＝お子さま）でログインし直す。?do= は付け直す。
+    try { await signOut(auth); } catch (e) {}
+    gotoLogin('subscribe');
+  };
+}
+
 async function runAction(u, action) {
-  var refresh = action === 'trial' ? await doTrial(u) : await doCheckout(u);
+  if (action === 'subscribe') {
+    // ⚠️ 自動で Checkout へ飛ばさない。保護者が自分のLINEでLPのボタンを踏むと、
+    // 保護者に課金され**お子さまの教材は開かない**。決済は成功し領収書も届くので
+    // あとから気づけない。名前を見せて、確認してからにする。
+    var name = await fetchDisplayName(u);
+    askConfirmSubscribe(u, name);
+    return;
+  }
+  var refresh = await doTrial(u);
   if (refresh) refreshEntitlement(u);
+}
+
+/** 表示名だけ先に取る（利用状況と同じ1 readなので追加コストは無い）。 */
+async function fetchDisplayName(u) {
+  try {
+    var idToken = await u.getIdToken();
+    var res = await fetch(ENTITLEMENT_API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken: idToken }),
+    });
+    var data = await res.json();
+    renderWhoami(data.displayName, data.isParent);
+    return data.displayName || '';
+  } catch (e) {
+    return '';
+  }
 }
 
 onAuthStateChanged(auth, function (u) {
