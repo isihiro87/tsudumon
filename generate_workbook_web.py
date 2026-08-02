@@ -494,7 +494,7 @@ def build(folder: str) -> tuple[str, list[str]]:
                 '<div class="mode-card"><button class="mode-btn" type="button" data-mode="D">'
                 f'<span class="mode-ic">{IC["doc"]}</span>'
                 f'<span class="mode-main"><span class="mode-t">記述</span>'
-                f'<span class="mode-sub">{len(written)}問・模範解答つき</span></span>'
+                f'<span class="mode-sub">{len(written)}問</span></span>'
                 '<span class="mode-arrow">›</span></button></div>')
         # 2回目以降は前回の解き方をそのまま使えるよう、いちばん上に「続きから」を出す
         # （毎回えらび直させると、単元を開くたびに2回タップが増えるだけだった）。
