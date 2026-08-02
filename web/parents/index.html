@@ -156,6 +156,16 @@ li{margin-bottom:4px}
 .privacy h3{margin:0 0 8px;font-size:15px}
 .privacy .see h3{color:var(--ok)}
 .privacy .hide h3{color:#57534e}
+/* 手順（きょうだいの登録など）。番号を丸バッジにして、どこまで進んだか分かるように */
+.steps{list-style:none;counter-reset:st;padding:0;margin:12px 0 14px}
+.steps li{counter-increment:st;position:relative;padding:11px 0 11px 42px;
+          border-top:1px solid var(--border);font-size:14.5px;line-height:1.85}
+.steps li:first-child{border-top:0}
+.steps li::before{content:counter(st);position:absolute;left:0;top:12px;
+                  width:26px;height:26px;border-radius:50%;background:var(--brand);color:#fff;
+                  font-family:"Zen Maru Gothic",sans-serif;font-weight:700;font-size:13px;
+                  display:flex;align-items:center;justify-content:center;line-height:1}
+
 .privacy ul{margin:0;padding-left:19px}
 .privacy li{margin-bottom:3px;line-height:1.8}
 
@@ -355,7 +365,17 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
     </ul>
     <h3>きょうだいでお使いの場合</h3>
     <p>学習の記録・毎日届く単元・テスト範囲はお子さまごとに違うため、<strong>お一人ずつのアカウント</strong>でお使いいただきます。ご契約もお一人ずつですが、<strong>2人目以降は月額980円（税込）</strong>になります。</p>
-    <p>割引は、<strong>公式LINEでお子さまとつながっている保護者の方</strong>に自動で適用されます（同じご家庭であることを確認するためです）。1人目のお子さまを登録したあと、決済完了の画面から公式LINEでおつなぎいただき、2人目のお子さまのページを開いてください。</p>
+    <p>割引は、<strong>公式LINEでお子さま全員とつながっている保護者の方</strong>に自動で適用されます（同じご家庭であることを確認するためです）。手順は次の4つです。</p>
+    <ol class="steps">
+      <li><strong>1人目のお子さまを登録する</strong>（このページから・月1,280円）</li>
+      <li><strong>公式LINEでつながる</strong><br>登録後に出る「公式LINEでお子さまの学習の記録を見る」から。これで保護者としての登録が済みます</li>
+      <li><strong>2人目のお子さまにも、同じようにご案内を送ってもらう</strong><br>お子さまが公式LINEで「おうちの人に見せたい」と送ると、このページのご案内が届きます。届いたら、同じように「学習の記録を見る」を押してつながってください</li>
+      <li><strong>学習の記録のページから2人目を登録する</strong>（<a href="/parents/dashboard/">保護者ダッシュボード</a>）<br>お子さまの一覧に出る「このお子さまを登録する」から。<strong>ここから登録すると月980円</strong>になります</li>
+    </ol>
+    <div class="card">
+      <strong class="card-t">4番目の手順にご注意ください。</strong>
+      2人目のお子さまから届いた<strong>ご案内のページで直接登録すると、割引が適用されず月1,280円</strong>になります。ご案内のページは、まだどなたが開いているか分からないためです。<strong>公式LINEでつながったあと、学習の記録のページ（保護者ダッシュボード）から登録</strong>してください。
+    </div>
   </section>
 
   <section>
