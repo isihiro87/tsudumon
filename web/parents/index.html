@@ -140,7 +140,12 @@ li{margin-bottom:4px}
 /* 白い紙（大事な補足） */
 .card{background:#fff;border:1px solid var(--border);border-radius:16px;
       padding:16px 18px;margin:14px 0;box-shadow:0 2px 10px rgba(80,54,20,.05)}
-.card strong:first-child{display:block;margin-bottom:4px;color:var(--brand-deep)}
+/* カードの見出し。⚠️ 以前は `.card strong:first-child` だったが、これは
+   **文中の <strong> にも当たっていた**。:first-child はテキストノードを数えないので、
+   `<p>〜〜<strong>強調</strong>〜〜</p>` の strong も「最初の要素の子」になり、
+   display:block が効いて強調語の前後で改行が入っていた（ユーザー指摘 2026-08-02）。
+   見出しかどうかは書き手にしか決められないので、明示クラスにする。 */
+.card .card-t{display:block;margin-bottom:4px;color:var(--brand-deep);font-weight:700}
 
 /* 見える／見えない */
 .privacy{display:grid;grid-template-columns:1fr;gap:11px;margin:14px 0}
@@ -253,7 +258,7 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
       </div>
     </div>
     <div class="card">
-      <strong>まちがいを保護者の方にお見せしない理由</strong>
+      <strong class="card-t">まちがいを保護者の方にお見せしない理由</strong>
       「間違えると親に見られる」と分かると、子どもは<strong>わざと簡単な問題だけを解く</strong>ようになります。それでは学習になりません。つまずきは、お子さま本人とAIの間で解決できるようにしています。
     </div>
     <!-- 安全のための見守り。
@@ -263,7 +268,7 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
            ・運営への即時通知  … functions/src/aiCrisisHandler.ts（**冒頭の要約のみ**・全文は載せない）
          「全文が運営に届く」と書くと嘘になる。実装を変えたらこの文面も直す。 -->
     <div class="card" id="safety">
-      <strong>安全のための見守りについて</strong>
+      <strong class="card-t">安全のための見守りについて</strong>
       お子さまの言葉を保護者の方にお見せしないのは上のとおりですが、<strong>安全に関わることだけは例外</strong>とさせていただいています。
       <p>自分を傷つけることや、いじめ・暴力をうかがわせる言葉が送られた場合、AIの返答とは別に<strong>運営スタッフへ即時に通知が届く仕組み</strong>にしています。このときお子さまには、AIの回答ではなく<strong>公的な相談窓口をご案内する決まった文面</strong>をお返しします。通知に載るのは<strong>本文の全文ではなく、冒頭の一部だけ</strong>です。</p>
       <p>また、サービスの品質と安全を保つため、運営スタッフがやりとりを確認させていただくことがあります。</p>
@@ -274,10 +279,10 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
   <section>
     <div class="sec-label">01　サービス</div>
     <h2>どんなサービスですか</h2>
-    <p>中学3年分の日本史・世界史を<strong>19の単元</strong>に分け、単元ごとに「参考書（読む）」と「問題集（解く）」をWebページで用意しています。</p>
+    <p>中学3年分の歴史を<strong>19の単元</strong>に分け、単元ごとに「参考書（読む）」と「問題集（解く）」をWebページで用意しています。</p>
     <p>そして<strong>公式LINEに「きょうの1単元」が届きます</strong>。お子さまはそのリンクを開くだけで、今日やるところが分かります。わからないところは、そのままLINEのトークで質問できます。</p>
     <div class="card">
-      <strong>いちばんの狙いは「何をやればいいか分からない」をなくすことです。</strong>
+      <strong class="card-t">いちばんの狙いは「何をやればいいか分からない」をなくすことです。</strong>
       教材があっても、どこから手をつけるか決められずに終わる——これがいちばん多いつまずきです。だから毎日1単元だけを名指しで届けます。
     </div>
   </section>
@@ -305,7 +310,7 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
     </ul>
     <p>どちらも<strong>届く曜日と時刻を設定できます</strong>（例：平日は17時、土日は8時）。<a href="/settings/">設定ページ</a>から変更できますし、LINEのトークで「平日だけにして」「朝に変えて」と伝えるだけでも変わります。</p>
     <div class="card">
-      <strong>すでに勉強した日は、催促を送りません。</strong>
+      <strong class="card-t">すでに勉強した日は、催促を送りません。</strong>
       終わったあとに「やろう」と届くのは、気持ちのいいものではないからです。
     </div>
   </section>
@@ -442,7 +447,7 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
       '<a class="cta-sub" href="' + linkUrl + '">' +
       '公式LINEでお子さまの学習の記録を見る</a>' +
       '<p class="fine" style="margin-top:6px">' +
-      '見えるのは学習の記録だけです（トークの内容は表示されません）</p>';
+      '見えるのは学習の記録だけです</p>';
 
     if (s.plan.state === 'active') {
       // すでにご登録済み。二重に払わせない。
