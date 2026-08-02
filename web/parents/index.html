@@ -153,6 +153,10 @@ li{margin-bottom:4px}
    display:block が効いて強調語の前後で改行が入っていた（ユーザー指摘 2026-08-02）。
    見出しかどうかは書き手にしか決められないので、明示クラスにする。 */
 .card .card-t{display:block;margin-bottom:4px;color:var(--brand-deep);font-weight:700}
+.more-link{margin-top:12px;font-size:14px}
+.more-link a{color:var(--brand-deep);font-weight:700;text-decoration:none;
+             border-bottom:1px solid var(--brand-pale);padding-bottom:2px}
+.more-link a:hover{border-bottom-color:var(--brand)}
 
 /* 見える／見えない */
 .privacy{display:grid;grid-template-columns:1fr;gap:11px;margin:14px 0}
@@ -309,6 +313,12 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
       <strong class="card-t">いちばんの狙いは、「勉強しなさい」と言わずにすむことです。</strong>
       始めるきっかけをつくる役目は、LINEが引き受けます。毎日きまった時刻に「今日はここ」と1単元だけ届くので、お子さまは何をやるか決めなくてよく、保護者の方は声をかけなくて済みます。
     </div>
+    <!-- 教材そのものの紹介ページ（LP）へ。ヘッダーのロゴとフッターにも
+         リンクはあるが、リンクとして弱く実質見えていなかったので、
+         読み進める流れの中に置く（ユーザー要望 2026-08-02）。
+         ⚠️ href はJSで `?t=` 付きに差し替える。トークンを落とすと、
+         LPで申し込まれたときに支払いが保護者自身に紐づいてしまう。 -->
+    <p class="more-link"><a id="lpLink" href="/">教材そのものの紹介ページを見る →</a></p>
   </section>
 
   <section>
@@ -535,6 +545,10 @@ window.tzmParentIdToken = async function () {
   }
 
   function renderCta(s) {
+    // 教材紹介ページ（LP）へもトークンを持たせる。LP側はこれを見て
+    // 申込ボタンを保護者ページへ戻す（裸のLPで登録させない）。
+    var lp = document.getElementById('lpLink');
+    if (lp) lp.setAttribute('href', '/?t=' + encodeURIComponent(token));
     var linkUrl = '/parents/link/?t=' + encodeURIComponent(token);
     // 学習の記録を見る導線は**どの状態でも出す**。無料体験中の様子を見たい保護者にも、
     // 決済後にこのページへ戻ってきた保護者にも、連携の入口が必要（設計 §4-4）。
