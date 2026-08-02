@@ -239,7 +239,7 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
       <ul class="checks">
         <li>3日間 無料でためせます <span>お支払いの登録は不要</span></li>
         <li>いつでも解約できます <span>保護者の方だけで手続きできます</span></li>
-        <li>LINEに届くのは1日 最大2通まで</li>
+        <li>LINEの通知は1日2通が基本 <span>体験の終わりなど、重なる日だけ3通</span></li>
       </ul>
       <div id="ctaArea">
         <!-- ⚠️ ここを /account/?do=trial にしない（2026-08-02）。
@@ -332,7 +332,11 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
   <section>
     <div class="sec-label">03　通知</div>
     <h2>1日の流れと、通知の量</h2>
-    <p>LINEに届くメッセージは<strong>1日に最大2通</strong>です。それ以上は送りません。</p>
+    <!-- ⚠️ 「1日2通まで」と言い切らない（2026-08-02）。日次配信・体験リマインド・
+         ふりかえりは別々のcronで動くため、体験の終了前日に勉強した日などは
+         3通になりうる。断言すると約束を破ることになるので、例外を具体的に書く。 -->
+    <p>LINEに届くメッセージは、ふだんは<strong>1日に2通</strong>です。それ以上は送りません。</p>
+    <p style="font-size:13.5px;color:var(--muted)">ただし<strong>無料体験の終わりなど、お知らせが重なる日だけ</strong>、もう1通（計3通）届くことがあります。</p>
     <ul>
       <li><strong>きょうの1単元</strong>（学習前）… 今日やるところと、教材へのリンク</li>
       <li><strong>おつかれさまメッセージ</strong>（学習後）… その日やったことの振り返りと、まちがえた問題の復習のお誘い</li>
