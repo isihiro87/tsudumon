@@ -9,7 +9,9 @@
   こたえを見る→○△セルフ採点）→ C 実戦4択（タップで即判定＋解説）→ D 記述（模範解答＋
   LINE AI採点への導線）→ E 資料問題 / F 資料の対応 → 結果（正答数・復習導線）
 - 進捗・成績は localStorage に保存（目次に ✓・つづきから）
-- 「🖨 印刷」で紙のワークとして印刷できる（空欄・解答欄つき・巻末解答は最後にまとめて印字）
+- ⚠️ 「紙に印刷して解く」ボタンは**いったん撤去**（ユーザー指示 2026-08-02・公開に間に合わないため）。
+  印刷用のスタイル（@media print）と巻末解答の生成は**残してある**ので、告知とボタンを
+  戻せば復活する。撤去したのは導線と告知だけで、印刷そのものを壊してはいない。
 - 参考書 Web 版と相互リンク（../../ref/{NN}/#t{i} ⇄ ../../wb/{NN}/#t{i}）
 
 使い方:
@@ -614,7 +616,6 @@ def build(folder: str) -> tuple[str, list[str]]:
     {''.join(toc_items)}
   </nav>
   {ref_home}
-  <button class="big-btn print-btn" type="button" onclick="window.print()">紙に印刷して解く（解答つき）</button>
   {credits_html}
   <footer class="foot">
     <div>つづもん 問題集</div>
@@ -1199,7 +1200,6 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .ref-btn { background:#fffbeb; color:var(--brand); border:1.5px solid var(--line); }
   .retry-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
   .home-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
-  .print-btn { background:#fff; color:#57534e; border:1.5px solid #e2d5bd; }
   /* すごろく（本一覧）へ戻るリンク */
   .home-link { display:inline-block; margin:10px 0 0; font-size:13px; font-weight:bold;
                color:var(--brand); text-decoration:none; background:#fffbeb;
@@ -1303,7 +1303,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     /* 問題選択・短答のやり方・結果などの操作用ページは紙に出さない（問題と解答だけ印刷） */
     .drawer, .sheet, .lightbox, .whynext, .review-view, .bookprog, .review-btn,
     .w-count, .retry-q, .zoom-tag, .unitbtn, .cfgbtn, .more-actions,
-    .mode-step, .mb-step, .done-step, .next-modes, .chip-mode, .print-btn,
+    .mode-step, .mb-step, .done-step, .next-modes, .chip-mode,
     .retry-btn, .home-btn, .wrong-btn, .ai-grade, .ai-result, .print-hide { display:none !important; }
     .print-only { display:block !important; }
     .view { display:block !important; }
@@ -1425,7 +1425,7 @@ TEMPLATE = """<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   :root[data-theme="dark"] .tl-table, :root[data-theme="dark"] .unitbtn,
   :root[data-theme="dark"] .cfgbtn, :root[data-theme="dark"] .bookprog,
   :root[data-theme="dark"] .retry-btn, :root[data-theme="dark"] .home-btn,
-  :root[data-theme="dark"] .print-btn, :root[data-theme="dark"] .ref-btn,
+  :root[data-theme="dark"] .ref-btn,
   :root[data-theme="dark"] .ht-bubble, :root[data-theme="dark"] .qa-expl,
   :root[data-theme="dark"] .expl, :root[data-theme="dark"] .sp-bubble {
     background:var(--card); color:var(--ink); border-color:var(--edge); }
