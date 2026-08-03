@@ -245,7 +245,10 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
         <div class="tax">税込・いつでも解約できます</div>
       </div>
       <ul class="checks">
-        <li>3日間 無料でためせます <span>お支払いの登録は不要</span></li>
+        <!-- ⚠️ 公開キャンペーン（2026-08-15まで無料 / 登録は8/11まで）。
+             実装は marutto-study の tsudumonCore.TSUDUMON_TRIAL_CAMPAIGN_* と連動。
+             キャンペーンが終わったら**この2か所も「3日間」に戻す**。日付だけ残ると嘘になる。 -->
+        <li>今だけ 8月15日まで無料 <span>8月11日までに始めた方・お支払いの登録は不要</span></li>
         <li>いつでも解約できます <span>保護者の方だけで手続きできます</span></li>
         <li>LINEの通知は1日2通が基本 <span>体験の終わりなど、重なる日だけ3通</span></li>
       </ul>
@@ -331,7 +334,7 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
     <dl class="dl">
       <div><dt>料金</dt><dd>月額 1,280円（税込）<br><span style="font-size:12.5px;color:var(--muted)">きょうだいでお使いの場合、2人目以降は月額 980円（税込）になります（下記06）</span></dd></div>
       <div><dt>お支払い方法</dt><dd>クレジットカード（決済代行：Stripe, Inc.）<br><span style="font-size:12.5px;color:var(--muted)">カード番号は決済代行会社が取り扱い、当方では保持しません</span></dd></div>
-      <div><dt>無料でためせる範囲</dt><dd>お申し込み前に<strong>3日間、全19単元を無料</strong>でお試しいただけます（お支払い情報のご登録は不要です）。また、第4章の中の1節「律令国家と奈良時代」は<strong>いつでも無料</strong>で読めます</dd></div>
+      <div><dt>無料でためせる範囲</dt><dd>お申し込み前に<strong>全19単元を無料</strong>でお試しいただけます（お支払い情報のご登録は不要です）。<strong>8月11日までに始めた方は8月15日まで</strong>、それ以降に始めた方は<strong>3日間</strong>ご利用いただけます。また、第4章の中の1節「律令国家と奈良時代」は<strong>いつでも無料</strong>で読めます</dd></div>
       <!-- ⚠️ /account/ を案内しない（2026-08-02）。あれは**お子さま本人**がLINEログインして
            使うページで、tsudumonCreatePortal は開いた本人の customerId を見る。
            保護者ペイリンクで払った場合 customerId はお子さまのuidに付くため、
