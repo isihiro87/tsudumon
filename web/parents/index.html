@@ -65,8 +65,6 @@ strong{font-weight:700}
 /* ---------- 冒頭 ---------- */
 .top{background:linear-gradient(180deg,#fdf9f2 0%,#fbf2e2 100%);
      border-bottom:1px solid var(--border);padding:34px 0 30px}
-/* ⚠️ inline-flex にしない。中の「呼び名」「（空の学年欄）」「から届いています」が
-   それぞれ flex アイテムになり、gap のぶん不自然な空きが入る（実際に空いていた）。 */
 .from-child{display:inline-block;background:#fff;
             border:1px solid var(--border);border-radius:999px;padding:7px 18px;
             font-size:13.5px;font-weight:700;color:var(--brand-deep);
@@ -215,7 +213,13 @@ footer a{margin:0 9px;white-space:nowrap;display:inline-block}
 
   <!-- ===== カード経由（?t=…）のときの冒頭 ===== -->
   <section id="stChild" class="hidden" style="padding:0">
-    <div class="from-child"><b id="childName">お子さん</b><span id="childGrade"></span>から届いています</div>
+    <!-- ⚠️ 名前も学年も**差し込まない**（2026-08-03）。
+         ・学年「（中2）」は 2026-07-31 に廃止。保護者は自分の子の学年を知って
+           いるので情報が増えず、users.grade が古いと嘘になる
+         ・呼び名を子に聞く導線も撤去したので、名前は常に「お子さん」で固定
+         つまり毎回まったく同じ文字列になる。JSで差し込む理由がないので静的に置く
+         （差し込みが残っていると、また値が混ざる余地を作る）。 -->
+    <div class="from-child">お子さんから届いています</div>
     <h1>お子さんが「つづもんを続けたい」と思っています</h1>
     <p class="lead" id="trialLead">まずは、3日間の無料体験でどれくらい取り組んだかをご覧ください。</p>
     <div class="stats" id="stats"></div>
@@ -513,11 +517,6 @@ window.tzmParentIdToken = async function () {
   }
 
   function renderSummary(s) {
-    $('childName').textContent = s.name;
-    // 学年は出さない（2026-08-02）。保護者は自分の子の学年を知っているので
-    // 情報が増えず、users.grade が古いと嘘になる。呼び名だけで足りる。
-    $('childGrade').textContent = '';
-
     var st = s.study;
     var tiles = '';
     tiles += statTile(st.daysThisWeek, '日', 'この1週間で<br>学習した日');
