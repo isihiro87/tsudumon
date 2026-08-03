@@ -38,8 +38,19 @@
   .confirm { text-align:left; background:#fffbeb; border:2px solid var(--brand,#b45309);
              border-radius:14px; padding:16px 18px; margin-bottom:12px; }
   .confirm-lead { font-size:14.5px; line-height:1.8; margin:0 0 8px; }
-  .confirm-who { font-size:15px; font-weight:bold; margin:0 0 8px; }
-  .confirm-note { font-size:12.5px; color:#6b6b6b; line-height:1.8; margin:0 0 12px; }
+  .confirm-who { font-size:15px; font-weight:bold; margin:0 0 14px; }
+  /* 2つの場合分け。どちらに当てはまるかを先に読ませてから操作させる。 */
+  .confirm-case { background:#fff; border-radius:12px; padding:13px 15px; margin-bottom:10px; }
+  .confirm-case:last-child { margin-bottom:0; }
+  .confirm-case.ok { border:1.5px solid #bbf7d0; }
+  .confirm-case.ng { border:1.5px solid var(--line); }
+  .confirm-case h3 { font-size:13.5px; margin:0 0 6px; line-height:1.7; }
+  .confirm-case.ok h3 { color:#15803d; }
+  .confirm-case.ng h3 { color:var(--warn); }
+  .confirm-case p { font-size:12.5px; color:#57534e; line-height:1.85; margin:0; }
+  .confirm-case .big-btn { margin-top:10px; }
+  .confirm-steps { margin:9px 0 0; padding-left:1.3em; }
+  .confirm-steps li { font-size:12.5px; color:#57534e; line-height:1.85; margin-bottom:5px; }
   .ent-box { text-align:left; background:#fffbeb; border:1.5px solid var(--line); border-radius:14px;
              padding:16px 18px; margin-bottom:6px; font-size:14px; line-height:1.8; }
   .ent-ok .ent-grades, .ent-ok .ent-exp { color:#44403c; }
@@ -85,9 +96,28 @@
 
   <!-- 状態2: 未ログイン -->
   <section id="stLogin" class="hidden">
-    <div class="lead">ご利用状況の確認や、お支払い方法の変更・解約には、公式LINEでのログインが必要です。</div>
+    <div class="lead" id="loginLead">ご利用状況の確認や、お支払い方法の変更・解約には、公式LINEでのログインが必要です。</div>
     <button class="big-btn btn-line" id="loginBtn" type="button">LINEでログイン</button>
     <div class="note-box"><p>はじめての方は、ログインと同時に公式LINEの友だち追加になります。</p></div>
+  </section>
+
+  <!-- 状態2b: LPから体験・登録に来た「未ログインの人」への事前確認。
+       ⚠️ ここが**いちばん効く場所**（2026-08-03）。ログインしたあとの確認カードは
+       「気づける」だけで、保護者が自分のLINEで入ってしまったあとでは戻れない
+       （自分のスマホでログアウトしても、お子さまのLINEには入れない）。
+       ログインの**前**に行き先を分ければ、そもそも間違えたアカウントに入らない。 -->
+  <section id="stWho" class="hidden">
+    <div class="lead" id="whoLead">この先は<b>お子さまご本人のLINE</b>でログインします。</div>
+    <div class="confirm-case ok">
+      <h3>お子さま本人が、このスマホで使う場合</h3>
+      <p>ご家庭でLINEを1つ一緒にお使いの場合も含みます。<b>このまま進めて大丈夫です。</b></p>
+      <button class="big-btn btn-line" id="whoGo" type="button">このスマホのLINEで続ける</button>
+    </div>
+    <div class="confirm-case ng">
+      <h3>おうちの方が、ご自分のスマホでご覧の場合</h3>
+      <p id="whoNg">このまま進むと、教材が使えるようになるのは<b>おうちの方のアカウント</b>で、<b>お子さまの画面は変わりません</b>。まずは保護者の方向けのご案内をご覧ください。</p>
+      <a class="big-btn btn-sub" href="/parents/">保護者の方へ（料金・解約・AIの安全）→</a>
+    </div>
   </section>
 
   <!-- 状態3: ログイン後 -->
@@ -102,14 +132,31 @@
     <!-- LP からの ?do=trial / ?do=subscribe の結果表示（通常アクセス時は非表示） -->
     <div class="msg hidden" id="actMsg"></div>
 
-    <!-- ?do=subscribe の確認。自動で決済へ飛ばさず、ここで一度止める。 -->
+    <!-- ?do=subscribe の確認。自動で決済へ飛ばさず、ここで一度止める。
+         ⚠️ 「ログアウトして切り替える」は出さない（2026-08-02）。
+         保護者は**自分のスマホ**で見ているのが普通で、そこでログアウトしても
+         お子さまのLINEには入れない。切り替えではなく、
+         「お子さまから案内を送ってもらう」手順を出すのが正しい。 -->
     <div class="confirm hidden" id="confirmBox">
-      <p class="confirm-lead">このアカウントに<b>月額プラン（1,280円／月・税込）</b>を登録します。</p>
+      <p class="confirm-lead" id="confirmLead">このアカウントに<b>月額プラン（1,280円／月・税込）</b>を登録します。</p>
       <p class="confirm-who" id="confirmWho"></p>
-      <p class="confirm-note">教材が使えるようになるのは、<b>いまログインしているこのアカウント</b>です。<br>
-        おうちの方が代わりにお支払いする場合は、<b>お子さまのLINEでログイン</b>してください。</p>
-      <button class="big-btn btn-main" id="confirmGo" type="button">このアカウントで登録する</button>
-      <button class="big-btn btn-sub" id="confirmSwitch" type="button">ちがう場合：ログアウトして切り替える</button>
+
+      <div class="confirm-case ok">
+        <h3>このスマホを、お子さまが つづもん で使っている場合</h3>
+        <p>ご家庭でLINEを1つ一緒にお使いの場合も含みます。<b>このまま進めて大丈夫です。</b></p>
+        <button class="big-btn btn-main" id="confirmGo" type="button">このアカウントで登録する</button>
+      </div>
+
+      <div class="confirm-case ng">
+        <h3>おうちの方が、ご自分のスマホでご覧の場合</h3>
+        <p id="confirmNg">このまま登録すると、教材が使えるようになるのは<b>このアカウント</b>で、<b>お子さまの画面は変わりません</b>。お手数ですが、次の手順でお願いします。</p>
+        <ol class="confirm-steps">
+          <li>お子さまのスマホで、つづもんのトークに<b>「おうちの人に見せたい」</b>と送ってもらう</li>
+          <li>届いたメッセージを、<b>長おし →「転送」</b>でおうちの方へ送ってもらう</li>
+          <li>届いたリンクを開いて、<b>そのページからご登録ください</b></li>
+        </ol>
+        <a class="big-btn btn-sub" href="/parents/">保護者の方へ（料金・解約・AIの安全）→</a>
+      </div>
     </div>
     <a class="big-btn btn-main hidden" id="actGoMap" href="../map/">教材をひらく →</a>
     <button class="big-btn btn-main hidden" id="actSub" type="button">月額プランに登録（1,280円／月）</button>
@@ -141,7 +188,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {
   initializeAuth, browserLocalPersistence, browserSessionPersistence,
-  inMemoryPersistence, onAuthStateChanged, signOut,
+  inMemoryPersistence, onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 var ENTITLEMENT_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonEntitlement';
@@ -154,7 +201,9 @@ var auth = initializeAuth(app, {
 });
 
 function show(id) {
-  ['stLoading', 'stLogin', 'stMain'].forEach(function (s) {
+  // stWho = LPから体験・登録に来た未ログインの人への事前確認。
+  // ここに足し忘れると、切り替えても前の画面が残って二重に見える。
+  ['stLoading', 'stLogin', 'stWho', 'stMain'].forEach(function (s) {
     document.getElementById(s).classList.toggle('hidden', s !== id);
   });
 }
@@ -301,6 +350,30 @@ function gotoLogin(action) {
   location.href = '../login/?auto=1&next=' +
     encodeURIComponent(location.pathname + '?do=' + action);
 }
+
+/**
+ * ログイン**前**に「誰のスマホか」を尋ねる。
+ *
+ * ログイン後の確認カードは「気づける」だけで、保護者が自分のLINEで入って
+ * しまったあとでは戻せない（自分の端末でログアウトしても、お子さまのLINEには
+ * 入り直せない）。ここで行き先を分ければ、間違えたアカウントにそもそも入らない。
+ */
+function showWhoGate(action) {
+  var sub = action === 'subscribe';
+  document.getElementById('whoLead').innerHTML = sub
+    ? 'この先は<b>お子さまご本人のLINE</b>でログインして、月額プランに登録します。'
+    : 'この先は<b>お子さまご本人のLINE</b>でログインして、3日間の無料体験を始めます。';
+  document.getElementById('whoNg').innerHTML = sub
+    ? 'このまま進むと、教材が使えるようになるのは<b>おうちの方のアカウント</b>で、<b>お子さまの画面は変わりません</b>。まずは保護者の方向けのご案内をご覧ください。'
+    : 'このまま進むと、体験が使えるのは<b>おうちの方のアカウント</b>で、<b>お子さまの画面は変わりません</b>。しかも<b>体験はお1人1回</b>なので、お子さまが体験できなくなります。まずは保護者の方向けのご案内をご覧ください。';
+  document.getElementById('whoGo').onclick = function () {
+    loginRedirecting = true;
+    show('stLoading');
+    document.getElementById('loadingLead').textContent = 'LINEログインへ移動しています…';
+    gotoLogin(action);
+  };
+  show('stWho');
+}
 function actMsg(text, kind) {
   var el = document.getElementById('actMsg');
   el.textContent = text;
@@ -414,34 +487,41 @@ function renderWhoami(name, isParent) {
   el.appendChild(p);
 }
 
-/** 確認カードを出す（?do=subscribe のとき）。ここを通らないと決済へ行かせない。 */
-function askConfirmSubscribe(u, name) {
+/**
+ * 確認カードを出す。**ここを通らないと体験も決済も始めない。**
+ *
+ * ⚠️ 体験（trial）にも出す（2026-08-03）。以前は決済だけを止めていたが、
+ * 体験は**1アカウント1回**なので、保護者が自分のLINEで踏むと
+ * お子さまが二度と体験できなくなる。決済は返金できても、これは戻せない。
+ */
+function askConfirm(u, name, action) {
+  var sub = action === 'subscribe';
   var box = document.getElementById('confirmBox');
-  var who = document.getElementById('confirmWho');
-  who.textContent = (name || 'このLINE') + ' さんのアカウント';
+  document.getElementById('confirmWho').textContent =
+    (name || 'このLINE') + ' さんのアカウント';
+  document.getElementById('confirmLead').innerHTML = sub
+    ? 'このアカウントに<b>月額プラン（1,280円／月・税込）</b>を登録します。'
+    : 'このアカウントで<b>3日間の無料体験</b>を始めます。<b>体験はお1人1回だけ</b>です。';
+  document.getElementById('confirmNg').innerHTML = sub
+    ? 'このまま登録すると、教材が使えるようになるのは<b>このアカウント</b>で、<b>お子さまの画面は変わりません</b>。お手数ですが、次の手順でお願いします。'
+    : 'このまま始めると、体験が使えるのは<b>このアカウント</b>で、<b>お子さまの画面は変わりません</b>。しかも体験はお1人1回なので、<b>お子さまが体験できなくなります</b>。お手数ですが、次の手順でお願いします。';
+  document.getElementById('confirmGo').textContent = sub
+    ? 'このアカウントで登録する'
+    : 'このアカウントで体験を始める';
   box.classList.remove('hidden');
   document.getElementById('confirmGo').onclick = function () {
     box.classList.add('hidden');
-    doCheckout(u).then(function (refresh) { if (refresh) refreshEntitlement(u); });
-  };
-  document.getElementById('confirmSwitch').onclick = async function () {
-    // 別のアカウント（＝お子さま）でログインし直す。?do= は付け直す。
-    try { await signOut(auth); } catch (e) {}
-    gotoLogin('subscribe');
+    var run = sub ? doCheckout(u) : doTrial(u);
+    run.then(function (refresh) { if (refresh) refreshEntitlement(u); });
   };
 }
 
 async function runAction(u, action) {
-  if (action === 'subscribe') {
-    // ⚠️ 自動で Checkout へ飛ばさない。保護者が自分のLINEでLPのボタンを踏むと、
-    // 保護者に課金され**お子さまの教材は開かない**。決済は成功し領収書も届くので
-    // あとから気づけない。名前を見せて、確認してからにする。
-    var name = await fetchDisplayName(u);
-    askConfirmSubscribe(u, name);
-    return;
-  }
-  var refresh = await doTrial(u);
-  if (refresh) refreshEntitlement(u);
+  // ⚠️ 自動で実行しない。保護者が自分のLINEでLPのボタンを踏むと、保護者に
+  // 体験・課金が付き**お子さまの教材は開かない**。決済は成功して領収書も届くので
+  // あとから気づけない。名前を見せて、確認してからにする。
+  var name = await fetchDisplayName(u);
+  askConfirm(u, name, action);
 }
 
 /** 表示名だけ先に取る（利用状況と同じ1 readなので追加コストは無い）。 */
@@ -471,11 +551,11 @@ onAuthStateChanged(auth, function (u) {
       refreshEntitlement(u);
     }
   } else if (pendingAction && !loginRedirecting) {
-    // 体験開始・登録にはログインが要る。?do= を保ったままログインへ送り、戻って自動実行。
-    loginRedirecting = true;
-    show('stLoading');
-    document.getElementById('loadingLead').textContent = 'LINEログインへ移動しています…';
-    gotoLogin(pendingAction);
+    // ⚠️ ここで**ログインへ直行しない**（2026-08-03）。
+    // 保護者が自分のスマホでLPの「体験」「登録」を踏むと、自分のLINEでログインが
+    // 完了してしまう。そのあとで気づいても、自分の端末ではお子さまのLINEに
+    // 入り直せない。ログインの前に「誰のスマホか」を尋ねて行き先を分ける。
+    showWhoGate(pendingAction);
   } else {
     show('stLogin');
   }
