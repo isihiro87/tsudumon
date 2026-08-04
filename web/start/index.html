@@ -6,26 +6,27 @@
 <!--
   無料おためしの入口。**中学生が最初に見る画面**。
 
-  これまでは /account/?do=trial に直接飛ばしていたが、あそこは
-  「アカウント・お支払い」「解約について」「お支払い・解約の管理」が並ぶページで、
-  始める前の中学生には重すぎる（ユーザー指摘 2026-08-03）。
-  お金の話は、興味を持ってもらったあと・保護者に見せる段階で出せばいい。
+  /account/?do=trial に直接飛ばすのはやめた。あそこは「アカウント・お支払い」
+  ページで、解約の説明とお支払い管理ボタンが並ぶ。始める前の中学生には重すぎる。
+  お金の話は、興味を持ってもらったあと・おうちの人に見せる段階（/parents/）で出す。
 
-  このページに置くのは3つだけ:
-    ① いま何が起きているか（準備しています）
-    ② 終わったら自動で教材へ
-    ③ うまくいかなかったときの逃げ道
-  料金・解約・アカウントの語は**1つも出さない**。
+  ここでやることは3つだけ:
+    ① 学年をえらぶ（必須・1タップ）… 今日の1単元の出し分けに効く
+    ② テストの予定（任意・畳んである）… 入れた人は範囲から先に出る
+    ③ 無料でためす → そのままトップページ（/map/）へ
+
+  ⚠️ 体験開始後に「無料体験がはじまりました」等の演出は出さない。
+     終わったら勝手に課金されるのでは、という不安を先に置くことになる。
 -->
 <style>
   :root { --brand:#b45309; --deep:#7c2d12; --amber:#f59e0b; --line:#fde68a; --ng:#dc2626; }
   * { margin:0; padding:0; box-sizing:border-box; }
   body { font-family:"Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
          color:#1c1917; background:linear-gradient(#fffdf8,#fef6e4); min-height:100vh;
-         display:flex; align-items:center; justify-content:center; padding:24px 16px; }
-  .card { width:100%; max-width:400px; background:#fff; border:2px solid var(--line);
-          border-radius:20px; padding:32px 24px 28px; box-shadow:0 8px 24px rgba(120,80,20,.14);
-          text-align:center; }
+         display:flex; align-items:flex-start; justify-content:center; padding:20px 16px 40px; }
+  .card { width:100%; max-width:420px; background:#fff; border:2px solid var(--line);
+          border-radius:20px; padding:28px 22px 26px; box-shadow:0 8px 24px rgba(120,80,20,.14);
+          text-align:center; margin-top:12px; }
   .badge { display:inline-block; background:var(--brand); color:#fff; font-weight:bold;
            padding:4px 16px; border-radius:20px; font-size:13px; }
   h1 { font-size:22px; color:var(--deep); margin:16px 0 6px; line-height:1.6; }
@@ -35,8 +36,9 @@
   @keyframes spin { to { transform:rotate(360deg); } }
   @media (prefers-reduced-motion:reduce) { .spinner { animation:none; } }
   .big-btn { display:block; width:100%; margin-top:14px; border:none; border-radius:14px;
-             padding:14px; font-size:16px; font-weight:bold; text-decoration:none; cursor:pointer;
+             padding:15px; font-size:16.5px; font-weight:bold; text-decoration:none; cursor:pointer;
              font-family:inherit; }
+  .big-btn:disabled { opacity:.6; cursor:default; }
   .btn-line { background:#06c755; color:#fff; box-shadow:0 3px 8px rgba(6,199,85,.3); }
   .btn-main { background:var(--brand); color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.3); }
   .btn-sub  { background:#fff; color:var(--brand); border:1.5px solid var(--line); }
@@ -44,24 +46,80 @@
          margin-top:14px; text-align:left; background:#fffbeb; border:1px solid var(--line);
          color:var(--brand); }
   .hidden { display:none; }
-  .fine { font-size:12px; color:#8a7a63; margin-top:14px; line-height:1.8; }
+  .fine { font-size:12px; color:#8a7a63; margin-top:12px; line-height:1.85; }
+  .lp-link { display:inline-block; margin-top:16px; font-size:13.5px; color:var(--brand);
+             text-decoration:underline; }
+
+  /* 設定（学年・テストの予定） */
+  .field { text-align:left; margin-top:18px; }
+  .field > h2 { font-size:14px; color:var(--deep); margin-bottom:2px; }
+  .field .hint { font-size:12px; color:#8a7a63; line-height:1.75; margin-bottom:8px; }
+  .grades { display:flex; gap:8px; }
+  .grades button { flex:1; font-family:inherit; font-size:15px; font-weight:bold; padding:12px 0;
+                   border-radius:12px; border:1.5px solid var(--line); background:#fff;
+                   color:#57534e; cursor:pointer; }
+  .grades button.on { background:var(--brand); color:#fff; border-color:var(--brand); }
+  details.opt { margin-top:16px; text-align:left; border-top:1px solid var(--line); padding-top:14px; }
+  details.opt > summary { font-size:13.5px; color:var(--brand); cursor:pointer; list-style:none;
+                          font-weight:bold; }
+  details.opt > summary::-webkit-details-marker { display:none; }
+  details.opt > summary::before { content:'▸ '; }
+  details.opt[open] > summary::before { content:'▾ '; }
+  .opt .hint { font-size:12px; color:#8a7a63; line-height:1.75; margin:6px 0 10px; }
+  .opt input[type=date] { font-family:inherit; font-size:15px; padding:9px 10px; border-radius:10px;
+                          border:1.5px solid var(--line); background:#fffdf8; width:100%; }
+  .units { display:flex; flex-direction:column; gap:1px; margin-top:10px;
+           max-height:210px; overflow-y:auto; border:1px solid var(--line); border-radius:10px;
+           padding:8px 10px; }
+  .units label { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#44403c;
+                 padding:5px 0; line-height:1.6; }
+  .units input { accent-color:var(--brand); margin-top:3px; flex:none; }
 </style></head><body>
 <div class="card">
   <span class="badge">つづもん</span>
 
-  <!-- 準備中（ふつうはここしか見えない） -->
+  <!-- 準備中 -->
   <section id="stWork">
     <h1>ちょっと待ってね</h1>
-    <p>ぜんぶの単元をひらいています。</p>
+    <p>じゅんびしています。</p>
     <div class="spinner"></div>
   </section>
 
   <!-- ログインが要るとき -->
   <section id="stLogin" class="hidden">
     <h1>はじめよう</h1>
-    <p>LINEでログインすると、そのまま全単元がひらきます。<br>お支払いの登録はいりません。</p>
+    <p>LINEでログインすると、つづきの画面にすすみます。</p>
     <button class="big-btn btn-line" id="loginBtn" type="button">LINEではじめる</button>
-    <p class="fine">ログインと同時に、つづもんの公式LINEが友だちに追加されます。</p>
+    <p class="fine">お支払いの登録はいりません。<br>期間が終わっても、お金が勝手にかかることはありません。<br>ログインと同時に、つづもんの公式LINEが友だちに追加されます。</p>
+    <a class="lp-link" href="/">つづもんってなに？ →</a>
+  </section>
+
+  <!-- 登録（学年・テストの予定）→ 体験開始 -->
+  <section id="stForm" class="hidden">
+    <h1>あと1ステップ</h1>
+    <p>学年をえらぶと、きみに合った単元が毎日ひとつ届きます。</p>
+
+    <div class="field">
+      <h2>学年</h2>
+      <div class="hint">あとから変えられます。</div>
+      <div class="grades" id="grades">
+        <button type="button" data-g="中1">中1</button>
+        <button type="button" data-g="中2">中2</button>
+        <button type="button" data-g="中3">中3</button>
+      </div>
+    </div>
+
+    <details class="opt">
+      <summary>テストの予定を入れる（あとで大丈夫）</summary>
+      <p class="hint">入れておくと、テストに出る範囲から先に届きます。<br>わからなければ飛ばしてOK。あとからトークで相談もできます。</p>
+      <input type="date" id="examDate">
+      <div class="units" id="units"></div>
+    </details>
+
+    <button class="big-btn btn-main" id="goBtn" type="button">無料でためしてみる</button>
+    <div class="msg hidden" id="formMsg"></div>
+    <p class="fine">お支払いの登録はいりません。<br>期間が終わっても、お金が勝手にかかることはありません。</p>
+    <a class="lp-link" href="/">つづもんってなに？ →</a>
   </section>
 
   <!-- うまくいかなかったとき（行き止まりにしない） -->
@@ -80,8 +138,10 @@ import {
   inMemoryPersistence, onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
-var TRIAL_API = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net/tsudumonTrialStart';
-var MAP_URL = '/map/?trial=started';   // マップ側が「はじまったよ」のバナーを出す
+var FN = 'https://asia-northeast1-chatstudy-63477.cloudfunctions.net';
+var TRIAL_API = FN + '/tsudumonTrialStart';
+var EXAM_API = FN + '/tsudumonExamSetting';   // 学年・テストの予定はここに保存する
+var MAP_URL = '/map/';                        // 体験が始まったらトップページへ
 
 var app = initializeApp({ "apiKey": "AIzaSyBJuODbPmpu_fiJ8a1ffzDIUwEFszol5Cc", "authDomain": "chatstudy-63477.firebaseapp.com", "projectId": "chatstudy-63477", "appId": "1:283901969847:web:9efd3b421e8cdb16091432" });
 var auth = initializeAuth(app, {
@@ -90,7 +150,7 @@ var auth = initializeAuth(app, {
 
 var $ = function (id) { return document.getElementById(id); };
 function show(id) {
-  ['stWork', 'stLogin', 'stStop'].forEach(function (s) {
+  ['stWork', 'stLogin', 'stForm', 'stStop'].forEach(function (s) {
     $(s).classList.toggle('hidden', s !== id);
   });
 }
@@ -101,11 +161,54 @@ function stop(title, msg, goHref, goLabel) {
   if (goLabel) $('stopGo').textContent = goLabel;
   show('stStop');
 }
+function formMsg(text) {
+  $('formMsg').textContent = text;
+  $('formMsg').classList.remove('hidden');
+}
 
 $('loginBtn').onclick = function () {
   // LINE内ブラウザは auto=1 で無操作ログイン。戻り先はこのページ。
   location.href = '/login/?auto=1&next=' + encodeURIComponent('/start/');
 };
+
+var grade = '';
+$('grades').addEventListener('click', function (e) {
+  var b = e.target.closest('button[data-g]');
+  if (!b) return;
+  grade = b.dataset.g;
+  [].forEach.call($('grades').children, function (x) {
+    x.classList.toggle('on', x === b);
+  });
+  // マップの学年タブの初期値に使う（同じオリジンなので localStorage を共有できる）。
+  // ここを書かないと、登録で中2を選んでもマップは中1から開く。
+  try { localStorage.setItem('tzmgrade', grade); } catch (e) {}
+});
+
+async function post(user, body) {
+  var idToken = await user.getIdToken();
+  var res = await fetch(EXAM_API, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ idToken: idToken }, body || {})),
+  });
+  var data = null;
+  try { data = await res.json(); } catch (e) {}
+  return { res: res, data: data || {} };
+}
+
+/** 単元の一覧を出す（テストの予定は任意なので、開いた人だけが使う）。 */
+function renderUnits(units) {
+  var box = $('units');
+  box.innerHTML = '';
+  (units || []).forEach(function (u) {
+    var l = document.createElement('label');
+    var i = document.createElement('input');
+    i.type = 'checkbox'; i.value = u.no; i.dataset.unit = '1';
+    var s = document.createElement('span');
+    s.textContent = u.no + '　' + u.title;
+    l.appendChild(i); l.appendChild(s);
+    box.appendChild(l);
+  });
+}
 
 async function startTrial(user) {
   show('stWork');
@@ -119,13 +222,9 @@ async function startTrial(user) {
     try { data = await res.json(); } catch (e) {}
     data = data || {};
 
-    if (res.ok && data.ok) {
-      location.href = MAP_URL;   // 成功。説明せずそのまま教材へ
-      return;
-    }
-    // すでに使える人は、止めずに教材へ通す（「もう持ってるよ」を読ませる必要はない）
-    if (data.reason === 'already_licensed') {
-      location.href = '/map/';
+    // 成功も「すでに使える」も、説明せずそのままトップページへ。
+    if ((res.ok && data.ok) || data.reason === 'already_licensed') {
+      location.href = MAP_URL;
       return;
     }
     if (data.reason === 'trial_used') {
@@ -141,23 +240,53 @@ async function startTrial(user) {
         '/parents/dashboard/', '学習の記録を見る');
       return;
     }
-    if (res.status === 401 || res.status === 403) {
-      show('stLogin');
-      return;
-    }
+    if (res.status === 401 || res.status === 403) { show('stLogin'); return; }
     stop('うまくいきませんでした',
       data.message || '時間をおいて、もう一度ためしてみてね。',
       '/ref/04/', '無料の単元を読んでみる');
   } catch (e) {
-    stop('つながらなかったみたい',
-      '電波のいいところで、もう一度ためしてみてね。',
+    stop('つながらなかったみたい', '電波のいいところで、もう一度ためしてみてね。',
       '/ref/04/', '無料の単元を読んでみる');
   }
 }
 
-onAuthStateChanged(auth, function (user) {
-  if (user) startTrial(user);
-  else show('stLogin');
+/** 「無料でためしてみる」。設定を保存してから体験を始める。 */
+async function submit(user) {
+  if (!grade) { formMsg('学年をえらんでね。'); return; }
+  var btn = $('goBtn');
+  btn.disabled = true; btn.textContent = 'じゅんびしています…';
+  try {
+    await post(user, { grade: grade });
+    // テストの予定は**任意**。入っていれば保存し、失敗しても体験は止めない。
+    var date = $('examDate').value;
+    var nos = [].filter.call($('units').querySelectorAll('input[data-unit]'),
+      function (i) { return i.checked; }).map(function (i) { return i.value; });
+    if (date && nos.length) {
+      try {
+        await post(user, { testDate: date, unitNos: nos, confidence: 'confirmed' });
+      } catch (e) { /* 予定が入らなくても体験は始める */ }
+    }
+  } catch (e) {
+    // 学年の保存に失敗しても、体験そのものは始めさせる（行き止まりを作らない）
+  }
+  await startTrial(user);
+}
+
+onAuthStateChanged(auth, async function (user) {
+  if (!user) { show('stLogin'); return; }
+  show('stWork');
+  try {
+    var r = await post(user, {});           // 単元一覧と現在の設定を取る
+    renderUnits(r.data.units);
+    if (r.data.grade) {
+      grade = r.data.grade;
+      [].forEach.call($('grades').children, function (x) {
+        x.classList.toggle('on', x.dataset.g === grade);
+      });
+    }
+  } catch (e) { /* 一覧が取れなくても学年だけで進める */ }
+  $('goBtn').onclick = function () { submit(user); };
+  show('stForm');
 });
 </script>
 </body></html>

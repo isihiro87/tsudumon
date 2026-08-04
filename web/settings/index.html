@@ -495,6 +495,8 @@ async function saveGrade(u) {
   try {
     var r = await postWithToken(EXAM_API, u, { grade: value });
     if (r.res.ok && r.data.ok) {
+      // マップの学年タブの初期値もここに合わせる（/start/ と同じ扱い）。
+      try { localStorage.setItem('tzmgrade', value); } catch (e) {}
       applyMode(r.data);
       setMsg('modeMsg', '学年を保存しました。「おまかせ」のときは学年に合わせて出し方が決まります。', 'ok');
     } else {

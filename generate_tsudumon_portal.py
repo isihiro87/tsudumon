@@ -33,6 +33,14 @@
   成立し、画像が置かれたら自動で差し変わる（img は onerror で消える＝崩れない）。
   画像の仕様は CODEX_BRIEF_QUEST_MOBILE.md を参照。
 
+■ 「今日のミッション」は撤去中（2026-08-04・ユーザー指示）
+  「今日は3マスすすめよう！」の枠を**いったん外している**。機能として成立して
+  いなかったため（進捗の基準をその日の初回アクセス時のクリア数に置いていたので、
+  端末を変える・日付をまたぐ・localStorage が消えるだけで数え直しになり、
+  「あと3マス」が出続ける状態になりうる）。整ったら復活させる。
+  復活させるときは、応援マスコットの差し込み（`__MASCOT__`）も一緒に戻すこと。
+  撤去前の実装は git 履歴（このコミットの1つ前）にある。
+
 出力:
   python -X utf8 generate_tsudumon_portal.py            # output/web/map/index.html
   python -X utf8 generate_tsudumon_portal.py --deploy   # dist-web/map/index.html
@@ -146,12 +154,6 @@ def img_tag(name: str, cls: str, alt: str = "") -> str:
 def build_html() -> str:
     manifest = build_manifest()
     total_units = sum(len(c["units"]) for c in manifest)
-    # 「今日のミッション」の応援マスコット（ポータル全体で1箇所だけの表示）。
-    # 章ごとに男女交互、という運用ルールに沿わせるため、先頭の章番号の偶奇で決める
-    # （偶数章＝お姉さん / 奇数章＝先生）。1章始まり・全体で1箇所のみの表示なので、
-    # 実質は常に同じ結果になる（章カードが複数あるわけではない）。
-    _mascot_ch_no = manifest[0]["no"] if manifest else 1
-    mascot_img = "char_sensei_f_sm.png" if _mascot_ch_no % 2 == 0 else "char_sensei_m_sm.png"
     # 学年ごとのマス数（進捗の分母は「その学年の中で」数える）
     grade_total = {g: sum(len(c["units"]) for c in manifest if c["grade"] == g) for g in GRADES}
 
@@ -215,7 +217,6 @@ def build_html() -> str:
             .replace("__CHEST__", img_tag("quest-chest.webp", "g-chest", ""))
             .replace("__EXPLORER__", img_tag("quest-explorer.webp", "ch-explorer", ""))
             .replace("__BIRD__", img_tag("quest-bird.webp", "ch-bird", ""))
-            .replace("__MASCOT__", img_tag(mascot_img, "ch-mascot", ""))
             .replace("__MANIFEST__", json.dumps(manifest_min, ensure_ascii=False)))
 
 
@@ -279,8 +280,11 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   .rs-btns { display:flex; gap:8px; }
   .rs-btns a { flex:1; text-align:center; text-decoration:none; font-weight:bold; font-size:14.5px;
                padding:11px 8px; border-radius:12px; }
-  .rs-wb { background:#b45309; color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.28); }
-  .rs-ref { background:#fff; color:#b45309; border:1.5px solid var(--line,#fde68a); }
+  /* ⚠️ 2つのボタンは**同じ見た目**にする（2026-08-04）。
+     以前は「問題を解く」だけ塗りで、参考書が白抜きだった。読んでから解きたい子には
+     順番が逆で、片方だけ目立つと「そっちが正解」という圧になる。どちらから入っても
+     いいので、重みを揃える。並びも 左=参考書 → 右=問題 にした（読む→解く）。 */
+  .rs-ref, .rs-wb { background:#b45309; color:#fff; box-shadow:0 3px 8px rgba(180,83,9,.28); }
   .rs-note { font-size:11.5px; color:#a8a29e; margin-top:8px; text-align:center; }
   .gtab { border:2px solid #c9a978; background:#fffaf0; color:var(--brand); font-weight:bold;
           transition:transform .12s, filter .12s, background-color .12s;
@@ -313,20 +317,6 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
          border:1.5px solid rgba(0,0,0,.12); background:#fff; flex:none; }
   .dot.d-ref { background:var(--s-ref); } .dot.d-some { background:var(--s-some); }
   .dot.d-all { background:var(--s-all); } .dot.d-perfect { background:var(--s-perfect); }
-
-  /* ───── 今日のミッション ───── */
-  .mission { display:flex; align-items:center; gap:10px; margin-top:10px;
-             background:linear-gradient(#fffdf6,#fdf3e0);
-             border:2px dashed var(--amber); border-radius:14px; padding:8px 12px; }
-  .ch-mascot { height:62px; width:auto; flex:none; margin-right:8px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.18)); }
-  .ms-body { flex:1; min-width:0; }
-  .ms-h { font-size:12px; font-weight:bold; color:#b45309; }
-  .ms-txt { font-size:14px; font-weight:bold; color:var(--deep); margin-top:2px;
-            white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .ms-steps { display:flex; gap:6px; margin-top:7px; }
-  .ms-step { width:26px; height:26px; border-radius:50%; background:#fff; border:2px solid #ddc39a;
-             display:inline-flex; align-items:center; justify-content:center; font-size:13px; }
-  .ms-step.on { background:var(--amber); border-color:var(--brand); color:#fff; }
 
   /* ───── マップ（時代エリアごとに1画面・横スワイプで切替） ───── */
   .board { margin-top:12px; }
@@ -514,7 +504,10 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   <div class="thanks" id="thanks" hidden>
     <div class="th-t" id="thanksTitle">ご登録ありがとうございます！</div>
     <div class="th-d" id="thanksBody">中学歴史ぜんぶ（全19単元）が使えるようになりました。<br>下のマップから、気になる単元をタップして始めましょう。</div>
-    <a class="th-link" href="../account/">ご利用状況・お支払いの確認はこちら →</a>
+    <!-- ⚠️ 「ご利用状況・お支払いの確認」への導線はここに置かない（2026-08-04）。
+         使い始める瞬間にお金のページへ誘うと、そこで手が止まる。
+         /account/ はお支払い・解約のページなので、必要になったときに
+         リッチメニューや設定から辿れれば足りる。 -->
     <button class="th-close" id="thanksClose" type="button" aria-label="閉じる">×</button>
   </div>
 
@@ -533,8 +526,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
     <div class="rs-lead" id="rsLead">つづきから</div>
     <div class="rs-name" id="rsName"></div>
     <div class="rs-btns">
-      <a class="rs-wb" id="rsWb" href="#">問題を解く</a>
       <a class="rs-ref" id="rsRef" href="#">参考書で読む</a>
+      <a class="rs-wb" id="rsWb" href="#">問題を解く</a>
     </div>
     <div class="rs-note">ほかの単元は、下のマップから選べます</div>
   </div>
@@ -552,15 +545,6 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
       <span class="lg"><span class="dot d-some"></span>一部を解いた</span>
       <span class="lg"><span class="dot d-all"></span>全部解いた</span>
       <span class="lg"><span class="dot d-perfect"></span>全問正解</span>
-    </div>
-  </div>
-
-  <div class="mission">
-    __MASCOT__
-    <div class="ms-body">
-      <div class="ms-h">🎯 今日のミッション</div>
-      <div class="ms-txt" id="msTxt">今日は 3マス すすめよう！</div>
-      <div class="ms-steps" id="msSteps"></div>
     </div>
   </div>
 
@@ -612,22 +596,32 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   function lsRaw(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function save(key, v) { try { localStorage.setItem(key, v); } catch (e) {} }
 
-  /* ───── 登録・体験開始の完了バナー ─────
-     Stripe Checkout の success_url は /map/?sub=thanks、体験開始からの遷移は
-     /map/?trial=started。決済直後にただのマップが出るだけだと「払えたのか」が
-     分からないので、ここで必ず受け止める。表示したら ?sub= / ?trial= を
-     history.replaceState で消し、リロードで再表示しない。 */
+  /* ───── 登録の完了バナー ─────
+     Stripe Checkout の success_url は /map/?sub=thanks。決済直後にただのマップが
+     出るだけだと「払えたのか」が分からないので、ここで必ず受け止める。
+     表示したら ?sub= を history.replaceState で消し、リロードで再表示しない。
+
+     ⚠️ 体験開始（?trial=started）では**何も出さない**（2026-08-03）。
+     始めた直後に「無料体験がはじまりました」と出ると、
+     **終わったら勝手に課金されるのでは**という不安を先に置くことになる。
+     体験にお金の話は出てこない（クレカ登録も無い）ので、黙って教材を見せる。
+     期限が近づいたら tsudumonTrialReminder が知らせるので、伝え漏れにはならない。 */
   (function showThanks() {
     var q = new URLSearchParams(location.search);
-    var kind = q.get('sub') === 'thanks' ? 'sub' : (q.get('trial') === 'started' ? 'trial' : null);
-    if (!kind) return;
+    var kind = q.get('sub') === 'thanks' ? 'sub' : null;
+    if (!kind) {
+      // ?trial=started が付いていても、URLだけは掃除して何も出さない
+      if (q.get('trial')) {
+        try {
+          q.delete('trial');
+          var s0 = q.toString();
+          history.replaceState(null, '', location.pathname + (s0 ? '?' + s0 : '') + location.hash);
+        } catch (e) {}
+      }
+      return;
+    }
     var box = document.getElementById('thanks');
     if (!box) return;
-    if (kind === 'trial') {
-      document.getElementById('thanksTitle').textContent = '3日間の無料体験がはじまりました！';
-      document.getElementById('thanksBody').innerHTML =
-        '中学歴史ぜんぶ（全19単元）が、3日間まるごと使えます。<br>下のマップから、気になる単元をタップして始めましょう。';
-    }
     box.hidden = false;
     var btn = document.getElementById('thanksClose');
     if (btn) btn.addEventListener('click', function () { box.hidden = true; });
@@ -667,6 +661,8 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
   }
 
   var MY = myGrades();
+  // 初期表示の学年。/start/ の登録や /settings/ で選んだ学年（tzmgrade）を優先する。
+  // 同じオリジンなので localStorage を共有できる＝サーバに問い合わせずに反映できる。
   var cur = lsRaw('tzmgrade');
   if (MY.indexOf(cur) < 0) cur = MY[0];
 
@@ -897,28 +893,6 @@ TEMPLATE = r"""<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
       if (cell) nq = +cell.dataset.nq || 0;
       el.querySelector('.u-state').textContent = m[stateOf(el.dataset.ch, el.dataset.tid, nq, el.dataset.ref)];
     });
-
-    mission(cleared);
-  }
-
-  // 今日のミッション: その日はじめてのアクセス時のクリア数を基準に、今日進めたマス数を数える
-  function mission(cleared) {
-    var GOAL = 3, today = new Date().toISOString().slice(0, 10), key = 'tzmportal-' + cur;
-    var st = ls(key);
-    if (st.date !== today) { st = { date: today, base: cleared }; save(key, JSON.stringify(st)); }
-    if (cleared < st.base) { st.base = cleared; save(key, JSON.stringify(st)); }
-    var got = Math.max(0, cleared - st.base);
-    var steps = document.getElementById('msSteps');
-    steps.innerHTML = '';
-    for (var i = 0; i < GOAL; i++) {
-      var s = document.createElement('span');
-      s.className = 'ms-step' + (i < got ? ' on' : '');
-      s.textContent = i < got ? '★' : (i + 1);
-      steps.appendChild(s);
-    }
-    document.getElementById('msTxt').textContent = got >= GOAL
-      ? '今日のミッション達成！ すごい！'
-      : '今日は あと ' + (GOAL - got) + 'マス すすめよう！';
   }
 
   document.addEventListener('click', function (e) {
